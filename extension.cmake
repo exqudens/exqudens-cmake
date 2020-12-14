@@ -13,23 +13,23 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}" CACHE PATH "..." FORCE)
 endif()
 
-# define container 'DIRECTORIES'
-set(DIRECTORIES)
+# define container 'EXPORT_DIRECTORIES'
+set(EXPORT_DIRECTORIES)
 
-# define macro 'directories'
-macro(directories dirs)
+# define macro 'export_directories'
+macro(export_directories dirs)
     include_directories("${dirs}")
-    list(APPEND DIRECTORIES "${dirs}")
-    list(REMOVE_DUPLICATES DIRECTORIES)
+    list(APPEND EXPORT_DIRECTORIES "${dirs}")
+    list(REMOVE_DUPLICATES EXPORT_DIRECTORIES)
 endmacro()
 
-# define container 'LIBRARIES'
-set(LIBRARIES)
+# define container 'EXPORT_LIBRARIES'
+set(EXPORT_LIBRARIES)
 
-# define macro 'library'
-macro(library name)
-    list(APPEND LIBRARIES "${name}")
-    list(REMOVE_DUPLICATES LIBRARIES)
+# define macro 'export_library'
+macro(export_library name)
+    list(APPEND EXPORT_LIBRARIES "${name}")
+    list(REMOVE_DUPLICATES EXPORT_LIBRARIES)
 endmacro()
 
 # define container 'DEPENDENCIES'
@@ -65,13 +65,13 @@ macro(dependencies)
         )
         FetchContent_MakeAvailable("${${dep}_NAME}")
 
-        get_directory_property("${dep}_DIRECTORIES" DIRECTORY ${${${dep}_NAME}_SOURCE_DIR} DEFINITION DIRECTORIES)
-        foreach(d "${${dep}_DIRECTORIES}")
+        get_directory_property("${dep}_EXPORT_DIRECTORIES" DIRECTORY ${${${dep}_NAME}_SOURCE_DIR} DEFINITION EXPORT_DIRECTORIES)
+        foreach(d "${${dep}_EXPORT_DIRECTORIES}")
             message(STATUS "include_directory: ${${${dep}_NAME}_SOURCE_DIR}/${d}")
             include_directories("${${${dep}_NAME}_SOURCE_DIR}/${d}")
         endforeach()
 
-        get_directory_property("${dep}_LIBRARIES" DIRECTORY ${${${dep}_NAME}_SOURCE_DIR} DEFINITION LIBRARIES)
+        get_directory_property("${dep}_EXPORT_LIBRARIES" DIRECTORY ${${${dep}_NAME}_SOURCE_DIR} DEFINITION EXPORT_LIBRARIES)
 
     endforeach()
 endmacro()
