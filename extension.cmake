@@ -26,9 +26,9 @@ endmacro()
 # define container 'EXPORT_LIBRARIES'
 set(EXPORT_LIBRARIES)
 
-# define macro 'export_library'
-macro(export_library name)
-    list(APPEND EXPORT_LIBRARIES "${name}")
+# define macro 'export_libraries'
+macro(export_libraries names)
+    list(APPEND EXPORT_LIBRARIES "${names}")
     list(REMOVE_DUPLICATES EXPORT_LIBRARIES)
 endmacro()
 
