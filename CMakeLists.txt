@@ -1,0 +1,20 @@
+cmake_minimum_required(VERSION 3.17)
+project(exqudens_cmake)
+
+# config
+include(extension.cmake)
+init()
+
+message_status("---")
+message_status("1: ${HOME_PREFIX}")
+message_status("2: ${CMAKE_INSTALL_PREFIX}")
+message_status("3: ${CMAKE_PREFIX_PATH}")
+message_status("4: ${DOWNLOADS_PREFIX}")
+message_status("---")
+download("zlib-1.2.11.zip" "https://github.com/madler/zlib/archive/v1.2.11.zip")
+if(NOT EXISTS "${DOWNLOADS_PREFIX}/zlib-1.2.11.zip")
+    message_fatal_error("Not exists: ${DOWNLOADS_PREFIX}/zlib-1.2.11.zip")
+else()
+    message_status("exists: ${DOWNLOADS_PREFIX}/zlib-1.2.11.zip")
+endif()
+message_status("---")
