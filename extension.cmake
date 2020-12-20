@@ -16,7 +16,7 @@ macro(set_home_prefix)
         elseif(UNIX)
             set(HOME_PREFIX "$ENV{HOME}")
         else()
-            message_fatal_error("Can't set USER_HOME")
+            message_fatal_error("Can't set HOME_PREFIX")
         endif()
     elseif("${ARGV0}" MATCHES "^$")
         set(HOME_PREFIX "")
@@ -35,8 +35,7 @@ endmacro()
 macro(set_packages_prefix)
     if(NOT DEFINED "${DEFAULT_INSTALL_PREFIX}")
         set(
-            DEFAULT_INSTALL_PREFIX
-            "${CMAKE_INSTALL_PREFIX}"
+            DEFAULT_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}"
             CACHE
             PATH
             "Default CMAKE_INSTALL_PREFIX"
@@ -45,10 +44,8 @@ macro(set_packages_prefix)
     endif()
     if(${ARGC} EQUAL 0)
         set(CMAKE_INSTALL_PREFIX "${DEFAULT_INSTALL_PREFIX}")
-        set(CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}")
     elseif("${ARGV0}" MATCHES "^$")
         set(CMAKE_INSTALL_PREFIX "")
-        set(CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}")
     elseif("${ARGV0}" MATCHES "^[ \t\r\n]+.")
         message_status("Path starts with whitespace: '${ARGV0}'")
     elseif(NOT EXISTS "${ARGV0}")
@@ -57,7 +54,6 @@ macro(set_packages_prefix)
         message_status("Not is directory: '${ARGV0}'")
     else()
         set(CMAKE_INSTALL_PREFIX "${ARGV0}")
-        set(CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}")
     endif()
 endmacro()
 
@@ -104,11 +100,7 @@ endmacro()
 # define macro 'download'
 macro(download file_name url)
     if(NOT EXISTS "${DOWNLOADS_PREFIX}/${file_name}")
-        file(
-            DOWNLOAD
-                "${url}"
-                "${DOWNLOADS_PREFIX}/${file_name}"
-        )
+        file(DOWNLOAD "${url}" "${DOWNLOADS_PREFIX}/${file_name}")
     endif()
 endmacro()
 
