@@ -3,7 +3,13 @@ project(exqudens_cmake)
 
 # config
 include(extension.cmake)
-init()
+if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}")
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}")
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/.cmake")
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/.cmake/packages")
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/.cmake/downloads")
+endif()
+init("${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}")
 
 message_status("---")
 message_status("1: ${HOME_PREFIX}")
