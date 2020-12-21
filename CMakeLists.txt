@@ -17,12 +17,12 @@ message_status("2: ${CMAKE_INSTALL_PREFIX}")
 message_status("3: ${CMAKE_PREFIX_PATH}")
 message_status("4: ${DOWNLOADS_PREFIX}")
 message_status("---")
-download("zlib-1.2.11.zip" "https://github.com/madler/zlib/archive/v1.2.11.zip")
+download(
+        "zlib-1.2.11.zip"
+        "https://github.com/madler/zlib/archive/v1.2.11.zip"
+        "9d6a627693163bbbf3f26403a3a0b0b1"
+)
 if(NOT EXISTS "${DOWNLOADS_PREFIX}/zlib-1.2.11.zip")
     message_fatal_error("Not exists: ${DOWNLOADS_PREFIX}/zlib-1.2.11.zip")
-else()
-    file(READ "${DOWNLOADS_PREFIX}/zlib-1.2.11.zip.md5" "zlib-1.2.11.zip.md5")
-    message_status("exists: ${DOWNLOADS_PREFIX}/zlib-1.2.11.zip")
-    message_status("md5: ${zlib-1.2.11.zip.md5}")
 endif()
 message_status("---")
