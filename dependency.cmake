@@ -1,6 +1,7 @@
 # set variables
 set(LOAD_DEPENDENCY_DEFAULT_CONFIGURE_COMMAND ${CMAKE_COMMAND})
 set(LOAD_DEPENDENCY_DEFAULT_CONFIGURE_COMMAND_ARGS
+    "-DCMAKE_PREFIX_PATH={{{PREFIX_PATH}}}"
     "-DCMAKE_INSTALL_PREFIX={{{PACKAGES_PREFIX}}}/{{{NAME}}}-{{{VERSION}}}"
     "-G"
     "{{{GENERATOR}}}"
@@ -46,6 +47,7 @@ include(FetchContent)
 
 # define function 'dependency'
 function(dependency)
+    list(APPEND CMAKE_MESSAGE_CONTEXT "dependency")
 
     set(options OPTIONAL)
     set(oneValueArgs
@@ -63,13 +65,18 @@ function(dependency)
         BUILD_COMMAND
         TEST_COMMAND
         INSTALL_COMMAND
-        )
+        SKIP_CONFIG
+        SKIP_BUILD
+        SKIP_TEST
+        SKIP_INSTALL
+    )
     set(multiValueArgs
+        PREFIX_PATH
         CONFIGURE_COMMAND_ARGS
         BUILD_COMMAND_ARGS
         TEST_COMMAND_ARGS
         INSTALL_COMMAND_ARGS
-        )
+    )
     cmake_parse_arguments(PARSE_ARGV 0 DEPENDENCY "${options}" "${oneValueArgs}" "${multiValueArgs}")
 
     # short path -----------------------------------------------------------------------
@@ -98,7 +105,7 @@ function(dependency)
     unset(NEW_CMAKE_PREFIX_PATH)
 
     # check one '${DEPENDENCY_NAME}' type 'QUIET'
-    if(DEPENDENCY_VERSION)
+    if(DEFINED DEPENDENCY_VERSION)
         find_package("${DEPENDENCY_NAME}" "${DEPENDENCY_VERSION}" QUIET)
     else()
         find_package("${DEPENDENCY_NAME}" QUIET)
@@ -107,6 +114,11 @@ function(dependency)
     # build if not found '${DEPENDENCY_NAME}'
     load_dependency(
         SKIP                   ${${DEPENDENCY_NAME}_FOUND}
+        SKIP_CONFIG            ${DEPENDENCY_SKIP_CONFIG}
+        SKIP_BUILD             ${DEPENDENCY_SKIP_BUILD}
+        SKIP_TEST              ${DEPENDENCY_SKIP_TEST}
+        SKIP_INSTALL           ${DEPENDENCY_SKIP_INSTALL}
+        PREFIX_PATH            ${DEPENDENCY_PREFIX_PATH}
         NAME                   ${DEPENDENCY_PACKAGE_NAME}
         VERSION                ${DEPENDENCY_PACKAGE_VERSION}
         DOWNLOADS_PREFIX       ${DEPENDENCY_DOWNLOADS_PREFIX}
@@ -144,8 +156,8 @@ function(dependency)
     set(CMAKE_PREFIX_PATH "${NEW_CMAKE_PREFIX_PATH}" PARENT_SCOPE)
     unset(NEW_CMAKE_PREFIX_PATH)
 
-    # check one '${DEPENDENCY_NAME}' type 'QUIET'
-    if(DEPENDENCY_VERSION)
+    # check two '${DEPENDENCY_NAME}' type 'REQUIRED'
+    if(DEFINED DEPENDENCY_VERSION)
         find_package("${DEPENDENCY_NAME}" "${DEPENDENCY_VERSION}" REQUIRED)
     else()
         find_package("${DEPENDENCY_NAME}" REQUIRED)
@@ -155,6 +167,7 @@ endfunction()
 
 # define function 'load_dependency'
 function(load_dependency)
+    list(APPEND CMAKE_MESSAGE_CONTEXT "load_dependency")
 
     set(options)
     set(oneValueArgs
@@ -171,8 +184,13 @@ function(load_dependency)
         TEST_COMMAND
         INSTALL_COMMAND
         SKIP
+        SKIP_CONFIG
+        SKIP_BUILD
+        SKIP_TEST
+        SKIP_INSTALL
     )
     set(multiValueArgs
+        PREFIX_PATH
         CONFIGURE_COMMAND_ARGS
         BUILD_COMMAND_ARGS
         TEST_COMMAND_ARGS
@@ -188,6 +206,14 @@ function(load_dependency)
     endif()
 
     # config -----------------------------------------------------------------------
+
+    if(NOT DEFINED LOAD_DEPENDENCY_DOWNLOAD_NAME)
+        if("${LOAD_DEPENDENCY_URL_HOST}" MATCHES "^.+\\.zip$")
+            set(LOAD_DEPENDENCY_DOWNLOAD_NAME "archive.zip")
+        elseif("${LOAD_DEPENDENCY_URL_HOST}" MATCHES "^.+\\.tar\\.gz$")
+            set(LOAD_DEPENDENCY_DOWNLOAD_NAME "archive.tar.gz")
+        endif()
+    endif()
 
     # set 'LOAD_DEPENDENCY_URL'
     if(EXISTS "${LOAD_DEPENDENCY_DOWNLOADS_PREFIX}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}/${LOAD_DEPENDENCY_DOWNLOAD_NAME}")
@@ -207,6 +233,7 @@ function(load_dependency)
         else()
             string(REPLACE "{{{GENERATOR}}}" "${CMAKE_GENERATOR}" arg "${arg}")
         endif()
+        string(REPLACE "{{{PREFIX_PATH}}}"           "${LOAD_DEPENDENCY_PREFIX_PATH}" arg "${arg}")
         string(REPLACE "{{{PACKAGES_PREFIX}}}"       "${LOAD_DEPENDENCY_PACKAGES_PREFIX}" arg "${arg}")
         string(REPLACE "{{{NAME}}}"                  "${LOAD_DEPENDENCY_NAME}"            arg "${arg}")
         string(REPLACE "{{{VERSION}}}"               "${LOAD_DEPENDENCY_VERSION}"         arg "${arg}")
@@ -263,7 +290,7 @@ function(load_dependency)
         URL           "${LOAD_DEPENDENCY_URL}"
         URL_MD5       "${LOAD_DEPENDENCY_URL_MD5}"
         #CMAKE_ARGS    "-DCMAKE_INSTALL_PREFIX=${LOAD_DEPENDENCY_PACKAGES_PREFIX}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}"
-        )
+    )
     FetchContent_GetProperties("fetch_content_${LOAD_DEPENDENCY_NAME}")
     if(NOT ${fetch_content_${LOAD_DEPENDENCY_NAME}_POPULATED})
         FetchContent_Populate("fetch_content_${LOAD_DEPENDENCY_NAME}")
@@ -273,60 +300,76 @@ function(load_dependency)
     endif()
     message(STATUS "--- extract '${LOAD_DEPENDENCY_NAME}' (done) ---")
 
-    message(STATUS "--- config '${LOAD_DEPENDENCY_NAME}' (start) ---")
-    execute_process(
-        COMMAND           ${LOAD_DEPENDENCY_CONFIGURE_COMMAND} ${LOAD_DEPENDENCY_CONFIGURE_COMMAND_ARGS}
-        WORKING_DIRECTORY "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}"
-        RESULT_VARIABLE   "fetch_content_${LOAD_DEPENDENCY_NAME}_CONFIG_RESULT"
-    )
-    if(NOT ${fetch_content_${LOAD_DEPENDENCY_NAME}_CONFIG_RESULT} EQUAL 0)
-        message(
-            FATAL_ERROR
-            "ERROR: config 'fetch_content_${LOAD_DEPENDENCY_NAME}' exit code ${fetch_content_${LOAD_DEPENDENCY_NAME}_CONFIG_RESULT} !!!"
+    if(LOAD_DEPENDENCY_SKIP_CONFIG)
+        message(STATUS "Skipping config for '${LOAD_DEPENDENCY_NAME}'")
+    else()
+        message(STATUS "--- config '${LOAD_DEPENDENCY_NAME}' (start) ---")
+        execute_process(
+            COMMAND           ${LOAD_DEPENDENCY_CONFIGURE_COMMAND} ${LOAD_DEPENDENCY_CONFIGURE_COMMAND_ARGS}
+            WORKING_DIRECTORY "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}"
+            RESULT_VARIABLE   "fetch_content_${LOAD_DEPENDENCY_NAME}_CONFIG_RESULT"
         )
+        if(NOT ${fetch_content_${LOAD_DEPENDENCY_NAME}_CONFIG_RESULT} EQUAL 0)
+            message(
+                FATAL_ERROR
+                "ERROR: config 'fetch_content_${LOAD_DEPENDENCY_NAME}' exit code ${fetch_content_${LOAD_DEPENDENCY_NAME}_CONFIG_RESULT} !!!"
+            )
+        endif()
+        message(STATUS "--- config '${LOAD_DEPENDENCY_NAME}' (done) ---")
     endif()
-    message(STATUS "--- config '${LOAD_DEPENDENCY_NAME}' (done) ---")
 
-    message(STATUS "--- build '${LOAD_DEPENDENCY_NAME}' (start) ---")
-    execute_process(
-        COMMAND           ${LOAD_DEPENDENCY_BUILD_COMMAND} ${LOAD_DEPENDENCY_BUILD_COMMAND_ARGS}
-        WORKING_DIRECTORY "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}"
-        RESULT_VARIABLE   "fetch_content_${LOAD_DEPENDENCY_NAME}_BUILD_RESULT"
-    )
-    if(NOT ${fetch_content_${LOAD_DEPENDENCY_NAME}_BUILD_RESULT} EQUAL 0)
-        message(
-            FATAL_ERROR
-            "ERROR: build 'fetch_content_${LOAD_DEPENDENCY_NAME}' exit code ${fetch_content_${LOAD_DEPENDENCY_NAME}_BUILD_RESULT} !!!"
+    if(LOAD_DEPENDENCY_SKIP_BUILD)
+        message(STATUS "Skipping build for '${LOAD_DEPENDENCY_NAME}'")
+    else()
+        message(STATUS "--- build '${LOAD_DEPENDENCY_NAME}' (start) ---")
+        execute_process(
+            COMMAND           ${LOAD_DEPENDENCY_BUILD_COMMAND} ${LOAD_DEPENDENCY_BUILD_COMMAND_ARGS}
+            WORKING_DIRECTORY "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}"
+            RESULT_VARIABLE   "fetch_content_${LOAD_DEPENDENCY_NAME}_BUILD_RESULT"
         )
+        if(NOT ${fetch_content_${LOAD_DEPENDENCY_NAME}_BUILD_RESULT} EQUAL 0)
+            message(
+                FATAL_ERROR
+                "ERROR: build 'fetch_content_${LOAD_DEPENDENCY_NAME}' exit code ${fetch_content_${LOAD_DEPENDENCY_NAME}_BUILD_RESULT} !!!"
+            )
+        endif()
+        message(STATUS "--- build '${LOAD_DEPENDENCY_NAME}' (done) ---")
     endif()
-    message(STATUS "--- build '${LOAD_DEPENDENCY_NAME}' (done) ---")
 
-    message(STATUS "--- test '${LOAD_DEPENDENCY_NAME}' (start) ---")
-    execute_process(
-        COMMAND           ${LOAD_DEPENDENCY_TEST_COMMAND} ${LOAD_DEPENDENCY_TEST_COMMAND_ARGS}
-        WORKING_DIRECTORY "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}"
-        RESULT_VARIABLE   "fetch_content_${LOAD_DEPENDENCY_NAME}_TEST_RESULT"
-    )
-    if(NOT ${fetch_content_${LOAD_DEPENDENCY_NAME}_TEST_RESULT} EQUAL 0)
-        message(
-            FATAL_ERROR
-            "ERROR: test 'fetch_content_${LOAD_DEPENDENCY_NAME}' exit code ${fetch_content_${LOAD_DEPENDENCY_NAME}_TEST_RESULT} !!!"
+    if(LOAD_DEPENDENCY_SKIP_TEST)
+        message(STATUS "Skipping test for '${LOAD_DEPENDENCY_NAME}'")
+    else()
+        message(STATUS "--- test '${LOAD_DEPENDENCY_NAME}' (start) ---")
+        execute_process(
+            COMMAND           ${LOAD_DEPENDENCY_TEST_COMMAND} ${LOAD_DEPENDENCY_TEST_COMMAND_ARGS}
+            WORKING_DIRECTORY "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}"
+            RESULT_VARIABLE   "fetch_content_${LOAD_DEPENDENCY_NAME}_TEST_RESULT"
         )
+        if(NOT ${fetch_content_${LOAD_DEPENDENCY_NAME}_TEST_RESULT} EQUAL 0)
+            message(
+                FATAL_ERROR
+                "ERROR: test 'fetch_content_${LOAD_DEPENDENCY_NAME}' exit code ${fetch_content_${LOAD_DEPENDENCY_NAME}_TEST_RESULT} !!!"
+            )
+        endif()
+        message(STATUS "--- test '${LOAD_DEPENDENCY_NAME}' (done) ---")
     endif()
-    message(STATUS "--- test '${LOAD_DEPENDENCY_NAME}' (done) ---")
 
-    message(STATUS "--- install '${LOAD_DEPENDENCY_NAME}' (start) ---")
-    execute_process(
-        COMMAND           ${LOAD_DEPENDENCY_INSTALL_COMMAND} ${LOAD_DEPENDENCY_INSTALL_COMMAND_ARGS}
-        WORKING_DIRECTORY "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}"
-        RESULT_VARIABLE   "fetch_content_${LOAD_DEPENDENCY_NAME}_INSTALL_RESULT"
-    )
-    if(NOT ${fetch_content_${LOAD_DEPENDENCY_NAME}_INSTALL_RESULT} EQUAL 0)
-        message(
-            FATAL_ERROR
-            "ERROR: install 'fetch_content_${LOAD_DEPENDENCY_NAME}' exit code ${fetch_content_${LOAD_DEPENDENCY_NAME}_INSTALL_RESULT} !!!"
+    if(LOAD_DEPENDENCY_SKIP_INSTALL)
+        message(STATUS "Skipping install for '${LOAD_DEPENDENCY_NAME}'")
+    else()
+        message(STATUS "--- install '${LOAD_DEPENDENCY_NAME}' (start) ---")
+        execute_process(
+            COMMAND           ${LOAD_DEPENDENCY_INSTALL_COMMAND} ${LOAD_DEPENDENCY_INSTALL_COMMAND_ARGS}
+            WORKING_DIRECTORY "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}"
+            RESULT_VARIABLE   "fetch_content_${LOAD_DEPENDENCY_NAME}_INSTALL_RESULT"
         )
+        if(NOT ${fetch_content_${LOAD_DEPENDENCY_NAME}_INSTALL_RESULT} EQUAL 0)
+            message(
+                FATAL_ERROR
+                "ERROR: install 'fetch_content_${LOAD_DEPENDENCY_NAME}' exit code ${fetch_content_${LOAD_DEPENDENCY_NAME}_INSTALL_RESULT} !!!"
+            )
+        endif()
+        message(STATUS "--- install '${LOAD_DEPENDENCY_NAME}' (done) ---")
     endif()
-    message(STATUS "--- install '${LOAD_DEPENDENCY_NAME}' (done) ---")
 
 endfunction()
