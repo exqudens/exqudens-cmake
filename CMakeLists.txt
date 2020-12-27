@@ -70,7 +70,7 @@ dependency(
     URL_HOST         "github.com/madler/zlib/archive/v1.2.11.zip"
     URL_MD5          "9d6a627693163bbbf3f26403a3a0b0b1"
     DOWNLOAD_NAME    "archive.zip"
-    OPTIONAL
+    #OPTIONAL
 )
 message_status("aaa: ${INIT_CONFIGURATIONS}")
 message_status("bbb: ${TEST_VAR_1}")
