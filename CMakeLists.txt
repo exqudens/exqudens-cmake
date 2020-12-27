@@ -57,3 +57,20 @@ if(NOT EXISTS "${DOWNLOADS_PREFIX}/zlib-1.2.11/archive.zip")
     message_fatal_error("Not exists: ${DOWNLOADS_PREFIX}/zlib-1.2.11/archive.zip")
 endif()
 message_status("---")
+
+include(dependency.cmake)
+dependency(
+    NAME             "ZLIB"
+    #VERSION          ""
+    PACKAGE_NAME     "zlib"
+    PACKAGE_VERSION  "1.2.11"
+    DOWNLOADS_PREFIX "${CMAKE_SOURCE_DIR}/downloads"
+    PACKAGES_PREFIX  "${CMAKE_SOURCE_DIR}/packages"
+    URL_SCHEMA       "https"
+    URL_HOST         "github.com/madler/zlib/archive/v1.2.11.zip"
+    URL_MD5          "9d6a627693163bbbf3f26403a3a0b0b1"
+    DOWNLOAD_NAME    "archive.zip"
+    OPTIONAL
+)
+message_status("aaa: ${INIT_CONFIGURATIONS}")
+message_status("bbb: ${TEST_VAR_1}")

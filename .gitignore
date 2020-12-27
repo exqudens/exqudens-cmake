@@ -1,6 +1,8 @@
 # Directories
 .idea/
 build/
+downloads/
+packages/
 
 # Files
 *.iml
