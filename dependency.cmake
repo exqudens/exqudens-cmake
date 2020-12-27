@@ -9,6 +9,36 @@ set(DEPENDENCY_DEFAULT_CONFIGURE_COMMAND_ARGS
     "-B"
     "{{{FETCHCONTENT_BASE_DIR}}}/{{{PACKAGE_NAME}}}-{{{PACKAGE_VERSION}}}/build"
 )
+set(DEPENDENCY_DEFAULT_BUILD_COMMAND ${CMAKE_COMMAND})
+set(DEPENDENCY_DEFAULT_BUILD_COMMAND_ARGS
+    "--build"
+    "{{{FETCHCONTENT_BASE_DIR}}}/{{{PACKAGE_NAME}}}-{{{PACKAGE_VERSION}}}/build"
+    "--target"
+    "all"
+    "--"
+    "-j"
+    "3"
+)
+set(DEPENDENCY_DEFAULT_TEST_COMMAND ${CMAKE_COMMAND})
+set(DEPENDENCY_DEFAULT_TEST_COMMAND_ARGS
+    "--build"
+    "{{{FETCHCONTENT_BASE_DIR}}}/{{{PACKAGE_NAME}}}-{{{PACKAGE_VERSION}}}/build"
+    "--target"
+    "test"
+    "--"
+    "-j"
+    "3"
+)
+set(DEPENDENCY_DEFAULT_INSTALL_COMMAND ${CMAKE_COMMAND})
+set(DEPENDENCY_DEFAULT_INSTALL_COMMAND_ARGS
+    "--build"
+    "{{{FETCHCONTENT_BASE_DIR}}}/{{{PACKAGE_NAME}}}-{{{PACKAGE_VERSION}}}/build"
+    "--target"
+    "install"
+    "--"
+    "-j"
+    "3"
+)
 
 # enable extensions
 include(FindPkgConfig)
@@ -52,12 +82,52 @@ function(dependency)
     # set 'DEPENDENCY_CONFIGURE_COMMAND_ARGS'
     set(DEPENDENCY_CONFIGURE_COMMAND_ARGS)
     foreach(arg ${DEPENDENCY_DEFAULT_CONFIGURE_COMMAND_ARGS})
-        string(REPLACE "{{{GENERATOR}}}"             "${CMAKE_EXTRA_GENERATOR} - ${CMAKE_GENERATOR}" arg "${arg}")
+        if("" STREQUAL "${CMAKE_EXTRA_GENERATOR}")
+            string(REPLACE "{{{GENERATOR}}}" "${CMAKE_EXTRA_GENERATOR} - ${CMAKE_GENERATOR}" arg "${arg}")
+        else()
+            string(REPLACE "{{{GENERATOR}}}" "${CMAKE_GENERATOR}" arg "${arg}")
+        endif()
         string(REPLACE "{{{PACKAGES_PREFIX}}}"       "${DEPENDENCY_PACKAGES_PREFIX}"                 arg "${arg}")
         string(REPLACE "{{{PACKAGE_NAME}}}"          "${DEPENDENCY_PACKAGE_NAME}"                    arg "${arg}")
         string(REPLACE "{{{PACKAGE_VERSION}}}"       "${DEPENDENCY_PACKAGE_VERSION}"                 arg "${arg}")
         string(REPLACE "{{{FETCHCONTENT_BASE_DIR}}}" "${FETCHCONTENT_BASE_DIR}"                      arg "${arg}")
         list(APPEND DEPENDENCY_CONFIGURE_COMMAND_ARGS "${arg}")
+    endforeach()
+
+    # set 'DEPENDENCY_BUILD_COMMAND'
+    set(DEPENDENCY_BUILD_COMMAND "${DEPENDENCY_DEFAULT_BUILD_COMMAND}")
+
+    # set 'DEPENDENCY_BUILD_COMMAND_ARGS'
+    set(DEPENDENCY_BUILD_COMMAND_ARGS)
+    foreach(arg ${DEPENDENCY_DEFAULT_BUILD_COMMAND_ARGS})
+        string(REPLACE "{{{PACKAGE_NAME}}}"          "${DEPENDENCY_PACKAGE_NAME}"    arg "${arg}")
+        string(REPLACE "{{{PACKAGE_VERSION}}}"       "${DEPENDENCY_PACKAGE_VERSION}" arg "${arg}")
+        string(REPLACE "{{{FETCHCONTENT_BASE_DIR}}}" "${FETCHCONTENT_BASE_DIR}"      arg "${arg}")
+        list(APPEND DEPENDENCY_BUILD_COMMAND_ARGS "${arg}")
+    endforeach()
+
+    # set 'DEPENDENCY_TEST_COMMAND'
+    set(DEPENDENCY_TEST_COMMAND "${DEPENDENCY_DEFAULT_TEST_COMMAND}")
+
+    # set 'DEPENDENCY_TEST_COMMAND_ARGS'
+    set(DEPENDENCY_TEST_COMMAND_ARGS)
+    foreach(arg ${DEPENDENCY_DEFAULT_TEST_COMMAND_ARGS})
+        string(REPLACE "{{{PACKAGE_NAME}}}"          "${DEPENDENCY_PACKAGE_NAME}"    arg "${arg}")
+        string(REPLACE "{{{PACKAGE_VERSION}}}"       "${DEPENDENCY_PACKAGE_VERSION}" arg "${arg}")
+        string(REPLACE "{{{FETCHCONTENT_BASE_DIR}}}" "${FETCHCONTENT_BASE_DIR}"      arg "${arg}")
+        list(APPEND DEPENDENCY_TEST_COMMAND_ARGS "${arg}")
+    endforeach()
+
+    # set 'DEPENDENCY_INSTALL_COMMAND'
+    set(DEPENDENCY_INSTALL_COMMAND "${DEPENDENCY_DEFAULT_INSTALL_COMMAND}")
+
+    # set 'DEPENDENCY_INSTALL_COMMAND_ARGS'
+    set(DEPENDENCY_INSTALL_COMMAND_ARGS)
+    foreach(arg ${DEPENDENCY_DEFAULT_INSTALL_COMMAND_ARGS})
+        string(REPLACE "{{{PACKAGE_NAME}}}"          "${DEPENDENCY_PACKAGE_NAME}"    arg "${arg}")
+        string(REPLACE "{{{PACKAGE_VERSION}}}"       "${DEPENDENCY_PACKAGE_VERSION}" arg "${arg}")
+        string(REPLACE "{{{FETCHCONTENT_BASE_DIR}}}" "${FETCHCONTENT_BASE_DIR}"      arg "${arg}")
+        list(APPEND DEPENDENCY_INSTALL_COMMAND_ARGS "${arg}")
     endforeach()
 
     message(STATUS "---")
@@ -132,6 +202,48 @@ function(dependency)
             )
         endif()
         message(STATUS "--- config '${DEPENDENCY_PACKAGE_NAME}' (done) ---")
+
+        message(STATUS "--- build '${DEPENDENCY_PACKAGE_NAME}' (start) ---")
+        execute_process(
+            COMMAND           ${DEPENDENCY_BUILD_COMMAND} ${DEPENDENCY_BUILD_COMMAND_ARGS}
+            WORKING_DIRECTORY "${FETCHCONTENT_BASE_DIR}/${DEPENDENCY_PACKAGE_NAME}-${DEPENDENCY_PACKAGE_VERSION}"
+            RESULT_VARIABLE   "fetch_content_${DEPENDENCY_PACKAGE_NAME}_BUILD_RESULT"
+        )
+        if(NOT ${fetch_content_${DEPENDENCY_PACKAGE_NAME}_BUILD_RESULT} EQUAL 0)
+            message(
+                FATAL_ERROR
+                "ERROR: build 'fetch_content_${DEPENDENCY_PACKAGE_NAME}' exit code ${fetch_content_${DEPENDENCY_PACKAGE_NAME}_BUILD_RESULT} !!!"
+            )
+        endif()
+        message(STATUS "--- build '${DEPENDENCY_PACKAGE_NAME}' (done) ---")
+
+        message(STATUS "--- test '${DEPENDENCY_PACKAGE_NAME}' (start) ---")
+        execute_process(
+            COMMAND           ${DEPENDENCY_TEST_COMMAND} ${DEPENDENCY_TEST_COMMAND_ARGS}
+            WORKING_DIRECTORY "${FETCHCONTENT_BASE_DIR}/${DEPENDENCY_PACKAGE_NAME}-${DEPENDENCY_PACKAGE_VERSION}"
+            RESULT_VARIABLE   "fetch_content_${DEPENDENCY_PACKAGE_NAME}_TEST_RESULT"
+        )
+        if(NOT ${fetch_content_${DEPENDENCY_PACKAGE_NAME}_TEST_RESULT} EQUAL 0)
+            message(
+                FATAL_ERROR
+                "ERROR: test 'fetch_content_${DEPENDENCY_PACKAGE_NAME}' exit code ${fetch_content_${DEPENDENCY_PACKAGE_NAME}_TEST_RESULT} !!!"
+            )
+        endif()
+        message(STATUS "--- test '${DEPENDENCY_PACKAGE_NAME}' (done) ---")
+
+        message(STATUS "--- install '${DEPENDENCY_PACKAGE_NAME}' (start) ---")
+        execute_process(
+            COMMAND           ${DEPENDENCY_INSTALL_COMMAND} ${DEPENDENCY_INSTALL_COMMAND_ARGS}
+            WORKING_DIRECTORY "${FETCHCONTENT_BASE_DIR}/${DEPENDENCY_PACKAGE_NAME}-${DEPENDENCY_PACKAGE_VERSION}"
+            RESULT_VARIABLE   "fetch_content_${DEPENDENCY_PACKAGE_NAME}_INSTALL_RESULT"
+        )
+        if(NOT ${fetch_content_${DEPENDENCY_PACKAGE_NAME}_INSTALL_RESULT} EQUAL 0)
+            message(
+                FATAL_ERROR
+                "ERROR: install 'fetch_content_${DEPENDENCY_PACKAGE_NAME}' exit code ${fetch_content_${DEPENDENCY_PACKAGE_NAME}_INSTALL_RESULT} !!!"
+            )
+        endif()
+        message(STATUS "--- install '${DEPENDENCY_PACKAGE_NAME}' (done) ---")
 
     endif()
 
