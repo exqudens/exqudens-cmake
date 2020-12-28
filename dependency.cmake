@@ -61,6 +61,26 @@ function(dependency)
         URL_HOST
         URL_MD5
         DOWNLOAD_NAME
+        PRE_COMMAND_0
+        PRE_COMMAND_1
+        PRE_COMMAND_2
+        PRE_COMMAND_3
+        PRE_COMMAND_4
+        PRE_COMMAND_5
+        PRE_COMMAND_6
+        PRE_COMMAND_7
+        PRE_COMMAND_8
+        PRE_COMMAND_9
+        PRE_COMMAND_0_WORKING_DIRECTORY
+        PRE_COMMAND_1_WORKING_DIRECTORY
+        PRE_COMMAND_2_WORKING_DIRECTORY
+        PRE_COMMAND_3_WORKING_DIRECTORY
+        PRE_COMMAND_4_WORKING_DIRECTORY
+        PRE_COMMAND_5_WORKING_DIRECTORY
+        PRE_COMMAND_6_WORKING_DIRECTORY
+        PRE_COMMAND_7_WORKING_DIRECTORY
+        PRE_COMMAND_8_WORKING_DIRECTORY
+        PRE_COMMAND_9_WORKING_DIRECTORY
         CONFIGURE_COMMAND
         BUILD_COMMAND
         TEST_COMMAND
@@ -73,6 +93,16 @@ function(dependency)
     )
     set(multiValueArgs
         PREFIX_PATH
+        PRE_COMMAND_0_ARGS
+        PRE_COMMAND_1_ARGS
+        PRE_COMMAND_2_ARGS
+        PRE_COMMAND_3_ARGS
+        PRE_COMMAND_4_ARGS
+        PRE_COMMAND_5_ARGS
+        PRE_COMMAND_6_ARGS
+        PRE_COMMAND_7_ARGS
+        PRE_COMMAND_8_ARGS
+        PRE_COMMAND_9_ARGS
         CONFIGURE_COMMAND_ARGS
         BUILD_COMMAND_ARGS
         TEST_COMMAND_ARGS
@@ -130,28 +160,58 @@ function(dependency)
 
     # build if not found '${DEPENDENCY_NAME}'
     load_dependency(
-        SKIP                   ${${DEPENDENCY_NAME}_FOUND}
-        SKIP_CONFIG            ${DEPENDENCY_SKIP_CONFIG}
-        SKIP_BUILD             ${DEPENDENCY_SKIP_BUILD}
-        SKIP_TEST              ${DEPENDENCY_SKIP_TEST}
-        SKIP_INSTALL           ${DEPENDENCY_SKIP_INSTALL}
-        PREFIX_PATH            ${DEPENDENCY_PREFIX_PATH}
-        NAME                   ${DEPENDENCY_PACKAGE_NAME}
-        VERSION                ${DEPENDENCY_PACKAGE_VERSION}
-        DOWNLOADS_PREFIX       ${DEPENDENCY_DOWNLOADS_PREFIX}
-        PACKAGES_PREFIX        ${DEPENDENCY_PACKAGES_PREFIX}
-        URL_SCHEMA             ${DEPENDENCY_URL_SCHEMA}
-        URL_HOST               ${DEPENDENCY_URL_HOST}
-        URL_MD5                ${DEPENDENCY_URL_MD5}
-        DOWNLOAD_NAME          ${DEPENDENCY_DOWNLOAD_NAME}
-        CONFIGURE_COMMAND      ${DEPENDENCY_CONFIGURE_COMMAND}
-        BUILD_COMMAND          ${DEPENDENCY_BUILD_COMMAND}
-        TEST_COMMAND           ${DEPENDENCY_TEST_COMMAND}
-        INSTALL_COMMAND        ${DEPENDENCY_INSTALL_COMMAND}
-        CONFIGURE_COMMAND_ARGS ${DEPENDENCY_CONFIGURE_COMMAND_ARGS}
-        BUILD_COMMAND_ARGS     ${DEPENDENCY_BUILD_COMMAND_ARGS}
-        TEST_COMMAND_ARGS      ${DEPENDENCY_TEST_COMMAND_ARGS}
-        INSTALL_COMMAND_ARGS   ${DEPENDENCY_INSTALL_COMMAND_ARGS}
+        SKIP                            ${${DEPENDENCY_NAME}_FOUND}
+        SKIP_CONFIG                     ${DEPENDENCY_SKIP_CONFIG}
+        SKIP_BUILD                      ${DEPENDENCY_SKIP_BUILD}
+        SKIP_TEST                       ${DEPENDENCY_SKIP_TEST}
+        SKIP_INSTALL                    ${DEPENDENCY_SKIP_INSTALL}
+        PREFIX_PATH                     ${DEPENDENCY_PREFIX_PATH}
+        NAME                            ${DEPENDENCY_PACKAGE_NAME}
+        VERSION                         ${DEPENDENCY_PACKAGE_VERSION}
+        DOWNLOADS_PREFIX                ${DEPENDENCY_DOWNLOADS_PREFIX}
+        PACKAGES_PREFIX                 ${DEPENDENCY_PACKAGES_PREFIX}
+        URL_SCHEMA                      ${DEPENDENCY_URL_SCHEMA}
+        URL_HOST                        ${DEPENDENCY_URL_HOST}
+        URL_MD5                         ${DEPENDENCY_URL_MD5}
+        DOWNLOAD_NAME                   ${DEPENDENCY_DOWNLOAD_NAME}
+        PRE_COMMAND_0                   ${DEPENDENCY_PRE_COMMAND_0}
+        PRE_COMMAND_1                   ${DEPENDENCY_PRE_COMMAND_1}
+        PRE_COMMAND_2                   ${DEPENDENCY_PRE_COMMAND_2}
+        PRE_COMMAND_3                   ${DEPENDENCY_PRE_COMMAND_3}
+        PRE_COMMAND_4                   ${DEPENDENCY_PRE_COMMAND_4}
+        PRE_COMMAND_5                   ${DEPENDENCY_PRE_COMMAND_5}
+        PRE_COMMAND_6                   ${DEPENDENCY_PRE_COMMAND_6}
+        PRE_COMMAND_7                   ${DEPENDENCY_PRE_COMMAND_7}
+        PRE_COMMAND_8                   ${DEPENDENCY_PRE_COMMAND_8}
+        PRE_COMMAND_9                   ${DEPENDENCY_PRE_COMMAND_9}
+        PRE_COMMAND_0_ARGS              ${DEPENDENCY_PRE_COMMAND_0_ARGS}
+        PRE_COMMAND_1_ARGS              ${DEPENDENCY_PRE_COMMAND_1_ARGS}
+        PRE_COMMAND_2_ARGS              ${DEPENDENCY_PRE_COMMAND_2_ARGS}
+        PRE_COMMAND_3_ARGS              ${DEPENDENCY_PRE_COMMAND_3_ARGS}
+        PRE_COMMAND_4_ARGS              ${DEPENDENCY_PRE_COMMAND_4_ARGS}
+        PRE_COMMAND_5_ARGS              ${DEPENDENCY_PRE_COMMAND_5_ARGS}
+        PRE_COMMAND_6_ARGS              ${DEPENDENCY_PRE_COMMAND_6_ARGS}
+        PRE_COMMAND_7_ARGS              ${DEPENDENCY_PRE_COMMAND_7_ARGS}
+        PRE_COMMAND_8_ARGS              ${DEPENDENCY_PRE_COMMAND_8_ARGS}
+        PRE_COMMAND_9_ARGS              ${DEPENDENCY_PRE_COMMAND_9_ARGS}
+        PRE_COMMAND_0_WORKING_DIRECTORY ${DEPENDENCY_PRE_COMMAND_0_WORKING_DIRECTORY}
+        PRE_COMMAND_1_WORKING_DIRECTORY ${DEPENDENCY_PRE_COMMAND_1_WORKING_DIRECTORY}
+        PRE_COMMAND_2_WORKING_DIRECTORY ${DEPENDENCY_PRE_COMMAND_2_WORKING_DIRECTORY}
+        PRE_COMMAND_3_WORKING_DIRECTORY ${DEPENDENCY_PRE_COMMAND_3_WORKING_DIRECTORY}
+        PRE_COMMAND_4_WORKING_DIRECTORY ${DEPENDENCY_PRE_COMMAND_4_WORKING_DIRECTORY}
+        PRE_COMMAND_5_WORKING_DIRECTORY ${DEPENDENCY_PRE_COMMAND_5_WORKING_DIRECTORY}
+        PRE_COMMAND_6_WORKING_DIRECTORY ${DEPENDENCY_PRE_COMMAND_6_WORKING_DIRECTORY}
+        PRE_COMMAND_7_WORKING_DIRECTORY ${DEPENDENCY_PRE_COMMAND_7_WORKING_DIRECTORY}
+        PRE_COMMAND_8_WORKING_DIRECTORY ${DEPENDENCY_PRE_COMMAND_8_WORKING_DIRECTORY}
+        PRE_COMMAND_9_WORKING_DIRECTORY ${DEPENDENCY_PRE_COMMAND_9_WORKING_DIRECTORY}
+        CONFIGURE_COMMAND               ${DEPENDENCY_CONFIGURE_COMMAND}
+        BUILD_COMMAND                   ${DEPENDENCY_BUILD_COMMAND}
+        TEST_COMMAND                    ${DEPENDENCY_TEST_COMMAND}
+        INSTALL_COMMAND                 ${DEPENDENCY_INSTALL_COMMAND}
+        CONFIGURE_COMMAND_ARGS          ${DEPENDENCY_CONFIGURE_COMMAND_ARGS}
+        BUILD_COMMAND_ARGS              ${DEPENDENCY_BUILD_COMMAND_ARGS}
+        TEST_COMMAND_ARGS               ${DEPENDENCY_TEST_COMMAND_ARGS}
+        INSTALL_COMMAND_ARGS            ${DEPENDENCY_INSTALL_COMMAND_ARGS}
     )
 
     # update 'CMAKE_PREFIX_PATH'
@@ -218,6 +278,26 @@ function(load_dependency)
         URL_HOST
         URL_MD5
         DOWNLOAD_NAME
+        PRE_COMMAND_0
+        PRE_COMMAND_1
+        PRE_COMMAND_2
+        PRE_COMMAND_3
+        PRE_COMMAND_4
+        PRE_COMMAND_5
+        PRE_COMMAND_6
+        PRE_COMMAND_7
+        PRE_COMMAND_8
+        PRE_COMMAND_9
+        PRE_COMMAND_0_WORKING_DIRECTORY
+        PRE_COMMAND_1_WORKING_DIRECTORY
+        PRE_COMMAND_2_WORKING_DIRECTORY
+        PRE_COMMAND_3_WORKING_DIRECTORY
+        PRE_COMMAND_4_WORKING_DIRECTORY
+        PRE_COMMAND_5_WORKING_DIRECTORY
+        PRE_COMMAND_6_WORKING_DIRECTORY
+        PRE_COMMAND_7_WORKING_DIRECTORY
+        PRE_COMMAND_8_WORKING_DIRECTORY
+        PRE_COMMAND_9_WORKING_DIRECTORY
         CONFIGURE_COMMAND
         BUILD_COMMAND
         TEST_COMMAND
@@ -230,6 +310,16 @@ function(load_dependency)
     )
     set(multiValueArgs
         PREFIX_PATH
+        PRE_COMMAND_0_ARGS
+        PRE_COMMAND_1_ARGS
+        PRE_COMMAND_2_ARGS
+        PRE_COMMAND_3_ARGS
+        PRE_COMMAND_4_ARGS
+        PRE_COMMAND_5_ARGS
+        PRE_COMMAND_6_ARGS
+        PRE_COMMAND_7_ARGS
+        PRE_COMMAND_8_ARGS
+        PRE_COMMAND_9_ARGS
         CONFIGURE_COMMAND_ARGS
         BUILD_COMMAND_ARGS
         TEST_COMMAND_ARGS
@@ -262,6 +352,20 @@ function(load_dependency)
     else()
         set(LOAD_DEPENDENCY_URL "${LOAD_DEPENDENCY_URL_SCHEMA}://${LOAD_DEPENDENCY_URL_HOST}")
     endif()
+
+    # set 'LOAD_DEPENDENCY_PRE_COMMAND_NAMES'
+    set(LOAD_DEPENDENCY_PRE_COMMAND_NAMES
+        "PRE_COMMAND_0"
+        "PRE_COMMAND_1"
+        "PRE_COMMAND_2"
+        "PRE_COMMAND_3"
+        "PRE_COMMAND_4"
+        "PRE_COMMAND_5"
+        "PRE_COMMAND_6"
+        "PRE_COMMAND_7"
+        "PRE_COMMAND_8"
+        "PRE_COMMAND_9"
+    )
 
     # set 'LOAD_DEPENDENCY_CONFIGURE_COMMAND'
     set(LOAD_DEPENDENCY_CONFIGURE_COMMAND "${LOAD_DEPENDENCY_DEFAULT_CONFIGURE_COMMAND}")
@@ -341,6 +445,32 @@ function(load_dependency)
     endif()
     message(STATUS "--- extract '${LOAD_DEPENDENCY_NAME}' (done) ---")
 
+    # pre
+    foreach(pre_command_name ${LOAD_DEPENDENCY_PRE_COMMAND_NAMES})
+        if(NOT "" STREQUAL "${LOAD_DEPENDENCY_${pre_command_name}}")
+            if("" STREQUAL "${LOAD_DEPENDENCY_${pre_command_name}_WORKING_DIRECTORY}")
+                message(FATAL_ERROR "ERROR: '${pre_command_name}_WORKING_DIRECTORY' is empty !!!")
+            endif()
+            if("" STREQUAL "${LOAD_DEPENDENCY_${pre_command_name}_ARGS}")
+                message(FATAL_ERROR "ERROR: '${pre_command_name}_ARGS' is empty !!!")
+            endif()
+            message(STATUS "--- ${pre_command_name} '${LOAD_DEPENDENCY_NAME}' (start) ---")
+            execute_process(
+                COMMAND           ${LOAD_DEPENDENCY_${pre_command_name}} ${LOAD_DEPENDENCY_${pre_command_name}_ARGS}
+                WORKING_DIRECTORY "${LOAD_DEPENDENCY_${pre_command_name}_WORKING_DIRECTORY}"
+                RESULT_VARIABLE   "${pre_command_name}_RESULT"
+            )
+            if(NOT ${${pre_command_name}_RESULT} EQUAL 0)
+                message(
+                    FATAL_ERROR
+                    "ERROR: config '${pre_command_name}' exit code ${${pre_command_name}_RESULT} !!!"
+                )
+            endif()
+            message(STATUS "--- ${pre_command_name} '${LOAD_DEPENDENCY_NAME}' (done) ---")
+        endif()
+    endforeach()
+
+    # config
     if(LOAD_DEPENDENCY_SKIP_CONFIG)
         message(STATUS "Skipping config for '${LOAD_DEPENDENCY_NAME}'")
     else()
@@ -359,6 +489,7 @@ function(load_dependency)
         message(STATUS "--- config '${LOAD_DEPENDENCY_NAME}' (done) ---")
     endif()
 
+    # build
     if(LOAD_DEPENDENCY_SKIP_BUILD)
         message(STATUS "Skipping build for '${LOAD_DEPENDENCY_NAME}'")
     else()
@@ -377,6 +508,7 @@ function(load_dependency)
         message(STATUS "--- build '${LOAD_DEPENDENCY_NAME}' (done) ---")
     endif()
 
+    # test
     if(LOAD_DEPENDENCY_SKIP_TEST)
         message(STATUS "Skipping test for '${LOAD_DEPENDENCY_NAME}'")
     else()
@@ -395,6 +527,7 @@ function(load_dependency)
         message(STATUS "--- test '${LOAD_DEPENDENCY_NAME}' (done) ---")
     endif()
 
+    # install
     if(LOAD_DEPENDENCY_SKIP_INSTALL)
         message(STATUS "Skipping install for '${LOAD_DEPENDENCY_NAME}'")
     else()

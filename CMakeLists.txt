@@ -38,21 +38,79 @@ dependency(
 message(STATUS "3) CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 
 dependency(
-    USE_PKG_CONFIG   TRUE
-    PREFIX_PATH      "${CMAKE_PREFIX_PATH}"
-    NAME             "PNGPP"
-    VERSION          "0.2.9"
-    PACKAGE_NAME     "pngpp"
-    PACKAGE_VERSION  "0.2.9"
-    DOWNLOADS_PREFIX "${CMAKE_SOURCE_DIR}/downloads"
-    PACKAGES_PREFIX  "${CMAKE_SOURCE_DIR}/packages"
-    URL_SCHEMA       "http"
-    URL_HOST         "download.savannah.nongnu.org/releases/pngpp/png++-0.2.9.tar.gz"
-    URL_MD5          "92863df3bee625d707cebc0e749c10df"
-    SKIP_CONFIG      TRUE
-    SKIP_BUILD       TRUE
-    SKIP_TEST        TRUE
-    SKIP_INSTALL     TRUE
+    USE_PKG_CONFIG                  TRUE
+    PREFIX_PATH                     "${CMAKE_PREFIX_PATH}"
+    NAME                            "PNGPP"
+    #VERSION                         "0.2.9"
+    PACKAGE_NAME                    "pngpp"
+    PACKAGE_VERSION                 "0.2.9"
+    DOWNLOADS_PREFIX                "${CMAKE_SOURCE_DIR}/downloads"
+    PACKAGES_PREFIX                 "${CMAKE_SOURCE_DIR}/packages"
+    URL_SCHEMA                      "http"
+    URL_HOST                        "download.savannah.nongnu.org/releases/pngpp/png++-0.2.9.tar.gz"
+    URL_MD5                         "92863df3bee625d707cebc0e749c10df"
+    SKIP_CONFIG                     TRUE
+    SKIP_BUILD                      TRUE
+    SKIP_TEST                       TRUE
+    SKIP_INSTALL                    TRUE
+
+    PRE_COMMAND_0                   "${CMAKE_COMMAND}"
+    PRE_COMMAND_0_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    PRE_COMMAND_0_ARGS
+        "-E"
+        "make_directory"
+        "${CMAKE_SOURCE_DIR}/packages/pngpp-0.2.9/include/png++"
+
+    PRE_COMMAND_1                   "${CMAKE_COMMAND}"
+    PRE_COMMAND_1_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    PRE_COMMAND_1_ARGS
+        "-E"
+        "make_directory"
+        "${CMAKE_SOURCE_DIR}/packages/pngpp-0.2.9/share/pkgconfig"
+
+    PRE_COMMAND_2                   "${CMAKE_COMMAND}"
+    PRE_COMMAND_2_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    PRE_COMMAND_2_ARGS
+        "-E"
+        "copy"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/color.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/config.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/consumer.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/convert_color_space.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/end_info.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/error.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/ga_pixel.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/generator.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/gray_pixel.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/image.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/image_info.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/index_pixel.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/info.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/info_base.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/io_base.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/packed_pixel.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/palette.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/pixel_buffer.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/pixel_traits.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/png.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/reader.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/require_color_space.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/rgb_pixel.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/rgba_pixel.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/solid_pixel_buffer.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/streaming_base.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/tRNS.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/types.hpp"
+            "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/writer.hpp"
+        "${CMAKE_SOURCE_DIR}/packages/pngpp-0.2.9/include/png++"
+
+    PRE_COMMAND_3                   "${CMAKE_COMMAND}"
+    PRE_COMMAND_3_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    PRE_COMMAND_3_ARGS
+        "-E"
+        "copy"
+            "${CMAKE_SOURCE_DIR}/tmp/pngpp-0.2.9/share/pkgconfig/pngpp.pc"
+        "${CMAKE_SOURCE_DIR}/packages/pngpp-0.2.9/share/pkgconfig"
 )
 
 message(STATUS "4) CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
