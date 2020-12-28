@@ -5,7 +5,7 @@ set(CMAKE_MESSAGE_CONTEXT_SHOW TRUE)
 
 message(STATUS "1) CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 
-include(dependency.cmake)
+include(extension.cmake)
 dependency(
     PREFIX_PATH      "${CMAKE_PREFIX_PATH}"
     NAME             "ZLIB"
@@ -38,38 +38,38 @@ dependency(
 message(STATUS "3) CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 
 dependency(
-    USE_PKG_CONFIG                  TRUE
-    PREFIX_PATH                     "${CMAKE_PREFIX_PATH}"
-    NAME                            "PNGPP"
-    #VERSION                         "0.2.9"
-    PACKAGE_NAME                    "pngpp"
-    PACKAGE_VERSION                 "0.2.9"
-    DOWNLOADS_PREFIX                "${CMAKE_SOURCE_DIR}/downloads"
-    PACKAGES_PREFIX                 "${CMAKE_SOURCE_DIR}/packages"
-    URL_SCHEMA                      "http"
-    URL_HOST                        "download.savannah.nongnu.org/releases/pngpp/png++-0.2.9.tar.gz"
-    URL_MD5                         "92863df3bee625d707cebc0e749c10df"
-    SKIP_CONFIG                     TRUE
-    SKIP_BUILD                      TRUE
-    SKIP_TEST                       TRUE
-    SKIP_INSTALL                    TRUE
+    USE_PKG_CONFIG                   TRUE
+    PREFIX_PATH                      "${CMAKE_PREFIX_PATH}"
+    NAME                             "PNGPP"
+    #VERSION                          "0.2.9"
+    PACKAGE_NAME                     "pngpp"
+    PACKAGE_VERSION                  "0.2.9"
+    DOWNLOADS_PREFIX                 "${CMAKE_SOURCE_DIR}/downloads"
+    PACKAGES_PREFIX                  "${CMAKE_SOURCE_DIR}/packages"
+    URL_SCHEMA                       "http"
+    URL_HOST                         "download.savannah.nongnu.org/releases/pngpp/png++-0.2.9.tar.gz"
+    URL_MD5                          "92863df3bee625d707cebc0e749c10df"
+    SKIP_CONFIG                      TRUE
+    SKIP_BUILD                       TRUE
+    SKIP_TEST                        TRUE
+    SKIP_INSTALL                     TRUE
 
-    PRE_COMMAND_0                   "${CMAKE_COMMAND}"
-    PRE_COMMAND_0_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    PRE_COMMAND_0                    "${CMAKE_COMMAND}"
+    PRE_COMMAND_0_WORKING_DIRECTORY  "${CMAKE_SOURCE_DIR}"
     PRE_COMMAND_0_ARGS
         "-E"
         "make_directory"
         "${CMAKE_SOURCE_DIR}/packages/pngpp-0.2.9/include/png++"
 
-    PRE_COMMAND_1                   "${CMAKE_COMMAND}"
-    PRE_COMMAND_1_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    PRE_COMMAND_1                    "${CMAKE_COMMAND}"
+    PRE_COMMAND_1_WORKING_DIRECTORY  "${CMAKE_SOURCE_DIR}"
     PRE_COMMAND_1_ARGS
         "-E"
         "make_directory"
         "${CMAKE_SOURCE_DIR}/packages/pngpp-0.2.9/share/pkgconfig"
 
-    PRE_COMMAND_2                   "${CMAKE_COMMAND}"
-    PRE_COMMAND_2_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    PRE_COMMAND_2                    "${CMAKE_COMMAND}"
+    PRE_COMMAND_2_WORKING_DIRECTORY  "${CMAKE_SOURCE_DIR}"
     PRE_COMMAND_2_ARGS
         "-E"
         "copy"
@@ -104,13 +104,25 @@ dependency(
             "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/writer.hpp"
         "${CMAKE_SOURCE_DIR}/packages/pngpp-0.2.9/include/png++"
 
-    PRE_COMMAND_3                   "${CMAKE_COMMAND}"
-    PRE_COMMAND_3_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-    PRE_COMMAND_3_ARGS
+    POST_COMMAND_3                   "${CMAKE_COMMAND}"
+    POST_COMMAND_3_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    POST_COMMAND_3_ARGS
         "-E"
         "copy"
-            "${CMAKE_SOURCE_DIR}/tmp/pngpp-0.2.9/share/pkgconfig/pngpp.pc"
+            "${CMAKE_SOURCE_DIR}/src/test/resources/pc/pngpp-0.2.9/share/pkgconfig/pngpp.pc"
         "${CMAKE_SOURCE_DIR}/packages/pngpp-0.2.9/share/pkgconfig"
 )
 
 message(STATUS "4) CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+
+pkg_search_module("PNGPP" "PNGPP" "pngpp")
+message(STATUS "zzz_0: ${PNGPP_FOUND}")
+message(STATUS "zzz_1: ${PNGPP_LIBRARIES}")
+message(STATUS "zzz_2: ${PNGPP_LINK_LIBRARIES}")
+message(STATUS "zzz_3: ${PNGPP_LIBRARY_DIRS}")
+message(STATUS "zzz_4: ${PNGPP_LDFLAGS}")
+message(STATUS "zzz_5: ${PNGPP_LDFLAGS_OTHER}")
+message(STATUS "zzz_6: ${PNGPP_INCLUDE_DIRS}")
+message(STATUS "zzz_7: ${PNGPP_CFLAGS}")
+message(STATUS "zzz_8: ${PNGPP_CFLAGS_OTHER}")
+message(STATUS "zzz_9: ${PNGPP_PREFIX}")

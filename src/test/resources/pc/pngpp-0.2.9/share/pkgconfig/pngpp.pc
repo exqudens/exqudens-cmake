@@ -1,0 +1,11 @@
+prefix=C:/Users/Video/work/git/exqudens/other/exqudens-cmake/packages/pngpp-0.2.9
+exec_prefix=C:/Users/Video/work/git/exqudens/other/exqudens-cmake/packages/pngpp-0.2.9
+includedir=C:/Users/Video/work/git/exqudens/other/exqudens-cmake/packages/pngpp-0.2.9/include
+
+Name: pngpp
+Description: Api for PNG lib
+Version: 0.2.9
+Requires: zlib libpng
+Libs:
+Libs.private: -lz -lpng
+Cflags: -I${includedir}
