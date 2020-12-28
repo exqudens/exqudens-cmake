@@ -38,6 +38,7 @@ dependency(
 message(STATUS "3) CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 
 dependency(
+    USE_PKG_CONFIG   TRUE
     PREFIX_PATH      "${CMAKE_PREFIX_PATH}"
     NAME             "PNGPP"
     VERSION          "0.2.9"

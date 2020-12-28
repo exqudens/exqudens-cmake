@@ -69,6 +69,7 @@ function(dependency)
         SKIP_BUILD
         SKIP_TEST
         SKIP_INSTALL
+        USE_PKG_CONFIG
     )
     set(multiValueArgs
         PREFIX_PATH
@@ -106,9 +107,25 @@ function(dependency)
 
     # check one '${DEPENDENCY_NAME}' type 'QUIET'
     if(DEFINED DEPENDENCY_VERSION)
-        find_package("${DEPENDENCY_NAME}" "${DEPENDENCY_VERSION}" QUIET)
+        if(DEPENDENCY_USE_PKG_CONFIG)
+            pkg_search_module("${DEPENDENCY_NAME}"
+                "${DEPENDENCY_NAME}-${DEPENDENCY_VERSION}"
+                "${DEPENDENCY_NAME}${DEPENDENCY_VERSION}"
+                "${DEPENDENCY_PACKAGE_NAME}-${DEPENDENCY_VERSION}"
+                "${DEPENDENCY_PACKAGE_NAME}${DEPENDENCY_VERSION}"
+            )
+        else()
+            find_package("${DEPENDENCY_NAME}" "${DEPENDENCY_VERSION}" QUIET)
+        endif()
     else()
-        find_package("${DEPENDENCY_NAME}" QUIET)
+        if(DEPENDENCY_USE_PKG_CONFIG)
+            pkg_search_module("${DEPENDENCY_NAME}"
+                "${DEPENDENCY_NAME}"
+                "${DEPENDENCY_PACKAGE_NAME}"
+            )
+        else()
+            find_package("${DEPENDENCY_NAME}" QUIET)
+        endif()
     endif()
 
     # build if not found '${DEPENDENCY_NAME}'
@@ -158,9 +175,31 @@ function(dependency)
 
     # check two '${DEPENDENCY_NAME}' type 'REQUIRED'
     if(DEFINED DEPENDENCY_VERSION)
-        find_package("${DEPENDENCY_NAME}" "${DEPENDENCY_VERSION}" REQUIRED)
+        if(DEPENDENCY_USE_PKG_CONFIG)
+            pkg_search_module("${DEPENDENCY_NAME}"
+                "${DEPENDENCY_NAME}-${DEPENDENCY_VERSION}"
+                "${DEPENDENCY_NAME}${DEPENDENCY_VERSION}"
+                "${DEPENDENCY_PACKAGE_NAME}-${DEPENDENCY_VERSION}"
+                "${DEPENDENCY_PACKAGE_NAME}${DEPENDENCY_VERSION}"
+            )
+            if(NOT ${${DEPENDENCY_NAME}_FOUND})
+                message(FATAL_ERROR "ERROR: ${DEPENDENCY_NAME}-${DEPENDENCY_VERSION} (found: ${${DEPENDENCY_NAME}_FOUND})")
+            endif()
+        else()
+            find_package("${DEPENDENCY_NAME}" "${DEPENDENCY_VERSION}" REQUIRED)
+        endif()
     else()
-        find_package("${DEPENDENCY_NAME}" REQUIRED)
+        if(DEPENDENCY_USE_PKG_CONFIG)
+            pkg_search_module("${DEPENDENCY_NAME}"
+                "${DEPENDENCY_NAME}"
+                "${DEPENDENCY_PACKAGE_NAME}"
+            )
+            if(NOT ${${DEPENDENCY_NAME}_FOUND})
+                message(FATAL_ERROR "ERROR: ${DEPENDENCY_NAME} (found: ${${DEPENDENCY_NAME}_FOUND})")
+            endif()
+        else()
+            find_package("${DEPENDENCY_NAME}" REQUIRED)
+        endif()
     endif()
 
 endfunction()
@@ -212,6 +251,8 @@ function(load_dependency)
             set(LOAD_DEPENDENCY_DOWNLOAD_NAME "archive.zip")
         elseif("${LOAD_DEPENDENCY_URL_HOST}" MATCHES "^.+\\.tar\\.gz$")
             set(LOAD_DEPENDENCY_DOWNLOAD_NAME "archive.tar.gz")
+        else()
+            string(REGEX REPLACE ".+/" "" LOAD_DEPENDENCY_DOWNLOAD_NAME "${LOAD_DEPENDENCY_URL_HOST}")
         endif()
     endif()
 

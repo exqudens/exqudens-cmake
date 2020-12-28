@@ -3,6 +3,7 @@
 build/
 downloads/
 packages/
+tmp/
 
 # Files
 *.iml
