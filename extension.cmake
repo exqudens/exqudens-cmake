@@ -2,44 +2,44 @@
 set(LOAD_DEPENDENCY_DEFAULT_CONFIGURE_COMMAND ${CMAKE_COMMAND})
 set(LOAD_DEPENDENCY_DEFAULT_CONFIGURE_COMMAND_ARGS
     "-DCMAKE_PREFIX_PATH={{{PREFIX_PATH}}}"
-    "-DCMAKE_INSTALL_PREFIX={{{PACKAGES_PREFIX}}}/{{{NAME}}}-{{{VERSION}}}"
+    "-DCMAKE_INSTALL_PREFIX={{{PACKAGES_PREFIX}}}/{{{PACKAGE_DIRECTORY_NAME}}}"
     "-G"
     "{{{GENERATOR}}}"
     "-S"
-    "{{{FETCHCONTENT_BASE_DIR}}}/{{{NAME}}}-{{{VERSION}}}/src"
+    "{{{FETCHCONTENT_BASE_DIR}}}/{{{PACKAGE_DIRECTORY_NAME}}}/src"
     "-B"
-    "{{{FETCHCONTENT_BASE_DIR}}}/{{{NAME}}}-{{{VERSION}}}/build"
-    )
+    "{{{FETCHCONTENT_BASE_DIR}}}/{{{PACKAGE_DIRECTORY_NAME}}}/build"
+)
 set(LOAD_DEPENDENCY_DEFAULT_BUILD_COMMAND ${CMAKE_COMMAND})
 set(LOAD_DEPENDENCY_DEFAULT_BUILD_COMMAND_ARGS
     "--build"
-    "{{{FETCHCONTENT_BASE_DIR}}}/{{{NAME}}}-{{{VERSION}}}/build"
+    "{{{FETCHCONTENT_BASE_DIR}}}/{{{PACKAGE_DIRECTORY_NAME}}}/build"
     "--target"
     "all"
     "--"
     "-j"
     "3"
-    )
+)
 set(LOAD_DEPENDENCY_DEFAULT_TEST_COMMAND ${CMAKE_COMMAND})
 set(LOAD_DEPENDENCY_DEFAULT_TEST_COMMAND_ARGS
     "--build"
-    "{{{FETCHCONTENT_BASE_DIR}}}/{{{NAME}}}-{{{VERSION}}}/build"
+    "{{{FETCHCONTENT_BASE_DIR}}}/{{{PACKAGE_DIRECTORY_NAME}}}/build"
     "--target"
     "test"
     "--"
     "-j"
     "3"
-    )
+)
 set(LOAD_DEPENDENCY_DEFAULT_INSTALL_COMMAND ${CMAKE_COMMAND})
 set(LOAD_DEPENDENCY_DEFAULT_INSTALL_COMMAND_ARGS
     "--build"
-    "{{{FETCHCONTENT_BASE_DIR}}}/{{{NAME}}}-{{{VERSION}}}/build"
+    "{{{FETCHCONTENT_BASE_DIR}}}/{{{PACKAGE_DIRECTORY_NAME}}}/build"
     "--target"
     "install"
     "--"
     "-j"
     "3"
-    )
+)
 
 # enable extensions
 include(FindPkgConfig)
@@ -137,6 +137,7 @@ function(dependency)
     set(oneValueArgs
         NAME
         VERSION
+        PACKAGE_DIRECTORY_NAME
         PACKAGE_NAME
         PACKAGE_VERSION
         DOWNLOADS_PREFIX
@@ -144,7 +145,8 @@ function(dependency)
         URL_SCHEMA
         URL_HOST
         URL_MD5
-        DOWNLOAD_NAME
+        DOWNLOAD_DIRECTORY_NAME
+        DOWNLOAD_FILE_NAME
         PRE_COMMAND_0
         PRE_COMMAND_1
         PRE_COMMAND_2
@@ -194,7 +196,7 @@ function(dependency)
         SKIP_TEST
         SKIP_INSTALL
         USE_PKG_CONFIG
-        )
+    )
     set(multiValueArgs
         PREFIX_PATH
         PRE_COMMAND_0_ARGS
@@ -221,7 +223,7 @@ function(dependency)
         POST_COMMAND_7_ARGS
         POST_COMMAND_8_ARGS
         POST_COMMAND_9_ARGS
-        )
+    )
     cmake_parse_arguments(PARSE_ARGV 0 DEPENDENCY "${options}" "${oneValueArgs}" "${multiValueArgs}")
 
     # short path -----------------------------------------------------------------------
@@ -280,6 +282,7 @@ function(dependency)
         SKIP_TEST                        ${DEPENDENCY_SKIP_TEST}
         SKIP_INSTALL                     ${DEPENDENCY_SKIP_INSTALL}
         PREFIX_PATH                      ${DEPENDENCY_PREFIX_PATH}
+        DIRECTORY_NAME                   ${DEPENDENCY_PACKAGE_DIRECTORY_NAME}
         NAME                             ${DEPENDENCY_PACKAGE_NAME}
         VERSION                          ${DEPENDENCY_PACKAGE_VERSION}
         DOWNLOADS_PREFIX                 ${DEPENDENCY_DOWNLOADS_PREFIX}
@@ -287,7 +290,8 @@ function(dependency)
         URL_SCHEMA                       ${DEPENDENCY_URL_SCHEMA}
         URL_HOST                         ${DEPENDENCY_URL_HOST}
         URL_MD5                          ${DEPENDENCY_URL_MD5}
-        DOWNLOAD_NAME                    ${DEPENDENCY_DOWNLOAD_NAME}
+        DOWNLOAD_DIRECTORY_NAME          ${DEPENDENCY_DOWNLOAD_DIRECTORY_NAME}
+        DOWNLOAD_FILE_NAME               ${DEPENDENCY_DOWNLOAD_FILE_NAME}
         PRE_COMMAND_0                    ${DEPENDENCY_PRE_COMMAND_0}
         PRE_COMMAND_1                    ${DEPENDENCY_PRE_COMMAND_1}
         PRE_COMMAND_2                    ${DEPENDENCY_PRE_COMMAND_2}
@@ -414,6 +418,7 @@ function(load_dependency)
 
     set(options)
     set(oneValueArgs
+        DIRECTORY_NAME
         NAME
         VERSION
         DOWNLOADS_PREFIX
@@ -421,7 +426,8 @@ function(load_dependency)
         URL_SCHEMA
         URL_HOST
         URL_MD5
-        DOWNLOAD_NAME
+        DOWNLOAD_DIRECTORY_NAME
+        DOWNLOAD_FILE_NAME
         PRE_COMMAND_0
         PRE_COMMAND_1
         PRE_COMMAND_2
@@ -471,7 +477,7 @@ function(load_dependency)
         SKIP_BUILD
         SKIP_TEST
         SKIP_INSTALL
-        )
+    )
     set(multiValueArgs
         PREFIX_PATH
         PRE_COMMAND_0_ARGS
@@ -498,7 +504,7 @@ function(load_dependency)
         POST_COMMAND_7_ARGS
         POST_COMMAND_8_ARGS
         POST_COMMAND_9_ARGS
-        )
+    )
     cmake_parse_arguments(PARSE_ARGV 0 LOAD_DEPENDENCY "${options}" "${oneValueArgs}" "${multiValueArgs}")
 
     # short path -----------------------------------------------------------------------
@@ -510,21 +516,32 @@ function(load_dependency)
 
     # config -----------------------------------------------------------------------
 
-    if(NOT DEFINED LOAD_DEPENDENCY_DOWNLOAD_NAME)
+    # set 'LOAD_DEPENDENCY_DOWNLOAD_DIRECTORY_NAME'
+    if(NOT DEFINED LOAD_DEPENDENCY_DOWNLOAD_DIRECTORY_NAME OR "" STREQUAL "${LOAD_DEPENDENCY_DOWNLOAD_DIRECTORY_NAME}")
+        set(LOAD_DEPENDENCY_DOWNLOAD_DIRECTORY_NAME "${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}")
+    endif()
+
+    # set 'LOAD_DEPENDENCY_DOWNLOAD_FILE_NAME'
+    if(NOT DEFINED LOAD_DEPENDENCY_DOWNLOAD_FILE_NAME OR "" STREQUAL "${LOAD_DEPENDENCY_DOWNLOAD_FILE_NAME}")
         if("${LOAD_DEPENDENCY_URL_HOST}" MATCHES "^.+\\.zip$")
-            set(LOAD_DEPENDENCY_DOWNLOAD_NAME "archive.zip")
+            set(LOAD_DEPENDENCY_DOWNLOAD_FILE_NAME "archive.zip")
         elseif("${LOAD_DEPENDENCY_URL_HOST}" MATCHES "^.+\\.tar\\.gz$")
-            set(LOAD_DEPENDENCY_DOWNLOAD_NAME "archive.tar.gz")
+            set(LOAD_DEPENDENCY_DOWNLOAD_FILE_NAME "archive.tar.gz")
         else()
-            string(REGEX REPLACE ".+/" "" LOAD_DEPENDENCY_DOWNLOAD_NAME "${LOAD_DEPENDENCY_URL_HOST}")
+            string(REGEX REPLACE ".+/" "" LOAD_DEPENDENCY_DOWNLOAD_FILE_NAME "${LOAD_DEPENDENCY_URL_HOST}")
         endif()
     endif()
 
     # set 'LOAD_DEPENDENCY_URL'
-    if(EXISTS "${LOAD_DEPENDENCY_DOWNLOADS_PREFIX}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}/${LOAD_DEPENDENCY_DOWNLOAD_NAME}")
-        set(LOAD_DEPENDENCY_URL "file://${LOAD_DEPENDENCY_DOWNLOADS_PREFIX}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}/${LOAD_DEPENDENCY_DOWNLOAD_NAME}")
+    if(EXISTS "${LOAD_DEPENDENCY_DOWNLOADS_PREFIX}/${LOAD_DEPENDENCY_DOWNLOAD_DIRECTORY_NAME}/${LOAD_DEPENDENCY_DOWNLOAD_FILE_NAME}")
+        set(LOAD_DEPENDENCY_URL "file://${LOAD_DEPENDENCY_DOWNLOADS_PREFIX}/${LOAD_DEPENDENCY_DOWNLOAD_DIRECTORY_NAME}/${LOAD_DEPENDENCY_DOWNLOAD_FILE_NAME}")
     else()
         set(LOAD_DEPENDENCY_URL "${LOAD_DEPENDENCY_URL_SCHEMA}://${LOAD_DEPENDENCY_URL_HOST}")
+    endif()
+
+    # set 'LOAD_DEPENDENCY_DIRECTORY_NAME'
+    if(NOT DEFINED LOAD_DEPENDENCY_DIRECTORY_NAME OR "" STREQUAL "${LOAD_DEPENDENCY_DIRECTORY_NAME}")
+        set(LOAD_DEPENDENCY_DIRECTORY_NAME "${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}")
     endif()
 
     # set 'LOAD_DEPENDENCY_PRE_COMMAND_NAMES'
@@ -539,7 +556,7 @@ function(load_dependency)
         "PRE_COMMAND_7"
         "PRE_COMMAND_8"
         "PRE_COMMAND_9"
-        )
+    )
 
     # set 'LOAD_DEPENDENCY_CONFIGURE_COMMAND'
     set(LOAD_DEPENDENCY_CONFIGURE_COMMAND "${LOAD_DEPENDENCY_DEFAULT_CONFIGURE_COMMAND}")
@@ -552,10 +569,9 @@ function(load_dependency)
         else()
             string(REPLACE "{{{GENERATOR}}}" "${CMAKE_GENERATOR}" arg "${arg}")
         endif()
-        string(REPLACE "{{{PREFIX_PATH}}}"           "${LOAD_DEPENDENCY_PREFIX_PATH}" arg "${arg}")
+        string(REPLACE "{{{PREFIX_PATH}}}"           "${LOAD_DEPENDENCY_PREFIX_PATH}"     arg "${arg}")
         string(REPLACE "{{{PACKAGES_PREFIX}}}"       "${LOAD_DEPENDENCY_PACKAGES_PREFIX}" arg "${arg}")
-        string(REPLACE "{{{NAME}}}"                  "${LOAD_DEPENDENCY_NAME}"            arg "${arg}")
-        string(REPLACE "{{{VERSION}}}"               "${LOAD_DEPENDENCY_VERSION}"         arg "${arg}")
+        string(REPLACE "{{{PACKAGE_DIRECTORY_NAME}}}" "${LOAD_DEPENDENCY_DIRECTORY_NAME}" arg "${arg}")
         string(REPLACE "{{{FETCHCONTENT_BASE_DIR}}}" "${FETCHCONTENT_BASE_DIR}"           arg "${arg}")
         list(APPEND LOAD_DEPENDENCY_CONFIGURE_COMMAND_ARGS "${arg}")
     endforeach()
@@ -566,9 +582,8 @@ function(load_dependency)
     # set 'LOAD_DEPENDENCY_BUILD_COMMAND_ARGS'
     set(LOAD_DEPENDENCY_BUILD_COMMAND_ARGS)
     foreach(arg ${LOAD_DEPENDENCY_DEFAULT_BUILD_COMMAND_ARGS})
-        string(REPLACE "{{{NAME}}}"                  "${LOAD_DEPENDENCY_NAME}"    arg "${arg}")
-        string(REPLACE "{{{VERSION}}}"               "${LOAD_DEPENDENCY_VERSION}" arg "${arg}")
-        string(REPLACE "{{{FETCHCONTENT_BASE_DIR}}}" "${FETCHCONTENT_BASE_DIR}"   arg "${arg}")
+        string(REPLACE "{{{PACKAGE_DIRECTORY_NAME}}}" "${LOAD_DEPENDENCY_DIRECTORY_NAME}" arg "${arg}")
+        string(REPLACE "{{{FETCHCONTENT_BASE_DIR}}}" "${FETCHCONTENT_BASE_DIR}"           arg "${arg}")
         list(APPEND LOAD_DEPENDENCY_BUILD_COMMAND_ARGS "${arg}")
     endforeach()
 
@@ -578,9 +593,8 @@ function(load_dependency)
     # set 'LOAD_DEPENDENCY_TEST_COMMAND_ARGS'
     set(LOAD_DEPENDENCY_TEST_COMMAND_ARGS)
     foreach(arg ${LOAD_DEPENDENCY_DEFAULT_TEST_COMMAND_ARGS})
-        string(REPLACE "{{{NAME}}}"                  "${LOAD_DEPENDENCY_NAME}"    arg "${arg}")
-        string(REPLACE "{{{VERSION}}}"               "${LOAD_DEPENDENCY_VERSION}" arg "${arg}")
-        string(REPLACE "{{{FETCHCONTENT_BASE_DIR}}}" "${FETCHCONTENT_BASE_DIR}"   arg "${arg}")
+        string(REPLACE "{{{PACKAGE_DIRECTORY_NAME}}}" "${LOAD_DEPENDENCY_DIRECTORY_NAME}" arg "${arg}")
+        string(REPLACE "{{{FETCHCONTENT_BASE_DIR}}}" "${FETCHCONTENT_BASE_DIR}"           arg "${arg}")
         list(APPEND LOAD_DEPENDENCY_TEST_COMMAND_ARGS "${arg}")
     endforeach()
 
@@ -590,9 +604,8 @@ function(load_dependency)
     # set 'LOAD_DEPENDENCY_INSTALL_COMMAND_ARGS'
     set(LOAD_DEPENDENCY_INSTALL_COMMAND_ARGS)
     foreach(arg ${LOAD_DEPENDENCY_DEFAULT_INSTALL_COMMAND_ARGS})
-        string(REPLACE "{{{NAME}}}"                  "${LOAD_DEPENDENCY_NAME}"    arg "${arg}")
-        string(REPLACE "{{{VERSION}}}"               "${LOAD_DEPENDENCY_VERSION}" arg "${arg}")
-        string(REPLACE "{{{FETCHCONTENT_BASE_DIR}}}" "${FETCHCONTENT_BASE_DIR}"   arg "${arg}")
+        string(REPLACE "{{{PACKAGE_DIRECTORY_NAME}}}" "${LOAD_DEPENDENCY_DIRECTORY_NAME}" arg "${arg}")
+        string(REPLACE "{{{FETCHCONTENT_BASE_DIR}}}" "${FETCHCONTENT_BASE_DIR}"           arg "${arg}")
         list(APPEND LOAD_DEPENDENCY_INSTALL_COMMAND_ARGS "${arg}")
     endforeach()
 
@@ -608,21 +621,21 @@ function(load_dependency)
         "POST_COMMAND_7"
         "POST_COMMAND_8"
         "POST_COMMAND_9"
-        )
+    )
 
     # process -----------------------------------------------------------------------
 
     # extract
     message(STATUS "--- extract '${LOAD_DEPENDENCY_NAME}' (start) ---")
     FetchContent_Declare("fetch_content_${LOAD_DEPENDENCY_NAME}"
-        DOWNLOAD_DIR  "${LOAD_DEPENDENCY_DOWNLOADS_PREFIX}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}"
-        DOWNLOAD_NAME "${LOAD_DEPENDENCY_DOWNLOAD_NAME}"
-        SOURCE_DIR    "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}/src"
-        BINARY_DIR    "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}/build"
-        SUBBUILD_DIR  "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}/subbuild"
+        DOWNLOAD_DIR  "${LOAD_DEPENDENCY_DOWNLOADS_PREFIX}/${LOAD_DEPENDENCY_DOWNLOAD_DIRECTORY_NAME}"
+        DOWNLOAD_NAME "${LOAD_DEPENDENCY_DOWNLOAD_FILE_NAME}"
+        SOURCE_DIR    "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_DIRECTORY_NAME}/src"
+        BINARY_DIR    "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_DIRECTORY_NAME}/build"
+        SUBBUILD_DIR  "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_DIRECTORY_NAME}/subbuild"
         URL           "${LOAD_DEPENDENCY_URL}"
         URL_MD5       "${LOAD_DEPENDENCY_URL_MD5}"
-        #CMAKE_ARGS    "-DCMAKE_INSTALL_PREFIX=${LOAD_DEPENDENCY_PACKAGES_PREFIX}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}"
+        #CMAKE_ARGS    "-DCMAKE_INSTALL_PREFIX=${LOAD_DEPENDENCY_PACKAGES_PREFIX}/${LOAD_DEPENDENCY_DIRECTORY_NAME}"
         )
     FetchContent_GetProperties("fetch_content_${LOAD_DEPENDENCY_NAME}")
     if(NOT ${fetch_content_${LOAD_DEPENDENCY_NAME}_POPULATED})
@@ -665,7 +678,7 @@ function(load_dependency)
         message(STATUS "--- config '${LOAD_DEPENDENCY_NAME}' (start) ---")
         execute_process(
             COMMAND           ${LOAD_DEPENDENCY_CONFIGURE_COMMAND} ${LOAD_DEPENDENCY_CONFIGURE_COMMAND_ARGS}
-            WORKING_DIRECTORY "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}"
+            WORKING_DIRECTORY "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_DIRECTORY_NAME}"
             RESULT_VARIABLE   "fetch_content_${LOAD_DEPENDENCY_NAME}_CONFIG_RESULT"
         )
         if(NOT ${fetch_content_${LOAD_DEPENDENCY_NAME}_CONFIG_RESULT} EQUAL 0)
@@ -684,7 +697,7 @@ function(load_dependency)
         message(STATUS "--- build '${LOAD_DEPENDENCY_NAME}' (start) ---")
         execute_process(
             COMMAND           ${LOAD_DEPENDENCY_BUILD_COMMAND} ${LOAD_DEPENDENCY_BUILD_COMMAND_ARGS}
-            WORKING_DIRECTORY "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}"
+            WORKING_DIRECTORY "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_DIRECTORY_NAME}"
             RESULT_VARIABLE   "fetch_content_${LOAD_DEPENDENCY_NAME}_BUILD_RESULT"
         )
         if(NOT ${fetch_content_${LOAD_DEPENDENCY_NAME}_BUILD_RESULT} EQUAL 0)
@@ -703,7 +716,7 @@ function(load_dependency)
         message(STATUS "--- test '${LOAD_DEPENDENCY_NAME}' (start) ---")
         execute_process(
             COMMAND           ${LOAD_DEPENDENCY_TEST_COMMAND} ${LOAD_DEPENDENCY_TEST_COMMAND_ARGS}
-            WORKING_DIRECTORY "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}"
+            WORKING_DIRECTORY "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_DIRECTORY_NAME}"
             RESULT_VARIABLE   "fetch_content_${LOAD_DEPENDENCY_NAME}_TEST_RESULT"
         )
         if(NOT ${fetch_content_${LOAD_DEPENDENCY_NAME}_TEST_RESULT} EQUAL 0)
@@ -722,7 +735,7 @@ function(load_dependency)
         message(STATUS "--- install '${LOAD_DEPENDENCY_NAME}' (start) ---")
         execute_process(
             COMMAND           ${LOAD_DEPENDENCY_INSTALL_COMMAND} ${LOAD_DEPENDENCY_INSTALL_COMMAND_ARGS}
-            WORKING_DIRECTORY "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_NAME}-${LOAD_DEPENDENCY_VERSION}"
+            WORKING_DIRECTORY "${FETCHCONTENT_BASE_DIR}/${LOAD_DEPENDENCY_DIRECTORY_NAME}"
             RESULT_VARIABLE   "fetch_content_${LOAD_DEPENDENCY_NAME}_INSTALL_RESULT"
         )
         if(NOT ${fetch_content_${LOAD_DEPENDENCY_NAME}_INSTALL_RESULT} EQUAL 0)

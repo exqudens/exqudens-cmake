@@ -1,13 +1,15 @@
 # Directories
 .idea/
+.vs/
+idea-build/
+vs-build/
 build/
 downloads/
 packages/
-tmp/
 
 # Files
 *.iml
 *.iws
 *.ipr
 *.ids
-*.exe
+CMakeSettings.json
