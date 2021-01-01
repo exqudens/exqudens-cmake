@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.17)
 project(exqudens_cmake)
 
 # extensions
-include(get_home_prefix.cmake)
+include(src/main/cmake/get_home_prefix.cmake)
 
 # variables
 set(BUILD_HOME_PREFIX "${CMAKE_CURRENT_BINARY_DIR}")
