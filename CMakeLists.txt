@@ -1,211 +1,26 @@
 cmake_minimum_required(VERSION 3.17)
 project(exqudens_cmake)
 
-# enable 'extension'
-include(extension.cmake)
+# extensions
+include(get_home_prefix.cmake)
 
-# load 'pkg-config-lite'
-dependency(
-    NAME                             "PkgConfig"
-    PACKAGE_NAME                     "pkg-config-lite"
-    PACKAGE_VERSION                  "0.28.1"
-    DOWNLOADS_PREFIX                 "${CMAKE_SOURCE_DIR}/downloads"
-    PACKAGES_PREFIX                  "${CMAKE_SOURCE_DIR}/packages"
-    URL_SCHEMA                       "https"
-    URL_HOST                         "sourceforge.net/projects/pkgconfiglite/files/0.28-1/pkg-config-lite-0.28-1_bin-win32.zip"
-    URL_MD5                          "6004df17818f5a6dbf19cb335cc92702"
-    PREFIX_PATH                      "${CMAKE_PREFIX_PATH}"
-    SKIP_CONFIG                      TRUE
-    SKIP_BUILD                       TRUE
-    SKIP_TEST                        TRUE
-    SKIP_INSTALL                     TRUE
-    PRE_COMMAND_0                    "${CMAKE_COMMAND}"
-    PRE_COMMAND_0_WORKING_DIRECTORY  "${CMAKE_SOURCE_DIR}"
-    PRE_COMMAND_0_ARGS
-        "-E"
-        "make_directory"
-        "${CMAKE_SOURCE_DIR}/packages/pkg-config-lite-0.28.1"
-    PRE_COMMAND_1                    "${CMAKE_COMMAND}"
-    PRE_COMMAND_1_WORKING_DIRECTORY  "${CMAKE_SOURCE_DIR}"
-    PRE_COMMAND_1_ARGS
-        "-E"
-        "copy_directory"
-        "${FETCHCONTENT_BASE_DIR}/pkg-config-lite-0.28.1/src"
-        "${CMAKE_SOURCE_DIR}/packages/pkg-config-lite-0.28.1"
-)
+# variables
+set(BUILD_HOME_PREFIX "${CMAKE_CURRENT_BINARY_DIR}")
+get_home_prefix(BUILD_HOME_PREFIX)
+get_home_prefix(HOME_PREFIX)
 
-# load 'googletest'
-dependency(
-    USE_PKG_CONFIG          TRUE
-    PREFIX_PATH             "${CMAKE_PREFIX_PATH}"
-    NAME                    "GTEST"
-    PACKAGE_NAME            "gtest"
-    PACKAGE_VERSION         "1.10.0-custom"
-    DOWNLOADS_PREFIX        "${CMAKE_SOURCE_DIR}/downloads"
-    PACKAGES_PREFIX         "${CMAKE_SOURCE_DIR}/packages"
-    DOWNLOAD_DIRECTORY_NAME "gtest_gmock-1.10.0-custom"
-    PACKAGE_DIRECTORY_NAME  "gtest_gmock-1.10.0-custom"
-    URL_SCHEMA              "https"
-    URL_HOST                "github.com/google/googletest/archive/389cb68b87193358358ae87cc56d257fd0d80189.zip"
-    URL_MD5                 "07166e65eed56641d582d139cd750be0"
-)
+# test_1
+if(NOT "${BUILD_HOME_PREFIX}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
+    message(
+        FATAL_ERROR
+        "'BUILD_HOME_PREFIX' not equal to 'CMAKE_CURRENT_BINARY_DIR' '${BUILD_HOME_PREFIX}' / '${CMAKE_CURRENT_BINARY_DIR}'"
+    )
+endif()
 
-# load 'zlib'
-dependency(
-    PREFIX_PATH      "${CMAKE_PREFIX_PATH}"
-    NAME             "ZLIB"
-    PACKAGE_NAME     "zlib"
-    PACKAGE_VERSION  "1.2.11"
-    DOWNLOADS_PREFIX "${CMAKE_SOURCE_DIR}/downloads"
-    PACKAGES_PREFIX  "${CMAKE_SOURCE_DIR}/packages"
-    URL_SCHEMA       "https"
-    URL_HOST         "github.com/madler/zlib/archive/v1.2.11.zip"
-    URL_MD5          "9d6a627693163bbbf3f26403a3a0b0b1"
-)
-
-# load 'libpng'
-dependency(
-    PREFIX_PATH      "${CMAKE_PREFIX_PATH}"
-    NAME             "PNG"
-    PACKAGE_NAME     "libpng"
-    PACKAGE_VERSION  "1.6.37"
-    DOWNLOADS_PREFIX "${CMAKE_SOURCE_DIR}/downloads"
-    PACKAGES_PREFIX  "${CMAKE_SOURCE_DIR}/packages"
-    URL_SCHEMA       "https"
-    URL_HOST         "github.com/glennrp/libpng/archive/v1.6.37.zip"
-    URL_MD5          "1bbb6b2bcd580d50b82145e827eb3fb4"
-    SKIP_TEST        TRUE
-)
-
-# load 'pngpp'
-dependency(
-    USE_PKG_CONFIG                   TRUE
-    PREFIX_PATH                      "${CMAKE_PREFIX_PATH}"
-    NAME                             "PNGPP"
-    PACKAGE_NAME                     "pngpp"
-    PACKAGE_VERSION                  "0.2.9"
-    DOWNLOADS_PREFIX                 "${CMAKE_SOURCE_DIR}/downloads"
-    PACKAGES_PREFIX                  "${CMAKE_SOURCE_DIR}/packages"
-    URL_SCHEMA                       "http"
-    URL_HOST                         "download.savannah.nongnu.org/releases/pngpp/png++-0.2.9.tar.gz"
-    URL_MD5                          "92863df3bee625d707cebc0e749c10df"
-    SKIP_CONFIG                      TRUE
-    SKIP_BUILD                       TRUE
-    SKIP_TEST                        TRUE
-    SKIP_INSTALL                     TRUE
-
-    PRE_COMMAND_0                    "${CMAKE_COMMAND}"
-    PRE_COMMAND_0_WORKING_DIRECTORY  "${CMAKE_SOURCE_DIR}"
-    PRE_COMMAND_0_ARGS
-        "-E"
-        "make_directory"
-        "${CMAKE_SOURCE_DIR}/packages/pngpp-0.2.9/include/png++"
-
-    PRE_COMMAND_1                    "${CMAKE_COMMAND}"
-    PRE_COMMAND_1_WORKING_DIRECTORY  "${CMAKE_SOURCE_DIR}"
-    PRE_COMMAND_1_ARGS
-        "-E"
-        "make_directory"
-        "${CMAKE_SOURCE_DIR}/packages/pngpp-0.2.9/share/pkgconfig"
-
-    PRE_COMMAND_2                    "${CMAKE_COMMAND}"
-    PRE_COMMAND_2_WORKING_DIRECTORY  "${CMAKE_SOURCE_DIR}"
-    PRE_COMMAND_2_ARGS
-        "-E"
-        "copy"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/color.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/config.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/consumer.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/convert_color_space.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/end_info.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/error.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/ga_pixel.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/generator.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/gray_pixel.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/image.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/image_info.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/index_pixel.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/info.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/info_base.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/io_base.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/packed_pixel.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/palette.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/pixel_buffer.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/pixel_traits.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/png.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/reader.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/require_color_space.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/rgb_pixel.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/rgba_pixel.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/solid_pixel_buffer.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/streaming_base.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/tRNS.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/types.hpp"
-        "${FETCHCONTENT_BASE_DIR}/pngpp-0.2.9/src/writer.hpp"
-        "${CMAKE_SOURCE_DIR}/packages/pngpp-0.2.9/include/png++"
-
-    POST_COMMAND_3                   "${CMAKE_COMMAND}"
-    POST_COMMAND_3_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-    POST_COMMAND_3_ARGS
-        "-E"
-        "copy"
-        "${CMAKE_SOURCE_DIR}/src/test/resources/pc/pngpp-0.2.9/share/pkgconfig/pngpp.pc"
-        "${CMAKE_SOURCE_DIR}/packages/pngpp-0.2.9/share/pkgconfig"
-)
-
-
-macro(print_module name)
-    if(NOT "" STREQUAL "${${name}_FOUND}")
-        message(STATUS "${name}_FOUND: ${${name}_FOUND}")
-    endif()
-    if(NOT "" STREQUAL "${${name}_MODULE_NAME}")
-        message(STATUS "${name}_MODULE_NAME: ${${name}_MODULE_NAME}")
-    endif()
-    if(NOT "" STREQUAL "${${name}_VERSION}")
-        message(STATUS "${name}_VERSION: ${${name}_VERSION}")
-    endif()
-    if(NOT "" STREQUAL "${${name}_PREFIX}")
-        message(STATUS "${name}_PREFIX: ${${name}_PREFIX}")
-    endif()
-    if(NOT "" STREQUAL "${${name}_INCLUDEDIR}")
-        message(STATUS "${name}_INCLUDEDIR: ${${name}_INCLUDEDIR}")
-    endif()
-    if(NOT "" STREQUAL "${${name}_LIBDIR}")
-        message(STATUS "${name}_LIBDIR: ${${name}_LIBDIR}")
-    endif()
-    if(NOT "" STREQUAL "${${name}_LIBRARIES}")
-        message(STATUS "${name}_LIBRARIES: ${${name}_LIBRARIES}")
-    endif()
-    if(NOT "" STREQUAL "${${name}_LINK_LIBRARIES}")
-        message(STATUS "${name}_LINK_LIBRARIES: ${${name}_LINK_LIBRARIES}")
-    endif()
-    if(NOT "" STREQUAL "${${name}_LIBRARY_DIRS}")
-        message(STATUS "${name}_LIBRARY_DIRS: ${${name}_LIBRARY_DIRS}")
-    endif()
-    if(NOT "" STREQUAL "${${name}_LDFLAGS}")
-        message(STATUS "${name}_LDFLAGS: ${${name}_LDFLAGS}")
-    endif()
-    if(NOT "" STREQUAL "${${name}_LDFLAGS_OTHER}")
-        message(STATUS "${name}_LDFLAGS_OTHER: ${${name}_LDFLAGS_OTHER}")
-    endif()
-    if(NOT "" STREQUAL "${${name}_INCLUDE_DIRS}")
-        message(STATUS "${name}_INCLUDE_DIRS: ${${name}_INCLUDE_DIRS}")
-    endif()
-    if(NOT "" STREQUAL "${${name}_CFLAGS}")
-        message(STATUS "${name}_CFLAGS: ${${name}_CFLAGS}")
-    endif()
-    if(NOT "" STREQUAL "${${name}_CFLAGS_OTHER}")
-        message(STATUS "${name}_CFLAGS_OTHER: ${${name}_CFLAGS_OTHER}")
-    endif()
-endmacro()
-
-include(FindPkgConfig)
-pkg_search_module("GTEST" "GTEST" "gtest")
-
-message(STATUS "--- GTEST ---")
-print_module("GTEST")
-message(STATUS "-------------")
-
-message(STATUS "--- PNGPP ---")
-print_module("PNGPP")
-message(STATUS "-------------")
+# test_2
+if("${BUILD_HOME_PREFIX}" STREQUAL "${HOME_PREFIX}")
+    message(
+        FATAL_ERROR
+        "'BUILD_HOME_PREFIX' equal to 'HOME_PREFIX' '${BUILD_HOME_PREFIX}' / '${HOME_PREFIX}'"
+    )
+endif()
