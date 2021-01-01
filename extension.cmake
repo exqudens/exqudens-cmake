@@ -1,3 +1,10 @@
+# set include once
+include_guard()
+
+# enable extensions
+include(FindPkgConfig)
+include(FetchContent)
+
 # set variables
 set(LOAD_DEPENDENCY_DEFAULT_CONFIGURE_COMMAND ${CMAKE_COMMAND})
 set(LOAD_DEPENDENCY_DEFAULT_CONFIGURE_COMMAND_ARGS
@@ -40,10 +47,6 @@ set(LOAD_DEPENDENCY_DEFAULT_INSTALL_COMMAND_ARGS
     "-j"
     "3"
 )
-
-# enable extensions
-include(FindPkgConfig)
-include(FetchContent)
 
 # define macro 'set_home_prefix'
 macro(set_home_prefix)
