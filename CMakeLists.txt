@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(exqudens_cmake VERSION 6.1.1)
+project(exqudens_cmake VERSION 6.1.2)
 
 # extensions
 include(src/main/cmake/extension.cmake)
