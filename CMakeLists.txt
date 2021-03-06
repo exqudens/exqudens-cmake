@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(exqudens_cmake VERSION 6.1.2)
+project(exqudens_cmake VERSION 7.0.0)
 
 # extensions
 include(src/main/cmake/extension.cmake)
@@ -112,7 +112,6 @@ set_copy_file_command_arguments(
 list(GET COPY_README_MD_ARGS 0 ELEMENT_0)
 list(GET COPY_README_MD_ARGS 1 ELEMENT_1)
 list(GET COPY_README_MD_ARGS 2 ELEMENT_2)
-list(GET COPY_README_MD_ARGS 3 ELEMENT_3)
 if(NOT "-E" STREQUAL "${ELEMENT_0}")
     message(
         FATAL_ERROR
@@ -131,12 +130,6 @@ if(NOT "${CMAKE_CURRENT_SOURCE_DIR}/readme.md" STREQUAL "${ELEMENT_2}")
         "'set_copy_file_command_arguments' ERROR: '${CMAKE_CURRENT_SOURCE_DIR}/readme.md' not equal to 'ELEMENT_2': '${ELEMENT_2}'"
     )
 endif()
-if(NOT "${CMAKE_CURRENT_BINARY_DIR}" STREQUAL "${ELEMENT_3}")
-    message(
-        FATAL_ERROR
-        "'set_copy_file_command_arguments' ERROR: '${CMAKE_CURRENT_BINARY_DIR}' not equal to 'ELEMENT_3': '${ELEMENT_3}'"
-    )
-endif()
 
 # test_2
 set_copy_file_command_arguments(
@@ -148,7 +141,6 @@ set_copy_file_command_arguments(
 list(GET COPY_TEST_TXT_ARGS 0 ELEMENT_0)
 list(GET COPY_TEST_TXT_ARGS 1 ELEMENT_1)
 list(GET COPY_TEST_TXT_ARGS 2 ELEMENT_2)
-list(GET COPY_TEST_TXT_ARGS 3 ELEMENT_3)
 if(NOT "-E" STREQUAL "${ELEMENT_0}")
     message(
         FATAL_ERROR
@@ -165,11 +157,5 @@ if(NOT "${CMAKE_CURRENT_SOURCE_DIR}/src/test/resources/test.txt" STREQUAL "${ELE
     message(
         FATAL_ERROR
         "'set_copy_file_command_arguments' ERROR: '${CMAKE_CURRENT_SOURCE_DIR}/src/test/resources/test.txt' not equal to 'ELEMENT_2': '${ELEMENT_2}'"
-    )
-endif()
-if(NOT "${CMAKE_CURRENT_BINARY_DIR}" STREQUAL "${ELEMENT_3}")
-    message(
-        FATAL_ERROR
-        "'set_copy_file_command_arguments' ERROR: '${CMAKE_CURRENT_BINARY_DIR}' not equal to 'ELEMENT_3': '${ELEMENT_3}'"
     )
 endif()
