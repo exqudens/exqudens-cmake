@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(exqudens_cmake VERSION 7.0.0)
+project(exqudens_cmake VERSION 8.0.0)
 
 # extensions
 include(src/main/cmake/extension.cmake)
@@ -97,65 +97,5 @@ if("${BUILD_HOME_PREFIX}" STREQUAL "${HOME_PREFIX}")
     message(
         FATAL_ERROR
         "'BUILD_HOME_PREFIX' equal to 'HOME_PREFIX' '${BUILD_HOME_PREFIX}' / '${HOME_PREFIX}'"
-    )
-endif()
-
-# tests 'set_copy_command' --------------------------------------------------
-
-# test_1
-set_copy_file_command_arguments(
-    COPY_README_MD_ARGS
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}
-    "1.txt" "readme.md" "2.txt"
-)
-list(GET COPY_README_MD_ARGS 0 ELEMENT_0)
-list(GET COPY_README_MD_ARGS 1 ELEMENT_1)
-list(GET COPY_README_MD_ARGS 2 ELEMENT_2)
-if(NOT "-E" STREQUAL "${ELEMENT_0}")
-    message(
-        FATAL_ERROR
-        "'set_copy_file_command_arguments' ERROR: '-E' not equal to 'ELEMENT_0': '${ELEMENT_0}'"
-    )
-endif()
-if(NOT "copy" STREQUAL "${ELEMENT_1}")
-    message(
-        FATAL_ERROR
-        "'set_copy_file_command_arguments' ERROR: 'copy' not equal to 'ELEMENT_1': '${ELEMENT_1}'"
-    )
-endif()
-if(NOT "${CMAKE_CURRENT_SOURCE_DIR}/readme.md" STREQUAL "${ELEMENT_2}")
-    message(
-        FATAL_ERROR
-        "'set_copy_file_command_arguments' ERROR: '${CMAKE_CURRENT_SOURCE_DIR}/readme.md' not equal to 'ELEMENT_2': '${ELEMENT_2}'"
-    )
-endif()
-
-# test_2
-set_copy_file_command_arguments(
-    COPY_TEST_TXT_ARGS
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test/resources
-    ${CMAKE_CURRENT_BINARY_DIR}
-    "1.txt" "test.txt" "2.txt"
-)
-list(GET COPY_TEST_TXT_ARGS 0 ELEMENT_0)
-list(GET COPY_TEST_TXT_ARGS 1 ELEMENT_1)
-list(GET COPY_TEST_TXT_ARGS 2 ELEMENT_2)
-if(NOT "-E" STREQUAL "${ELEMENT_0}")
-    message(
-        FATAL_ERROR
-        "'set_copy_file_command_arguments' ERROR: '-E' not equal to 'ELEMENT_0': '${ELEMENT_0}'"
-    )
-endif()
-if(NOT "copy" STREQUAL "${ELEMENT_1}")
-    message(
-        FATAL_ERROR
-        "'set_copy_file_command_arguments' ERROR: 'copy' not equal to 'ELEMENT_1': '${ELEMENT_1}'"
-    )
-endif()
-if(NOT "${CMAKE_CURRENT_SOURCE_DIR}/src/test/resources/test.txt" STREQUAL "${ELEMENT_2}")
-    message(
-        FATAL_ERROR
-        "'set_copy_file_command_arguments' ERROR: '${CMAKE_CURRENT_SOURCE_DIR}/src/test/resources/test.txt' not equal to 'ELEMENT_2': '${ELEMENT_2}'"
     )
 endif()
