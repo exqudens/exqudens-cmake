@@ -99,3 +99,34 @@ if("${BUILD_HOME_PREFIX}" STREQUAL "${HOME_PREFIX}")
         "'BUILD_HOME_PREFIX' equal to 'HOME_PREFIX' '${BUILD_HOME_PREFIX}' / '${HOME_PREFIX}'"
     )
 endif()
+
+# test 'add_custom_command(OUTPUT <...>)' generator expression
+
+#[[macro(add_custom_target_build
+    targetName
+)
+    add_custom_command(
+        OUTPUT $<TARGET_PROPERTY:${targetName},property1>
+        COMMAND ${CMAKE_COMMAND}
+        ARGS -E touch $<TARGET_PROPERTY:${targetName},property1>
+    )
+    add_custom_target(build-${targetName}
+        DEPENDS $<TARGET_PROPERTY:${targetName},property1>
+    )
+endmacro()
+
+add_custom_target(target1)
+set_target_properties(target1 PROPERTIES
+    property1 ${CMAKE_CURRENT_BINARY_DIR}/target1-property1-file.txt
+)
+
+add_custom_target_build(target1)]]
+
+######################################################################
+# info ###############################################################
+######################################################################
+
+add_custom_target(project-info
+    COMMAND ${CMAKE_COMMAND} -E echo "1:" $<TARGET_PROPERTY:project-info,NAME>
+    COMMENT "Project info."
+)
