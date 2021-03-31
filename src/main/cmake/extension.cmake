@@ -9,6 +9,46 @@ elseif("file_download" STREQUAL "${CMAKE_ARGV3}")
     file(DOWNLOAD ${CMAKE_ARGV4} ${CMAKE_ARGV5})
 endif()
 
+# declare macro 'add_custom_target_zip_directory'
+macro(add_custom_target_zip_directory
+    name
+    depends
+    input
+    output
+    command
+)
+    add_custom_target(${name}
+        COMMAND ${command} -E tar cfv ${output} --format=zip -- .
+        BYPRODUCTS ${output}
+        WORKING_DIRECTORY ${input}
+        COMMENT "Zip directory '${input}'."
+    )
+    add_dependencies(${name} ${depends})
+endmacro()
+
+# declare macro 'add_custom_target_unzip_directory'
+macro(add_custom_target_unzip_directory
+    name
+    depends
+    input
+    output
+    command
+)
+    add_custom_command(
+        OUTPUT ${output}
+        COMMAND ${command}
+        ARGS -E make_directory ${output}
+        BYPRODUCTS ${output}
+    )
+    add_custom_target(${name}
+        COMMAND ${command} -E tar xzf ${input}
+        DEPENDS ${output}
+        WORKING_DIRECTORY ${output}
+        COMMENT "Un-Zip directory '${input}'."
+    )
+    add_dependencies(${name} ${depends})
+endmacro()
+
 # declare macro 'add_custom_target_install'
 macro(add_custom_target_install
     name
@@ -18,44 +58,15 @@ macro(add_custom_target_install
     command
 )
     add_custom_command(
-        OUTPUT  ${output}
+        OUTPUT ${output}
         COMMAND ${command}
-        ARGS    -E
-                make_directory
-                ${output}
+        ARGS -E make_directory ${output}
         COMMAND ${command}
-        ARGS    -E
-                copy_directory
-                ${input}
-                ${output}
+        ARGS -E copy_directory ${input} ${output}
         COMMENT "Installing project."
     )
     add_custom_target(${name}
         DEPENDS ${output}
-    )
-    add_dependencies(${name} ${depends})
-endmacro()
-
-# declare macro 'add_custom_target_pack'
-macro(add_custom_target_pack
-    name
-    depends
-    input
-    output
-    command
-)
-    add_custom_target(${name}
-        COMMAND           ${command}
-                          -E
-                          tar
-                          cfv
-                          ${output}
-                          --format=zip
-                          --
-                          .
-        BYPRODUCTS        ${output}
-        WORKING_DIRECTORY ${input}
-        COMMENT           "Packaging project."
     )
     add_dependencies(${name} ${depends})
 endmacro()
@@ -70,12 +81,7 @@ macro(add_custom_target_upload
     script
 )
     add_custom_target(${name}
-        COMMAND ${command}
-                -P
-                ${script}
-                file_upload
-                ${input}
-                ${output}
+        COMMAND ${command} -P ${script} file_upload ${input} ${output}
         COMMENT "Uploading project."
     )
     add_dependencies(${name} ${depends})
