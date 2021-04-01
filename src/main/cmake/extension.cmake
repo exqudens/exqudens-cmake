@@ -9,6 +9,42 @@ elseif("file_download" STREQUAL "${CMAKE_ARGV3}")
     file(DOWNLOAD ${CMAKE_ARGV4} ${CMAKE_ARGV5})
 endif()
 
+# declare macro 'add_custom_target_upload_file'
+macro(add_custom_target_upload_file
+    name
+    depends
+    file
+    url
+    command
+    script
+)
+    add_custom_target(${name}
+        COMMAND ${command} -P ${script} file_upload ${file} ${url}
+        COMMENT "Uploading project."
+    )
+    if(NOT "" STREQUAL "${depends}")
+        add_dependencies(${name} ${depends})
+    endif()
+endmacro()
+
+# declare macro 'add_custom_target_download_file'
+macro(add_custom_target_download_file
+    name
+    depends
+    url
+    file
+    command
+    script
+)
+    add_custom_target(${name}
+        COMMAND ${command} -P ${script} file_download ${url} ${file}
+        COMMENT "Uploading project."
+    )
+    if(NOT "" STREQUAL "${depends}")
+        add_dependencies(${name} ${depends})
+    endif()
+endmacro()
+
 # declare macro 'add_custom_target_zip_directory'
 macro(add_custom_target_zip_directory
     name
@@ -71,24 +107,6 @@ macro(add_custom_target_install
     )
     add_custom_target(${name}
         DEPENDS ${output}
-    )
-    if(NOT "" STREQUAL "${depends}")
-        add_dependencies(${name} ${depends})
-    endif()
-endmacro()
-
-# declare macro 'add_custom_target_upload_file'
-macro(add_custom_target_upload_file
-    name
-    depends
-    input
-    output
-    command
-    script
-)
-    add_custom_target(${name}
-        COMMAND ${command} -P ${script} file_upload ${input} ${output}
-        COMMENT "Uploading project."
     )
     if(NOT "" STREQUAL "${depends}")
         add_dependencies(${name} ${depends})
