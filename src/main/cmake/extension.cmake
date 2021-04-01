@@ -23,7 +23,9 @@ macro(add_custom_target_zip_directory
         WORKING_DIRECTORY ${input}
         COMMENT "Zip directory '${input}'."
     )
-    add_dependencies(${name} ${depends})
+    if(NOT "" STREQUAL "${depends}")
+        add_dependencies(${name} ${depends})
+    endif()
 endmacro()
 
 # declare macro 'add_custom_target_unzip_directory'
@@ -46,7 +48,9 @@ macro(add_custom_target_unzip_directory
         WORKING_DIRECTORY ${output}
         COMMENT "Un-Zip directory '${input}'."
     )
-    add_dependencies(${name} ${depends})
+    if(NOT "" STREQUAL "${depends}")
+        add_dependencies(${name} ${depends})
+    endif()
 endmacro()
 
 # declare macro 'add_custom_target_install'
@@ -68,11 +72,13 @@ macro(add_custom_target_install
     add_custom_target(${name}
         DEPENDS ${output}
     )
-    add_dependencies(${name} ${depends})
+    if(NOT "" STREQUAL "${depends}")
+        add_dependencies(${name} ${depends})
+    endif()
 endmacro()
 
-# declare macro 'add_custom_target_upload'
-macro(add_custom_target_upload
+# declare macro 'add_custom_target_upload_file'
+macro(add_custom_target_upload_file
     name
     depends
     input
@@ -84,7 +90,9 @@ macro(add_custom_target_upload
         COMMAND ${command} -P ${script} file_upload ${input} ${output}
         COMMENT "Uploading project."
     )
-    add_dependencies(${name} ${depends})
+    if(NOT "" STREQUAL "${depends}")
+        add_dependencies(${name} ${depends})
+    endif()
 endmacro()
 
 # declare function 'set_if_not_defined'
