@@ -113,6 +113,76 @@ macro(add_custom_target_install
     endif()
 endmacro()
 
+# declare macro 'add_custom_target_dependency'
+macro(add_custom_target_dependency
+    name
+    depends
+    url
+    include
+    link
+    libraries
+    output
+    command
+    script
+)
+    add_custom_command(
+        OUTPUT ${output}
+        COMMAND ${command}
+        ARGS -E make_directory ${output}
+        BYPRODUCTS ${output}
+    )
+    add_custom_command(
+        OUTPUT ${output}/archive.zip
+        COMMAND ${command}
+        ARGS -P ${script} file_download ${url} ${output}/archive.zip
+        DEPENDS ${output}
+        BYPRODUCTS ${output}/archive.zip
+    )
+    add_custom_target(${name}
+        COMMAND ${command} -E tar xzf ${output}/archive.zip
+        DEPENDS ${output}/archive.zip
+        WORKING_DIRECTORY ${output}
+        COMMENT "Get dependency '${name}'."
+    )
+
+    if(NOT "" STREQUAL "${include}")
+        set(add_custom_target_dependency_include "")
+        foreach(i ${include})
+            list(APPEND add_custom_target_dependency_include ${output}/${i})
+        endforeach()
+        set_property(TARGET ${name} PROPERTY
+            INCLUDE_DIRECTORIES ${add_custom_target_dependency_include}
+        )
+        unset(add_custom_target_dependency_include)
+    endif()
+
+    if(NOT "" STREQUAL "${link}")
+        set(add_custom_target_dependency_link "")
+        foreach(l ${link})
+            list(APPEND add_custom_target_dependency_link ${output}/${l})
+        endforeach()
+        set_property(TARGET ${name} PROPERTY
+            LINK_DIRECTORIES ${add_custom_target_dependency_link}
+        )
+        unset(add_custom_target_dependency_link)
+    endif()
+
+    if(NOT "" STREQUAL "${libraries}")
+        set(add_custom_target_dependency_libraries "")
+        foreach(l ${libraries})
+            list(APPEND add_custom_target_dependency_libraries ${l})
+        endforeach()
+        set_property(TARGET ${name} PROPERTY
+            LIBRARIES ${add_custom_target_dependency_libraries}
+        )
+        unset(add_custom_target_dependency_libraries)
+    endif()
+
+    if(NOT "" STREQUAL "${depends}")
+        add_dependencies(${name} ${depends})
+    endif()
+endmacro()
+
 # declare function 'set_if_not_defined'
 function(set_if_not_defined variableName)
     if(NOT DEFINED ${variableName})
