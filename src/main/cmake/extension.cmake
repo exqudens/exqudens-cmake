@@ -12,6 +12,7 @@ endif()
 # declare macro 'add_custom_targets_upload_file'
 macro(add_custom_targets_upload_file
     name
+    clean
     depends
     file
     url
@@ -26,6 +27,12 @@ macro(add_custom_targets_upload_file
         foreach(d ${depends})
             add_dependencies(${name} ${d})
         endforeach()
+    endif()
+    if(NOT "" STREQUAL "${clean}")
+        add_custom_target(${name}-clean
+            COMMAND ${command} -E echo "Nothing to clean"
+            COMMENT "Clean upload file '${file}'"
+        )
     endif()
 endmacro()
 
