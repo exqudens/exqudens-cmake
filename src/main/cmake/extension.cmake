@@ -9,8 +9,8 @@ elseif("file_download" STREQUAL "${CMAKE_ARGV3}")
     file(DOWNLOAD ${CMAKE_ARGV4} ${CMAKE_ARGV5})
 endif()
 
-# declare macro 'add_custom_target_upload_file'
-macro(add_custom_target_upload_file
+# declare macro 'add_custom_targets_upload_file'
+macro(add_custom_targets_upload_file
     name
     depends
     file
@@ -20,16 +20,19 @@ macro(add_custom_target_upload_file
 )
     add_custom_target(${name}
         COMMAND ${command} -P ${script} file_upload ${file} ${url}
-        COMMENT "Uploading project."
+        COMMENT "Upload file '${file}'"
     )
     if(NOT "" STREQUAL "${depends}")
-        add_dependencies(${name} ${depends})
+        foreach(d ${depends})
+            add_dependencies(${name} ${d})
+        endforeach()
     endif()
 endmacro()
 
-# declare macro 'add_custom_target_download_file'
-macro(add_custom_target_download_file
+# declare macro 'add_custom_targets_download_file'
+macro(add_custom_targets_download_file
     name
+    clean
     depends
     url
     file
@@ -38,16 +41,25 @@ macro(add_custom_target_download_file
 )
     add_custom_target(${name}
         COMMAND ${command} -P ${script} file_download ${url} ${file}
-        COMMENT "Uploading project."
+        COMMENT "Download file '${url}'"
     )
     if(NOT "" STREQUAL "${depends}")
-        add_dependencies(${name} ${depends})
+        foreach(d ${depends})
+            add_dependencies(${name} ${d})
+        endforeach()
+    endif()
+    if(NOT "" STREQUAL "${clean}")
+        add_custom_target(${name}-clean
+            COMMAND ${command} -E rm -f ${file}
+            COMMENT "Clean download file '${url}'"
+        )
     endif()
 endmacro()
 
-# declare macro 'add_custom_target_zip_directory'
-macro(add_custom_target_zip_directory
+# declare macro 'add_custom_targets_zip_directory'
+macro(add_custom_targets_zip_directory
     name
+    clean
     depends
     input
     output
@@ -57,16 +69,25 @@ macro(add_custom_target_zip_directory
         COMMAND ${command} -E tar cfv ${output} --format=zip -- .
         BYPRODUCTS ${output}
         WORKING_DIRECTORY ${input}
-        COMMENT "Zip directory '${input}'."
+        COMMENT "Zip directory '${input}'"
     )
     if(NOT "" STREQUAL "${depends}")
-        add_dependencies(${name} ${depends})
+        foreach(d ${depends})
+            add_dependencies(${name} ${d})
+        endforeach()
+    endif()
+    if(NOT "" STREQUAL "${clean}")
+        add_custom_target(${name}-clean
+            COMMAND ${command} -E rm -f ${output}
+            COMMENT "Clean zip directory '${input}'"
+        )
     endif()
 endmacro()
 
-# declare macro 'add_custom_target_unzip_directory'
-macro(add_custom_target_unzip_directory
+# declare macro 'add_custom_targets_unzip_directory'
+macro(add_custom_targets_unzip_directory
     name
+    clean
     depends
     input
     output
@@ -82,16 +103,25 @@ macro(add_custom_target_unzip_directory
         COMMAND ${command} -E tar xzf ${input}
         DEPENDS ${output}
         WORKING_DIRECTORY ${output}
-        COMMENT "Un-Zip directory '${input}'."
+        COMMENT "Unzip directory '${input}'"
     )
     if(NOT "" STREQUAL "${depends}")
-        add_dependencies(${name} ${depends})
+        foreach(d ${depends})
+            add_dependencies(${name} ${d})
+        endforeach()
+    endif()
+    if(NOT "" STREQUAL "${clean}")
+        add_custom_target(${name}-clean
+            COMMAND ${command} -E rm -Rf ${output}
+            COMMENT "Clean unzip directory '${input}'"
+        )
     endif()
 endmacro()
 
-# declare macro 'add_custom_target_install'
-macro(add_custom_target_install
+# declare macro 'add_custom_targets_install'
+macro(add_custom_targets_install
     name
+    clean
     depends
     input
     output
@@ -103,19 +133,28 @@ macro(add_custom_target_install
         ARGS -E make_directory ${output}
         COMMAND ${command}
         ARGS -E copy_directory ${input} ${output}
-        COMMENT "Installing project."
+        COMMENT "Install '${input}'"
     )
     add_custom_target(${name}
         DEPENDS ${output}
     )
     if(NOT "" STREQUAL "${depends}")
-        add_dependencies(${name} ${depends})
+        foreach(d ${depends})
+            add_dependencies(${name} ${d})
+        endforeach()
+    endif()
+    if(NOT "" STREQUAL "${clean}")
+        add_custom_target(${name}-clean
+            COMMAND ${command} -E rm -Rf ${output}
+            COMMENT "Clean install '${input}'"
+        )
     endif()
 endmacro()
 
-# declare macro 'add_custom_target_dependency'
-macro(add_custom_target_dependency
+# declare macro 'add_custom_targets_dependency'
+macro(add_custom_targets_dependency
     name
+    clean
     depends
     url
     include
@@ -142,7 +181,7 @@ macro(add_custom_target_dependency
         COMMAND ${command} -E tar xzf ${output}/archive.zip
         DEPENDS ${output}/archive.zip
         WORKING_DIRECTORY ${output}
-        COMMENT "Get dependency '${name}'."
+        COMMENT "Dependency '${name}'"
     )
 
     if(NOT "" STREQUAL "${include}")
@@ -179,7 +218,15 @@ macro(add_custom_target_dependency
     endif()
 
     if(NOT "" STREQUAL "${depends}")
-        add_dependencies(${name} ${depends})
+        foreach(d ${depends})
+            add_dependencies(${name} ${d})
+        endforeach()
+    endif()
+    if(NOT "" STREQUAL "${clean}")
+        add_custom_target(${name}-clean
+            COMMAND ${command} -E rm -Rf ${output}
+            COMMENT "Clean dependency '${name}'"
+        )
     endif()
 endmacro()
 
