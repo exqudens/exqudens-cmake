@@ -1,11 +1,11 @@
 function(
     conan_settings
-    overwrite
     variableName
     cmakeSystemName
     cmakeSystemProcessor
     cmakeCxxCompilerId
     cmakeCxxCompilerVersion
+    cmakeMsvcRuntimeLibrary
     cmakeCxxStandard
     cmakeBuildType
 )
@@ -35,6 +35,11 @@ function(
         )
             set(value "${value}" "--settings" "compiler=Visual Studio")
             set(value "${value}" "--settings" "compiler.version=16")
+            if("${cmakeMsvcRuntimeLibrary}" STREQUAL "MultiThreadedDLL")
+                set(value "${value}" "--settings" "compiler.runtime=MD")
+            else()
+                set(value "${value}" "--settings" "compiler.runtime=MD")
+            endif()
         elseif(
             "${cmakeCxxCompilerId}" STREQUAL "GNU"
             AND "${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "10"
@@ -47,7 +52,7 @@ function(
                 set(value "${value}" "--settings" "compiler.libcxx=libstdc++")
             endif()
         else()
-            message(FATAL_ERROR "Unsupported cmakeCxxCompilerId: '${cmakeCxxCompilerId}' and cmakeCxxCompilerVersion: '${cmakeCxxCompilerVersion}'")
+            message(FATAL_ERROR "Unsupported cmakeCxxCompilerId: '${cmakeCxxCompilerId}' and cmakeCxxCompilerVersion: '${cmakeCxxCompilerVersion}' and cmakeCxxStandard: '${cmakeCxxStandard}'")
         endif()
 
         # build_type
@@ -63,48 +68,41 @@ endfunction()
 
 function(
     conan_options
-    overwrite
     variableName
     buildSharedLibs
 )
-    if(NOT DEFINED "${variableName}" OR "OVERWRITE" STREQUAL "${overwrite}")
-        set("pythonBoolValue" "False")
-        if("${buildSharedLibs}")
-            set("pythonBoolValue" "True")
-        endif()
-
-        # self
-        set(value "--options" "shared=${pythonBoolValue}")
-
-        # dependencies
-        if("${ARGC}" GREATER_EQUAL "4")
-            set("start" "3")
-            math(EXPR "stop" "${ARGC} - 1")
-            foreach(i RANGE "${start}" "${stop}")
-                set(value "--options" "${ARGV${i}}:shared=${pythonBoolValue}" "${value}")
-            endforeach()
-        endif()
-
-        set("${variableName}" "${value}" PARENT_SCOPE)
+    set("pythonBoolValue" "False")
+    if("${buildSharedLibs}")
+        set("pythonBoolValue" "True")
     endif()
+
+    # self
+    set(value "--options" "shared=${pythonBoolValue}")
+
+    # dependencies
+    if("${ARGC}" GREATER_EQUAL "4")
+        set("start" "3")
+        math(EXPR "stop" "${ARGC} - 1")
+        foreach(i RANGE "${start}" "${stop}")
+            set(value "--options" "${ARGV${i}}:shared=${pythonBoolValue}" "${value}")
+        endforeach()
+    endif()
+
+    set("${variableName}" "${value}" PARENT_SCOPE)
 endfunction()
 
 macro(
     conan_install
-    overwrite
-    conanInstalledDir
+    conanProgramPath
     conanFile
+    conanInstalledDir
     conanSettings
     conanOptions
-    conanProgram
 )
-    if(NOT "" STREQUAL "${conanProgram}")
-        if("OVERWRITE" STREQUAL "${overwrite}")
-            file(REMOVE_RECURSE "${conanInstalledDir}")
-        endif()
+    if(NOT "" STREQUAL "${conanProgramPath}")
         if(NOT EXISTS "${conanInstalledDir}")
             execute_process(
-                COMMAND "${conanProgram}"
+                COMMAND "${conanProgramPath}"
                         install
                         "${conanFile}"
                         --install-folder
@@ -118,188 +116,96 @@ macro(
 endmacro()
 
 macro(
-    conan_install_target
+    add_custom_target_conan_install
     targetName
-    dependsOnTargetNames
-    comment
-    overwrite
-    conanInstalledDir
+    conanProgramPath
     conanFile
+    conanInstalledDir
     conanSettings
     conanOptions
-    conanProgram
-    cmakeProgram
 )
-    if(NOT "" STREQUAL "${conanProgram}")
-        if("OVERWRITE" STREQUAL "${overwrite}" AND NOT "" STREQUAL "${comment}")
-            add_custom_target("${targetName}"
-                COMMAND "${cmakeProgram}"
-                        -E
-                        rm
-                        -rf
-                        "${conanInstalledDir}"
-                COMMAND "${conanProgram}"
-                        install
-                        "${conanFile}"
-                        --install-folder
-                        "${conanInstalledDir}"
-                        ${conanSettings}
-                        ${conanOptions}
-                COMMENT "${comment}"
-                VERBATIM
-            )
-        elseif("OVERWRITE" STREQUAL "${overwrite}" AND "" STREQUAL "${comment}")
-            add_custom_target("${targetName}"
-                COMMAND "${cmakeProgram}"
-                        -E
-                        rm
-                        -rf
-                        "${conanInstalledDir}"
-                COMMAND "${conanProgram}"
-                        install
-                        "${conanFile}"
-                        --install-folder
-                        "${conanInstalledDir}"
-                        ${conanSettings}
-                        ${conanOptions}
-                VERBATIM
-            )
-        elseif(NOT "OVERWRITE" STREQUAL "${overwrite}" AND NOT "" STREQUAL "${comment}")
-            add_custom_target("${targetName}"
-                COMMAND "${conanProgram}"
-                        install
-                        "${conanFile}"
-                        --install-folder
-                        "${conanInstalledDir}"
-                        ${conanSettings}
-                        ${conanOptions}
-                COMMENT "${comment}"
-                VERBATIM
-            )
-        elseif(NOT "OVERWRITE" STREQUAL "${overwrite}" AND "" STREQUAL "${comment}")
-            add_custom_target("${targetName}"
-                COMMAND "${conanProgram}"
-                        install
-                        "${conanFile}"
-                        --install-folder
-                        "${conanInstalledDir}"
-                        ${conanSettings}
-                        ${conanOptions}
-                VERBATIM
-            )
-        endif()
-        if(NOT "" STREQUAL "${dependsOnTargetNames}")
-            foreach(d ${dependsOnTargetNames})
-                add_dependencies(${targetName} ${d})
-            endforeach()
-        endif()
+    if(NOT "" STREQUAL "${conanProgramPath}")
+        add_custom_target("${targetName}"
+            COMMAND "${conanProgramPath}"
+                    install
+                    "${conanFile}"
+                    --install-folder
+                    "${conanInstalledDir}"
+                    ${conanSettings}
+                    ${conanOptions}
+            COMMENT "custom-target: '${targetName}'"
+            VERBATIM
+        )
     endif()
 endmacro()
 
 macro(
-    conan_install_clean_target
+    add_custom_target_conan_install_clean
     targetName
-    dependsOnTargetNames
-    comment
+    cmakeProgramPath
     conanInstalledDir
-    cmakeProgram
 )
-    if(NOT "" STREQUAL "${comment}")
+    if(NOT "" STREQUAL "${cmakeProgramPath}")
         add_custom_target("${targetName}"
-            COMMAND "${cmakeProgram}"
+            COMMAND "${cmakeProgramPath}"
                     -E
                     rm
                     -rf
                     "${conanInstalledDir}"
-            COMMENT "${comment}"
+            COMMENT "custom-target: '${targetName}'"
             VERBATIM
         )
-    elseif("" STREQUAL "${comment}")
-        add_custom_target("${targetName}"
-            COMMAND "${cmakeProgram}"
-                    -E
-                    rm
-                    -rf
-                    "${conanInstalledDir}"
-            VERBATIM
-        )
-    endif()
-    if(NOT "" STREQUAL "${dependsOnTargetNames}")
-        foreach(d ${dependsOnTargetNames})
-            add_dependencies(${targetName} ${d})
-        endforeach()
     endif()
 endmacro()
 
 macro(
-    conan_export_target
+    add_custom_target_conan_export_user_channel
     targetName
-    dependsOnTargetNames
-    comment
-    conanPackageDir
+    conanProgramPath
     conanFile
     conanUser
     conanChannel
+    conanPackageDir
     conanSettings
     conanOptions
-    conanProgram
 )
-    if(NOT "" STREQUAL "${conanProgram}")
-        if(NOT "" STREQUAL "${conanUser}" AND NOT "" STREQUAL "${conanChannel}" AND NOT "" STREQUAL "${comment}")
-            add_custom_target("${targetName}"
-                COMMAND "${conanProgram}"
-                        export-pkg
-                        -f
-                        "${conanFile}"
-                        "${conanUser}/${conanChannel}"
-                        --package-folder
-                        "${conanPackageDir}"
-                        ${conanSettings}
-                        ${conanOptions}
-                COMMENT "${comment}"
-                VERBATIM
-            )
-        elseif(NOT "" STREQUAL "${conanUser}" AND NOT "" STREQUAL "${conanChannel}" AND "" STREQUAL "${comment}")
-            add_custom_target("${targetName}"
-                COMMAND "${conanProgram}"
-                        export-pkg
-                        -f
-                        "${conanFile}"
-                        "${conanUser}/${conanChannel}"
-                        --package-folder
-                        "${conanPackageDir}"
-                        ${conanSettings}
-                        ${conanOptions}
-                VERBATIM
-            )
-        elseif("" STREQUAL "${conanUser}" AND "" STREQUAL "${conanChannel}" AND NOT "" STREQUAL "${comment}")
-            add_custom_target("${targetName}"
-                COMMAND "${conanProgram}"
-                        export-pkg
-                        "${conanFile}"
-                        --package-folder
-                        "${conanPackageDir}"
-                        ${conanSettings}
-                        ${conanOptions}
-                COMMENT "${comment}"
-                VERBATIM
-            )
-        elseif("" STREQUAL "${conanUser}" AND "" STREQUAL "${conanChannel}" AND "" STREQUAL "${comment}")
-            add_custom_target("${targetName}"
-                COMMAND "${conanProgram}"
-                        export-pkg
-                        "${conanFile}"
-                        --package-folder
-                        "${conanPackageDir}"
-                        ${conanSettings}
-                        ${conanOptions}
-                VERBATIM
-            )
-        endif()
-        if(NOT "" STREQUAL "${dependsOnTargetNames}")
-            foreach(d ${dependsOnTargetNames})
-                add_dependencies(${targetName} ${d})
-            endforeach()
-        endif()
+    if(NOT "" STREQUAL "${conanProgramPath}")
+        add_custom_target("${targetName}"
+            COMMAND "${conanProgramPath}"
+                    export-pkg
+                    -f
+                    "${conanFile}"
+                    "${conanUser}/${conanChannel}"
+                    --package-folder
+                    "${conanPackageDir}"
+                    ${conanSettings}
+                    ${conanOptions}
+            COMMENT "custom-target: '${targetName}'"
+            VERBATIM
+        )
+    endif()
+endmacro()
+
+macro(
+    add_custom_target_conan_export
+    targetName
+    conanProgramPath
+    conanFile
+    conanPackageDir
+    conanSettings
+    conanOptions
+)
+    if(NOT "" STREQUAL "${conanProgramPath}")
+        add_custom_target("${targetName}"
+            COMMAND "${conanProgramPath}"
+                    export-pkg
+                    "${conanFile}"
+                    --package-folder
+                    "${conanPackageDir}"
+                    ${conanSettings}
+                    ${conanOptions}
+            COMMENT "custom-target: '${targetName}'"
+            VERBATIM
+        )
     endif()
 endmacro()
