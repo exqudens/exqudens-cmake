@@ -157,8 +157,8 @@ macro(
     cmakeProgramPath
     conanInstalledDir
 )
-    if("" STREQUAL "${conanProgramPath}" OR NOT EXISTS "${conanProgramPath}")
-        message(FATAL_ERROR "Not defined or not exists conanProgramPath: '${conanProgramPath}'")
+    if("" STREQUAL "${cmakeProgramPath}" OR NOT EXISTS "${cmakeProgramPath}")
+        message(FATAL_ERROR "Not defined or not exists cmakeProgramPath: '${cmakeProgramPath}'")
     endif()
     add_custom_target("${targetName}"
         COMMAND "${cmakeProgramPath}"
