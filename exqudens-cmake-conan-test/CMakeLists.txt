@@ -27,7 +27,7 @@ if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/conan-installed")
     #file(REMOVE_RECURSE "${CMAKE_CURRENT_BINARY_DIR}/conan-installed")
 endif()
 conan_install(
-    "${CONAN_PROGRAM}"
+    "${CONAN_PROGRAM_PATH}"
     "${CMAKE_CURRENT_SOURCE_DIR}/conanfile.py"
     "${CMAKE_CURRENT_BINARY_DIR}/conan-installed"
     "${CONAN_SETTINGS}"

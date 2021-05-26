@@ -1,69 +1,79 @@
 function(
     conan_settings
     variableName
-    cmakeSystemName
-    cmakeSystemProcessor
-    cmakeCxxCompilerId
-    cmakeCxxCompilerVersion
-    cmakeMsvcRuntimeLibrary
-    cmakeCxxStandard
-    cmakeBuildType
+    systemName
+    systemProcessor
+    cxxCompilerId
+    cxxCompilerVersion
+    msvcRuntimeLibrary
+    cxxStandard
+    buildType
 )
-    if(NOT DEFINED "${variableName}" OR "OVERWRITE" STREQUAL "${overwrite}")
-        # os
-        if("${cmakeSystemName}" STREQUAL "Windows")
-            set(value "--settings" "os=${cmakeSystemName}")
-        elseif("${cmakeSystemName}" STREQUAL "Linux")
-            set(value "--settings" "os=${cmakeSystemName}")
-        elseif("${cmakeSystemName}" STREQUAL "Darwin")
-            set(value "--settings" "os=Macos")
-        else()
-            message(FATAL_ERROR "Unsupported cmakeSystemName: '${cmakeSystemName}'")
-        endif()
-
-        # arch
-        if("${cmakeSystemProcessor}" STREQUAL "AMD64")
-            set(value "${value}" "--settings" "arch=x86_64")
-        else()
-            message(FATAL_ERROR "Unsupported cmakeSystemProcessor: '${cmakeSystemProcessor}'")
-        endif()
-
-        # compiler
-        if(
-            "${cmakeCxxCompilerId}" STREQUAL "MSVC"
-            AND "${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "19"
-        )
-            set(value "${value}" "--settings" "compiler=Visual Studio")
-            set(value "${value}" "--settings" "compiler.version=16")
-            if("${cmakeMsvcRuntimeLibrary}" STREQUAL "MultiThreadedDLL")
-                set(value "${value}" "--settings" "compiler.runtime=MD")
-            else()
-                set(value "${value}" "--settings" "compiler.runtime=MD")
-            endif()
-        elseif(
-            "${cmakeCxxCompilerId}" STREQUAL "GNU"
-            AND "${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "10"
-        )
-            set(value "${value}" "--settings" "compiler=gcc")
-            set(value "${value}" "--settings" "compiler.version=10")
-            if("${cmakeCxxStandard}" GREATER_EQUAL "11")
-                set(value "${value}" "--settings" "compiler.libcxx=libstdc++11")
-            else()
-                set(value "${value}" "--settings" "compiler.libcxx=libstdc++")
-            endif()
-        else()
-            message(FATAL_ERROR "Unsupported cmakeCxxCompilerId: '${cmakeCxxCompilerId}' and cmakeCxxCompilerVersion: '${cmakeCxxCompilerVersion}' and cmakeCxxStandard: '${cmakeCxxStandard}'")
-        endif()
-
-        # build_type
-        if("${cmakeBuildType}" STREQUAL "Release")
-            set(value "${value}" "--settings" "build_type=Release")
-        else()
-            message(FATAL_ERROR "Unsupported cmakeBuildType: '${cmakeBuildType}'")
-        endif()
-
-        set("${variableName}" "${value}" PARENT_SCOPE)
+    # os
+    if("${systemName}" STREQUAL "Windows")
+        set(value "--settings" "os=${systemName}")
+    elseif("${systemName}" STREQUAL "Linux")
+        set(value "--settings" "os=${systemName}")
+    elseif("${systemName}" STREQUAL "Darwin")
+        set(value "--settings" "os=Macos")
+    else()
+        message(FATAL_ERROR "Unsupported systemName: '${systemName}'")
     endif()
+
+    # arch
+    if("${systemProcessor}" STREQUAL "AMD64")
+        set(value "${value}" "--settings" "arch=x86_64")
+    else()
+        message(FATAL_ERROR "Unsupported systemProcessor: '${systemProcessor}'")
+    endif()
+
+    # compiler
+    if("${cxxCompilerId}" STREQUAL "MSVC")
+        set(value "${value}" "--settings" "compiler=Visual Studio")
+
+        # compiler.version
+        if("${cxxCompilerVersion}" VERSION_GREATER_EQUAL "19" AND "${cxxCompilerVersion}" VERSION_LESS "20")
+            set(value "${value}" "--settings" "compiler.version=16")
+        elseif("${cxxCompilerVersion}" VERSION_GREATER_EQUAL "17" AND "${cxxCompilerVersion}" VERSION_LESS "18")
+            set(value "${value}" "--settings" "compiler.version=15")
+        else()
+            message(FATAL_ERROR "Unsupported cxxCompilerVersion: '${cxxCompilerVersion}'")
+        endif()
+
+        # compiler.runtime
+        if("${msvcRuntimeLibrary}" STREQUAL "MultiThreadedDLL")
+            set(value "${value}" "--settings" "compiler.runtime=MD")
+        else()
+            message(FATAL_ERROR "Unsupported msvcRuntimeLibrary: '${msvcRuntimeLibrary}'")
+        endif()
+    elseif("${cxxCompilerId}" STREQUAL "GNU")
+        set(value "${value}" "--settings" "compiler=gcc")
+
+        # compiler.version
+        if("${cxxCompilerVersion}" VERSION_GREATER_EQUAL "10")
+            set(value "${value}" "--settings" "compiler.version=10")
+        else()
+            message(FATAL_ERROR "Unsupported cxxCompilerVersion: '${cxxCompilerVersion}'")
+        endif()
+
+        # compiler.libcxx
+        if("${cxxStandard}" GREATER_EQUAL "11")
+            set(value "${value}" "--settings" "compiler.libcxx=libstdc++11")
+        else()
+            set(value "${value}" "--settings" "compiler.libcxx=libstdc++")
+        endif()
+    else()
+        message(FATAL_ERROR "Unsupported cxxCompilerId: '${cxxCompilerId}'")
+    endif()
+
+    # build_type
+    if("${buildType}" STREQUAL "Release")
+        set(value "${value}" "--settings" "build_type=Release")
+    else()
+        message(FATAL_ERROR "Unsupported buildType: '${buildType}'")
+    endif()
+
+    set("${variableName}" "${value}" PARENT_SCOPE)
 endfunction()
 
 function(
@@ -80,8 +90,8 @@ function(
     set(value "--options" "shared=${pythonBoolValue}")
 
     # dependencies
-    if("${ARGC}" GREATER_EQUAL "4")
-        set("start" "3")
+    if("${ARGC}" GREATER_EQUAL "3")
+        set("start" "2")
         math(EXPR "stop" "${ARGC} - 1")
         foreach(i RANGE "${start}" "${stop}")
             set(value "--options" "${ARGV${i}}:shared=${pythonBoolValue}" "${value}")
@@ -99,19 +109,20 @@ macro(
     conanSettings
     conanOptions
 )
-    if(NOT "" STREQUAL "${conanProgramPath}")
-        if(NOT EXISTS "${conanInstalledDir}")
-            execute_process(
-                COMMAND "${conanProgramPath}"
-                        install
-                        "${conanFile}"
-                        --install-folder
-                        "${conanInstalledDir}"
-                        ${conanSettings}
-                        ${conanOptions}
-                COMMAND_ERROR_IS_FATAL ANY
-            )
-        endif()
+    if("" STREQUAL "${conanProgramPath}" OR NOT EXISTS "${conanProgramPath}")
+        message(FATAL_ERROR "Not defined or not exists conanProgramPath: '${conanProgramPath}'")
+    endif()
+    if(NOT EXISTS "${conanInstalledDir}")
+        execute_process(
+            COMMAND "${conanProgramPath}"
+                    install
+                    "${conanFile}"
+                    --install-folder
+                    "${conanInstalledDir}"
+                    ${conanSettings}
+                    ${conanOptions}
+            COMMAND_ERROR_IS_FATAL ANY
+        )
     endif()
 endmacro()
 
@@ -124,19 +135,20 @@ macro(
     conanSettings
     conanOptions
 )
-    if(NOT "" STREQUAL "${conanProgramPath}")
-        add_custom_target("${targetName}"
-            COMMAND "${conanProgramPath}"
-                    install
-                    "${conanFile}"
-                    --install-folder
-                    "${conanInstalledDir}"
-                    ${conanSettings}
-                    ${conanOptions}
-            COMMENT "custom-target: '${targetName}'"
-            VERBATIM
-        )
+    if("" STREQUAL "${conanProgramPath}" OR NOT EXISTS "${conanProgramPath}")
+        message(FATAL_ERROR "Not defined or not exists conanProgramPath: '${conanProgramPath}'")
     endif()
+    add_custom_target("${targetName}"
+        COMMAND "${conanProgramPath}"
+                install
+                "${conanFile}"
+                --install-folder
+                "${conanInstalledDir}"
+                ${conanSettings}
+                ${conanOptions}
+        COMMENT "custom-target: '${targetName}'"
+        VERBATIM
+    )
 endmacro()
 
 macro(
@@ -145,17 +157,18 @@ macro(
     cmakeProgramPath
     conanInstalledDir
 )
-    if(NOT "" STREQUAL "${cmakeProgramPath}")
-        add_custom_target("${targetName}"
-            COMMAND "${cmakeProgramPath}"
-                    -E
-                    rm
-                    -rf
-                    "${conanInstalledDir}"
-            COMMENT "custom-target: '${targetName}'"
-            VERBATIM
-        )
+    if("" STREQUAL "${conanProgramPath}" OR NOT EXISTS "${conanProgramPath}")
+        message(FATAL_ERROR "Not defined or not exists conanProgramPath: '${conanProgramPath}'")
     endif()
+    add_custom_target("${targetName}"
+        COMMAND "${cmakeProgramPath}"
+                -E
+                rm
+                -rf
+                "${conanInstalledDir}"
+        COMMENT "custom-target: '${targetName}'"
+        VERBATIM
+    )
 endmacro()
 
 macro(
@@ -169,21 +182,22 @@ macro(
     conanSettings
     conanOptions
 )
-    if(NOT "" STREQUAL "${conanProgramPath}")
-        add_custom_target("${targetName}"
-            COMMAND "${conanProgramPath}"
-                    export-pkg
-                    -f
-                    "${conanFile}"
-                    "${conanUser}/${conanChannel}"
-                    --package-folder
-                    "${conanPackageDir}"
-                    ${conanSettings}
-                    ${conanOptions}
-            COMMENT "custom-target: '${targetName}'"
-            VERBATIM
-        )
+    if("" STREQUAL "${conanProgramPath}" OR NOT EXISTS "${conanProgramPath}")
+        message(FATAL_ERROR "Not defined or not exists conanProgramPath: '${conanProgramPath}'")
     endif()
+    add_custom_target("${targetName}"
+        COMMAND "${conanProgramPath}"
+                export-pkg
+                -f
+                "${conanFile}"
+                "${conanUser}/${conanChannel}"
+                --package-folder
+                "${conanPackageDir}"
+                ${conanSettings}
+                ${conanOptions}
+        COMMENT "custom-target: '${targetName}'"
+        VERBATIM
+    )
 endmacro()
 
 macro(
@@ -195,17 +209,18 @@ macro(
     conanSettings
     conanOptions
 )
-    if(NOT "" STREQUAL "${conanProgramPath}")
-        add_custom_target("${targetName}"
-            COMMAND "${conanProgramPath}"
-                    export-pkg
-                    "${conanFile}"
-                    --package-folder
-                    "${conanPackageDir}"
-                    ${conanSettings}
-                    ${conanOptions}
-            COMMENT "custom-target: '${targetName}'"
-            VERBATIM
-        )
+    if("" STREQUAL "${conanProgramPath}" OR NOT EXISTS "${conanProgramPath}")
+        message(FATAL_ERROR "Not defined or not exists conanProgramPath: '${conanProgramPath}'")
     endif()
+    add_custom_target("${targetName}"
+        COMMAND "${conanProgramPath}"
+                export-pkg
+                "${conanFile}"
+                --package-folder
+                "${conanPackageDir}"
+                ${conanSettings}
+                ${conanOptions}
+        COMMENT "custom-target: '${targetName}'"
+        VERBATIM
+    )
 endmacro()
