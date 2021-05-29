@@ -103,18 +103,18 @@ endfunction()
 
 macro(
     conan_install
-    conanProgramPath
+    conanCommand
     conanFile
     conanInstalledDir
     conanSettings
     conanOptions
 )
-    if("" STREQUAL "${conanProgramPath}" OR NOT EXISTS "${conanProgramPath}")
-        message(FATAL_ERROR "Not defined or not exists conanProgramPath: '${conanProgramPath}'")
+    if("" STREQUAL "${conanCommand}" OR NOT EXISTS "${conanCommand}")
+        message(FATAL_ERROR "Not defined or not exists conanCommand: '${conanCommand}'")
     endif()
     if(NOT EXISTS "${conanInstalledDir}")
         execute_process(
-            COMMAND "${conanProgramPath}"
+            COMMAND "${conanCommand}"
                     install
                     "${conanFile}"
                     --install-folder
@@ -129,17 +129,17 @@ endmacro()
 macro(
     add_custom_target_conan_install
     targetName
-    conanProgramPath
+    conanCommand
     conanFile
     conanInstalledDir
     conanSettings
     conanOptions
 )
-    if("" STREQUAL "${conanProgramPath}" OR NOT EXISTS "${conanProgramPath}")
-        message(FATAL_ERROR "Not defined or not exists conanProgramPath: '${conanProgramPath}'")
+    if("" STREQUAL "${conanCommand}" OR NOT EXISTS "${conanCommand}")
+        message(FATAL_ERROR "Not defined or not exists conanCommand: '${conanCommand}'")
     endif()
     add_custom_target("${targetName}"
-        COMMAND "${conanProgramPath}"
+        COMMAND "${conanCommand}"
                 install
                 "${conanFile}"
                 --install-folder
@@ -174,7 +174,7 @@ endmacro()
 macro(
     add_custom_target_conan_export_user_channel
     targetName
-    conanProgramPath
+    conanCommand
     conanFile
     conanUser
     conanChannel
@@ -182,11 +182,11 @@ macro(
     conanSettings
     conanOptions
 )
-    if("" STREQUAL "${conanProgramPath}" OR NOT EXISTS "${conanProgramPath}")
-        message(FATAL_ERROR "Not defined or not exists conanProgramPath: '${conanProgramPath}'")
+    if("" STREQUAL "${conanCommand}" OR NOT EXISTS "${conanCommand}")
+        message(FATAL_ERROR "Not defined or not exists conanCommand: '${conanCommand}'")
     endif()
     add_custom_target("${targetName}"
-        COMMAND "${conanProgramPath}"
+        COMMAND "${conanCommand}"
                 export-pkg
                 -f
                 "${conanFile}"
@@ -201,25 +201,67 @@ macro(
 endmacro()
 
 macro(
+    add_custom_target_conan_export_user_channel_clean
+    targetName
+    conanCommand
+    conanPackageName
+    conanPackageVersion
+    conanUser
+    conanChannel
+)
+    if("" STREQUAL "${conanCommand}" OR NOT EXISTS "${conanCommand}")
+        message(FATAL_ERROR "Not defined or not exists conanCommand: '${conanCommand}'")
+    endif()
+    add_custom_target("${targetName}"
+        COMMAND "${conanCommand}"
+                remove
+                -f
+                "${conanPackageName}/${conanPackageVersion}@${conanUser}/${conanChannel}"
+        COMMENT "custom-target: '${targetName}'"
+        VERBATIM
+    )
+endmacro()
+
+macro(
     add_custom_target_conan_export
     targetName
-    conanProgramPath
+    conanCommand
     conanFile
     conanPackageDir
     conanSettings
     conanOptions
 )
-    if("" STREQUAL "${conanProgramPath}" OR NOT EXISTS "${conanProgramPath}")
-        message(FATAL_ERROR "Not defined or not exists conanProgramPath: '${conanProgramPath}'")
+    if("" STREQUAL "${conanCommand}" OR NOT EXISTS "${conanCommand}")
+        message(FATAL_ERROR "Not defined or not exists conanCommand: '${conanCommand}'")
     endif()
     add_custom_target("${targetName}"
-        COMMAND "${conanProgramPath}"
+        COMMAND "${conanCommand}"
                 export-pkg
                 "${conanFile}"
                 --package-folder
                 "${conanPackageDir}"
                 ${conanSettings}
                 ${conanOptions}
+        COMMENT "custom-target: '${targetName}'"
+        VERBATIM
+    )
+endmacro()
+
+macro(
+    add_custom_target_conan_export_clean
+    targetName
+    conanCommand
+    conanPackageName
+    conanPackageVersion
+)
+    if("" STREQUAL "${conanCommand}" OR NOT EXISTS "${conanCommand}")
+        message(FATAL_ERROR "Not defined or not exists conanCommand: '${conanCommand}'")
+    endif()
+    add_custom_target("${targetName}"
+        COMMAND "${conanCommand}"
+                remove
+                -f
+                "${conanPackageName}/${conanPackageVersion}"
         COMMENT "custom-target: '${targetName}'"
         VERBATIM
     )
