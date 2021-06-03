@@ -1,5 +1,48 @@
 function(
-    conan_settings
+    set_conan_path
+    variableName
+    searchPaths
+)
+    cmake_path(
+        CONVERT "${searchPaths}"
+        TO_CMAKE_PATH_LIST "cmakeSearchPaths"
+        NORMALIZE
+    )
+    foreach(pathDir ${cmakeSearchPaths})
+        file(GLOB pathDirFileNames RELATIVE "${pathDir}" "${pathDir}/*")
+        foreach(pathFileName ${pathDirFileNames})
+            if("conan" STREQUAL "${pathFileName}" OR "conan.exe" STREQUAL "${pathFileName}")
+                set("conanPath" "${pathDir}/${pathFileName}")
+            endif()
+        endforeach()
+    endforeach()
+    if(DEFINED "conanPath" AND EXISTS "${conanPath}")
+        cmake_path(
+            CONVERT "${conanPath}"
+            TO_NATIVE_PATH_LIST "nativeConanPath"
+            NORMALIZE
+        )
+        set("${variableName}" "${nativeConanPath}" PARENT_SCOPE)
+    else()
+        message(FATAL_ERROR "No 'conan' or 'conan.exe' in '${searchPaths}'")
+    endif()
+endfunction()
+
+function(
+    set_conan_command
+    variableName
+    conanPath
+)
+    cmake_path(
+        CONVERT "${conanPath}"
+        TO_CMAKE_PATH_LIST "conanCommand"
+        NORMALIZE
+    )
+    set("${variableName}" "${conanCommand}" PARENT_SCOPE)
+endfunction()
+
+function(
+    set_conan_settings
     variableName
     systemName
     systemProcessor
@@ -77,7 +120,7 @@ function(
 endfunction()
 
 function(
-    conan_options
+    set_conan_options
     variableName
     buildSharedLibs
 )

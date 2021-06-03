@@ -3,31 +3,15 @@ project("${CMAKE_PROJECT_NAME}-conan-test" VERSION "${CMAKE_PROJECT_VERSION}")
 
 message("project: '${PROJECT_NAME}-${PROJECT_VERSION}'")
 
-if(NOT DEFINED "CONAN_COMMAND")
-    cmake_path(
-        CONVERT "$ENV{PATH}"
-        TO_CMAKE_PATH_LIST "${PROJECT_NAME}_CMAKE_PATH_LIST"
-        NORMALIZE
-    )
-    foreach(pathDir ${${PROJECT_NAME}_CMAKE_PATH_LIST})
-        file(GLOB pathDirFileNames RELATIVE "${pathDir}" "${pathDir}/*")
-        foreach(pathFileName ${pathDirFileNames})
-            if("conan" STREQUAL "${pathFileName}" OR "conan.exe" STREQUAL "${pathFileName}")
-                set(CONAN_COMMAND "${pathDir}/${pathFileName}" CACHE FILEPATH "..." FORCE)
-            endif()
-        endforeach()
-    endforeach()
-    if(NOT DEFINED "CONAN_COMMAND")
-        message(FATAL_ERROR "No 'conan' or 'conan.exe' in 'ENV{PATH}'")
-    endif()
-endif()
-
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED "ON")
 
 include("${CMAKE_SOURCE_DIR}/src/main/cmake/conan.cmake")
 
-conan_settings(
+set_conan_path(CONAN_PROGRAM_PATH "$ENV{PATH}")
+set_conan_command(CONAN_COMMAND "${CONAN_PROGRAM_PATH}")
+
+set_conan_settings(
     CONAN_SETTINGS
     "${CMAKE_SYSTEM_NAME}"
     "${CMAKE_SYSTEM_PROCESSOR}"
@@ -38,7 +22,7 @@ conan_settings(
     "${CMAKE_BUILD_TYPE}"
 )
 
-conan_options(
+set_conan_options(
     CONAN_OPTIONS
     "${BUILD_SHARED_LIBS}"
     "fmt"
