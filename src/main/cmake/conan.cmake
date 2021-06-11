@@ -93,7 +93,11 @@ function(
         set(value "${value}" "--settings" "compiler=gcc")
 
         # compiler.version
-        if("${cxxCompilerVersion}" VERSION_GREATER_EQUAL "10")
+        if("${cxxCompilerVersion}" VERSION_GREATER_EQUAL "8" AND "${cxxCompilerVersion}" VERSION_LESS "9")
+            set(value "${value}" "--settings" "compiler.version=9")
+        elseif("${cxxCompilerVersion}" VERSION_GREATER_EQUAL "9" AND "${cxxCompilerVersion}" VERSION_LESS "10")
+            set(value "${value}" "--settings" "compiler.version=9")
+        elseif("${cxxCompilerVersion}" VERSION_GREATER_EQUAL "10" AND "${cxxCompilerVersion}" VERSION_LESS "11")
             set(value "${value}" "--settings" "compiler.version=10")
         else()
             message(FATAL_ERROR "Unsupported cxxCompilerVersion: '${cxxCompilerVersion}'")
