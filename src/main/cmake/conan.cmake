@@ -84,8 +84,14 @@ function(
         endif()
 
         # compiler.runtime
-        if("${msvcRuntimeLibrary}" STREQUAL "MultiThreadedDLL")
+        if("${msvcRuntimeLibrary}" STREQUAL "MultiThreaded")
+            set(value "${value}" "--settings" "compiler.runtime=MT")
+        elseif("${msvcRuntimeLibrary}" STREQUAL "MultiThreadedDLL")
             set(value "${value}" "--settings" "compiler.runtime=MD")
+        elseif("${msvcRuntimeLibrary}" STREQUAL "MultiThreadedDebug")
+            set(value "${value}" "--settings" "compiler.runtime=MTd")
+        elseif("${msvcRuntimeLibrary}" STREQUAL "MultiThreadedDebugDLL")
+            set(value "${value}" "--settings" "compiler.runtime=MDd")
         else()
             message(FATAL_ERROR "Unsupported msvcRuntimeLibrary: '${msvcRuntimeLibrary}'")
         endif()
