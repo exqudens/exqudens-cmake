@@ -31,6 +31,12 @@ include("${CMAKE_SOURCE_DIR}/src/main/cmake/util.cmake")
 set_conan_path(CONAN_PROGRAM_PATH "$ENV{PATH}")
 set_conan_command(CONAN_COMMAND "${CONAN_PROGRAM_PATH}")
 
+set(CONAN_PACKAGE_NAMES
+    "zlib"
+    "libpng"
+    "yaml-cpp"
+)
+
 set_conan_settings(
     CONAN_SETTINGS
     "${CMAKE_SYSTEM_NAME}"
@@ -47,6 +53,7 @@ message("CONAN_SETTINGS: '${CONAN_SETTINGS}'")
 set_conan_options(
     CONAN_OPTIONS
     "${BUILD_SHARED_LIBS}"
+    ${CONAN_PACKAGE_NAMES}
     "zlib=SHARED"
     "libpng=STATIC"
     "yaml-cpp"
