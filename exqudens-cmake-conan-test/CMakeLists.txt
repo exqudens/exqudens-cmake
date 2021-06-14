@@ -6,6 +6,8 @@ message("project: '${PROJECT_NAME}-${PROJECT_VERSION}'")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED "ON")
 
+message("BUILD_SHARED_LIBS: '${BUILD_SHARED_LIBS}'")
+
 include("${CMAKE_SOURCE_DIR}/src/main/cmake/conan.cmake")
 
 set_conan_path(CONAN_PROGRAM_PATH "$ENV{PATH}")
@@ -22,11 +24,17 @@ set_conan_settings(
     "${CMAKE_BUILD_TYPE}"
 )
 
+message("CONAN_SETTINGS: '${CONAN_SETTINGS}'")
+
 set_conan_options(
     CONAN_OPTIONS
     "${BUILD_SHARED_LIBS}"
-    "fmt"
+    "zlib=SHARED"
+    "libpng=STATIC"
+    "yaml-cpp"
 )
+
+message("CONAN_OPTIONS: '${CONAN_OPTIONS}'")
 
 if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/conan-installed")
     #file(REMOVE_RECURSE "${CMAKE_CURRENT_BINARY_DIR}/conan-installed")

@@ -134,22 +134,39 @@ function(
     variableName
     buildSharedLibs
 )
-    set("pythonBoolValue" "False")
+    set("pythonBuildSharedLibs" "False")
     if("${buildSharedLibs}")
-        set("pythonBoolValue" "True")
+        set("pythonBuildSharedLibs" "True")
     endif()
-
-    # self
-    set(value "--options" "shared=${pythonBoolValue}")
 
     # dependencies
     if("${ARGC}" GREATER_EQUAL "3")
         set("start" "2")
         math(EXPR "stop" "${ARGC} - 1")
         foreach(i RANGE "${start}" "${stop}")
-            set(value "--options" "${ARGV${i}}:shared=${pythonBoolValue}" "${value}")
+            set(argument "${ARGV${i}}")
+            if(NOT "" STREQUAL "${argument}")
+                string(FIND "${argument}" "=SHARED" indexOfShared)
+                string(FIND "${argument}" "=STATIC" indexOfStatic)
+                if(NOT "-1" STREQUAL "${indexOfShared}")
+                    string(LENGTH "${argument}" argumentLength)
+                    math(EXPR newArgumentLength "${argumentLength} - 7")
+                    string(SUBSTRING "${argument}" "0" "${newArgumentLength}" name)
+                    list(APPEND value "--options" "${name}:shared=True")
+                elseif(NOT "-1" STREQUAL "${indexOfStatic}")
+                    string(LENGTH "${argument}" argumentLength)
+                    math(EXPR newArgumentLength "${argumentLength} - 7")
+                    string(SUBSTRING "${argument}" "0" "${newArgumentLength}" name)
+                    list(APPEND value "--options" "${name}:shared=False")
+                else()
+                    list(APPEND value "--options" "${argument}:shared=${pythonBuildSharedLibs}")
+                endif()
+            endif()
         endforeach()
     endif()
+
+    # self
+    list(APPEND value "--options" "shared=${pythonBuildSharedLibs}")
 
     set("${variableName}" "${value}" PARENT_SCOPE)
 endfunction()
