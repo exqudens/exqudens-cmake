@@ -55,19 +55,17 @@ function(
     # os
     if("${systemName}" STREQUAL "Windows")
         set(value "--settings" "os=${systemName}")
-    elseif("${systemName}" STREQUAL "Linux")
-        set(value "--settings" "os=${systemName}")
-    elseif("${systemName}" STREQUAL "Darwin")
-        set(value "--settings" "os=Macos")
+
+        # arch
+        if("${systemProcessor}" STREQUAL "AMD64" OR "${systemProcessor}" STREQUAL "IA64")
+            set(value "${value}" "--settings" "arch=x86_64")
+        elseif("${systemProcessor}" STREQUAL "x86")
+            set(value "${value}" "--settings" "arch=x86")
+        else()
+            message(FATAL_ERROR "Unsupported systemProcessor: '${systemProcessor}'")
+        endif()
     else()
         message(FATAL_ERROR "Unsupported systemName: '${systemName}'")
-    endif()
-
-    # arch
-    if("${systemProcessor}" STREQUAL "AMD64")
-        set(value "${value}" "--settings" "arch=x86_64")
-    else()
-        message(FATAL_ERROR "Unsupported systemProcessor: '${systemProcessor}'")
     endif()
 
     # compiler
