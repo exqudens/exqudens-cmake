@@ -1,4 +1,38 @@
 function(
+    set_conan_boolean
+    variableName
+    cmakeValue
+)
+    if("${cmakeValue}")
+        set(value "True")
+    else()
+        set(value "False")
+    endif()
+
+    set("${variableName}" "${value}" PARENT_SCOPE)
+endfunction()
+
+function(
+    set_conan_msvc_compiler_runtime
+    variableName
+    msvcRuntimeLibrary
+)
+    if("${msvcRuntimeLibrary}" STREQUAL "MultiThreaded")
+        set(value "MT")
+    elseif("${msvcRuntimeLibrary}" STREQUAL "MultiThreadedDLL")
+        set(value "MD")
+    elseif("${msvcRuntimeLibrary}" STREQUAL "MultiThreadedDebug")
+        set(value "MTd")
+    elseif("${msvcRuntimeLibrary}" STREQUAL "MultiThreadedDebugDLL")
+        set(value "MDd")
+    else()
+        message(FATAL_ERROR "Unsupported msvcRuntimeLibrary: '${msvcRuntimeLibrary}'")
+    endif()
+
+    set("${variableName}" "${value}" PARENT_SCOPE)
+endfunction()
+
+function(
     set_conan_path
     variableName
     searchPaths
@@ -82,17 +116,8 @@ function(
         endif()
 
         # compiler.runtime
-        if("${msvcRuntimeLibrary}" STREQUAL "MultiThreaded")
-            set(value "${value}" "--settings" "compiler.runtime=MT")
-        elseif("${msvcRuntimeLibrary}" STREQUAL "MultiThreadedDLL")
-            set(value "${value}" "--settings" "compiler.runtime=MD")
-        elseif("${msvcRuntimeLibrary}" STREQUAL "MultiThreadedDebug")
-            set(value "${value}" "--settings" "compiler.runtime=MTd")
-        elseif("${msvcRuntimeLibrary}" STREQUAL "MultiThreadedDebugDLL")
-            set(value "${value}" "--settings" "compiler.runtime=MDd")
-        else()
-            message(FATAL_ERROR "Unsupported msvcRuntimeLibrary: '${msvcRuntimeLibrary}'")
-        endif()
+        set_conan_msvc_compiler_runtime(conanCompilerRuntime "${msvcRuntimeLibrary}")
+        set(value "${value}" "--settings" "compiler.runtime=${conanCompilerRuntime}")
     elseif("${cxxCompilerId}" STREQUAL "GNU")
         set(value "${value}" "--settings" "compiler=gcc")
 
@@ -124,6 +149,20 @@ function(
         message(FATAL_ERROR "Unsupported buildType: '${buildType}'")
     endif()
 
+    # additional
+    if("${ARGC}" GREATER_EQUAL "9")
+        set("start" "8")
+        math(EXPR "stop" "${ARGC} - 1")
+        foreach(i RANGE "${start}" "${stop}")
+            set(argument "${ARGV${i}}")
+            if(NOT "" STREQUAL "${argument}")
+                if(NOT "${argument}" IN_LIST "value")
+                    list(APPEND value "--settings" "${argument}")
+                endif()
+            endif()
+        endforeach()
+    endif()
+
     set("${variableName}" "${value}" PARENT_SCOPE)
 endfunction()
 
@@ -132,59 +171,23 @@ function(
     variableName
     buildSharedLibs
 )
-    # dependencies
+    set_conan_boolean(conanBuildSharedLibs "${buildSharedLibs}")
+
+    # self
+    list(APPEND value "--options" "shared=${conanBuildSharedLibs}")
+
+    # additional
     if("${ARGC}" GREATER_EQUAL "3")
         set("start" "2")
         math(EXPR "stop" "${ARGC} - 1")
         foreach(i RANGE "${start}" "${stop}")
             set(argument "${ARGV${i}}")
             if(NOT "" STREQUAL "${argument}")
-                string(FIND "${argument}" "=SHARED" indexOfShared)
-                string(FIND "${argument}" "=STATIC" indexOfStatic)
-                if(NOT "-1" STREQUAL "${indexOfShared}")
-                    string(LENGTH "${argument}" argumentLength)
-                    math(EXPR newArgumentLength "${argumentLength} - 7")
-                    string(SUBSTRING "${argument}" "0" "${newArgumentLength}" name)
-                    #list(APPEND value "--options" "${name}:shared=True")
-                    if(NOT "${name}" IN_LIST names)
-                        list(APPEND names "${name}")
-                    endif()
-                    set("SET_CONAN_OPTIONS_${name}" "SHARED")
-                elseif(NOT "-1" STREQUAL "${indexOfStatic}")
-                    string(LENGTH "${argument}" argumentLength)
-                    math(EXPR newArgumentLength "${argumentLength} - 7")
-                    string(SUBSTRING "${argument}" "0" "${newArgumentLength}" name)
-                    #list(APPEND value "--options" "${name}:shared=False")
-                    if(NOT "${name}" IN_LIST names)
-                        list(APPEND names "${name}")
-                    endif()
-                    set("SET_CONAN_OPTIONS_${name}" "STATIC")
-                else()
-                    if(NOT "${argument}" IN_LIST names)
-                        list(APPEND names "${argument}")
-                    endif()
-                    if("${buildSharedLibs}")
-                        set("SET_CONAN_OPTIONS_${argument}" "SHARED")
-                    else()
-                        set("SET_CONAN_OPTIONS_${argument}" "STATIC")
-                    endif()
+                if(NOT "${argument}" IN_LIST "value")
+                    list(APPEND value "--options" "${argument}")
                 endif()
             endif()
         endforeach()
-        foreach(name ${names})
-            if("${SET_CONAN_OPTIONS_${name}}" STREQUAL "SHARED")
-                list(APPEND value "--options" "${name}:shared=True")
-            elseif("${SET_CONAN_OPTIONS_${name}}" STREQUAL "STATIC")
-                list(APPEND value "--options" "${name}:shared=False")
-            endif()
-        endforeach()
-    endif()
-
-    # self
-    if("${buildSharedLibs}")
-        list(APPEND value "--options" "shared=True")
-    else()
-        list(APPEND value "--options" "shared=False")
     endif()
 
     set("${variableName}" "${value}" PARENT_SCOPE)

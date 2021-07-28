@@ -37,8 +37,7 @@ set(CONAN_PACKAGE_NAMES
     "yaml-cpp"
 )
 
-set_conan_boolean(CONAN_BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS}")
-set_conan_msvc_compiler_runtime(CONAN_MSVC_COMPILER_RUNTIME "${CMAKE_MSVC_RUNTIME_LIBRARY}")
+set_conan_msvc_compiler_runtime(CONAN_COMPILER_RUNTIME "${CMAKE_MSVC_RUNTIME_LIBRARY}")
 
 set_conan_settings(
     CONAN_SETTINGS
@@ -52,7 +51,7 @@ set_conan_settings(
 
     "zlib:compiler.runtime=MD"
     "libpng:compiler.runtime=MT"
-    "yaml-cpp:compiler.runtime=${CONAN_MSVC_COMPILER_RUNTIME}"
+    "yaml-cpp:compiler.runtime=${CONAN_COMPILER_RUNTIME}"
 )
 
 message("CONAN_SETTINGS: '${CONAN_SETTINGS}'")
@@ -66,40 +65,3 @@ set_conan_options(
 )
 
 message("CONAN_OPTIONS: '${CONAN_OPTIONS}'")
-
-if(NOT EXISTS "${${PROJECT_NAME}_CONAN_INSTALL_PREFIX}")
-    conan_install(
-        "${CONAN_COMMAND}"
-        "${CMAKE_CURRENT_SOURCE_DIR}/conanfile.py"
-        "${${PROJECT_NAME}_CONAN_INSTALL_PREFIX}"
-        "${CONAN_SETTINGS}"
-        "${CONAN_OPTIONS}"
-    )
-endif()
-
-if(EXISTS "${${PROJECT_NAME}_CONAN_INSTALL_PREFIX}/conan_paths.cmake")
-    include("${${PROJECT_NAME}_CONAN_INSTALL_PREFIX}/conan_paths.cmake")
-endif()
-
-find_package("ZLIB" "1.2.11" #[[REQUIRED]] QUIET)
-find_package("PNG" "1.6.37" #[[REQUIRED]] QUIET)
-find_package("json-c" "0.15" #[[REQUIRED]] QUIET)
-
-message("ZLIB_FOUND: '${ZLIB_FOUND}'")
-message("PNG_FOUND: '${PNG_FOUND}'")
-message("json-c_FOUND: '${json-c_FOUND}'")
-
-set_not_found_package_names(NOT_FOUND_PACKAGE_NAMES
-    "ZLIB"
-    "PNG"
-    "json-c"
-)
-
-message("NOT_FOUND_PACKAGE_NAMES: '${NOT_FOUND_PACKAGE_NAMES}'")
-
-if(NOT "" STREQUAL "${NOT_FOUND_PACKAGE_NAMES}")
-    foreach(name ${NOT_FOUND_PACKAGE_NAMES})
-        message(WARNING "${name}_FOUND: '${${name}_FOUND}'")
-    endforeach()
-    return()
-endif()
