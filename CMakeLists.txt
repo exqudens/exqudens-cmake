@@ -1,57 +1,52 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 get_filename_component(RAW_NAME "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
 string(REPLACE " " "_" NAME "${RAW_NAME}")
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/version.txt" RAW_VERSION)
 string(STRIP "${RAW_VERSION}" VERSION)
-project("${NAME}" VERSION "${VERSION}")
-
-message("project: '${PROJECT_NAME}-${PROJECT_VERSION}'")
-
-message(STATUS "ENV.PATH: '$ENV{PATH}'")
-message(STATUS "ENV.INCLUDE: '$ENV{INCLUDE}'")
-message(STATUS "ENV.LIBPATH: '$ENV{LIBPATH}'")
-message(STATUS "ENV.LIB: '$ENV{LIB}'")
-message(STATUS "CMAKE_AR: '${CMAKE_AR}'")
-message(STATUS "CMAKE_CXX_COMPILER: '${CMAKE_CXX_COMPILER}'")
-message(STATUS "CMAKE_C_COMPILER: '${CMAKE_C_COMPILER}'")
-message(STATUS "CMAKE_LINKER: '${CMAKE_LINKER}'")
-message(STATUS "CMAKE_MT: '${CMAKE_MT}'")
-message(STATUS "CMAKE_RC_COMPILER: '${CMAKE_RC_COMPILER}'")
-
-if("${BUILD_SHARED_LIBS}")
-    if(NOT DEFINED "CMAKE_MSVC_RUNTIME_LIBRARY")
-        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
-    endif()
-    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-    set(CMAKE_CXX_VISIBILITY_PRESET "default")
-    set(CMAKE_VISIBILITY_INLINES_HIDDEN FALSE)
-else()
-    if(NOT DEFINED "CMAKE_MSVC_RUNTIME_LIBRARY")
-        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
-    endif()
-    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS FALSE)
-    set(CMAKE_CXX_VISIBILITY_PRESET "hidden")
-    set(CMAKE_VISIBILITY_INLINES_HIDDEN TRUE)
-    if("${MINGW}")
-        set(CMAKE_CXX_STANDARD_LIBRARIES "-static-libgcc -static-libstdc++ ${CMAKE_CXX_STANDARD_LIBRARIES}")
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive")
-    endif()
-endif()
-
-set(CMAKE_OBJECT_PATH_MAX 1000)
-set(CMAKE_SHARED_LIBRARY_PREFIX "")
-set(CMAKE_SHARED_MODULE_PREFIX "")
-set(CMAKE_STATIC_LIBRARY_PREFIX "")
-set(CMAKE_IMPORT_LIBRARY_PREFIX "")
-set(CMAKE_STAGING_PREFIX "")
-set(CMAKE_FIND_LIBRARY_PREFIXES "")
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+project("${NAME}" VERSION "${VERSION}" LANGUAGES "NONE")
 
 if("${CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT}")
     set(CMAKE_INSTALL_PREFIX "${PROJECT_BINARY_DIR}/cmake-install" CACHE PATH "..." FORCE)
 endif()
 
-add_subdirectory("${PROJECT_NAME}-conan-test")
-add_subdirectory("${PROJECT_NAME}-extension-test")
+include("src/main/cmake/util.cmake")
+
+set_if_not_defined(MESSAGE_MODE "NOTICE")
+
+message("${MESSAGE_MODE}" "project: '${PROJECT_NAME}-${PROJECT_VERSION}'")
+message("${MESSAGE_MODE}" "CMAKE_COMMAND: '${CMAKE_COMMAND}'")
+message("${MESSAGE_MODE}" "CMAKE_VERSION: '${CMAKE_VERSION}'")
+
+if("Windows" STREQUAL "${CMAKE_HOST_SYSTEM_NAME}" AND "msvc" STREQUAL "${COMPILER_NAME}" AND NOT DEFINED "ENV{INCLUDE}")
+    if(
+        "" STREQUAL "${${CMAKE_PROJECT_NAME}-cpp-test_MSVC_INCLUDE}"
+        OR "" STREQUAL "${${CMAKE_PROJECT_NAME}-cpp-test_MSVC_LIBPATH}"
+        OR "" STREQUAL "${${CMAKE_PROJECT_NAME}-cpp-test_MSVC_LIB}"
+        OR "" STREQUAL "${${CMAKE_PROJECT_NAME}-cpp-test_MSVC_PATH}"
+    )
+        set_msvc_env("${CMAKE_PROJECT_NAME}-cpp-test" COMPILER_VERSION "${COMPILER_VERSION}" COMPILER_ARCH "${COMPILER_ARCH}" TARGET_ARCH "${TARGET_ARCH}")
+        set("${CMAKE_PROJECT_NAME}-cpp-test_MSVC_INCLUDE" "${${CMAKE_PROJECT_NAME}-cpp-test_MSVC_INCLUDE}" CACHE STRING "")
+        set("${CMAKE_PROJECT_NAME}-cpp-test_MSVC_LIBPATH" "${${CMAKE_PROJECT_NAME}-cpp-test_MSVC_LIBPATH}" CACHE STRING "")
+        set("${CMAKE_PROJECT_NAME}-cpp-test_MSVC_LIB" "${${CMAKE_PROJECT_NAME}-cpp-test_MSVC_LIB}" CACHE STRING "")
+        set("${CMAKE_PROJECT_NAME}-cpp-test_MSVC_PATH" "${${CMAKE_PROJECT_NAME}-cpp-test_MSVC_PATH}" CACHE STRING "")
+    endif()
+    set("ENV{INCLUDE}" "${${CMAKE_PROJECT_NAME}-cpp-test_MSVC_INCLUDE}")
+    set("ENV{LIBPATH}" "${${CMAKE_PROJECT_NAME}-cpp-test_MSVC_LIBPATH}")
+    set("ENV{LIB}" "${${CMAKE_PROJECT_NAME}-cpp-test_MSVC_LIB}")
+    set("ENV{PATH}" "${${CMAKE_PROJECT_NAME}-cpp-test_MSVC_PATH}\;$ENV{PATH}")
+endif()
+
+enable_language("C")
+enable_language("CXX")
+
+add_subdirectory("${PROJECT_NAME}-cpp-test")
+#add_subdirectory("${PROJECT_NAME}-conan-test")
+#add_subdirectory("${PROJECT_NAME}-extension-test")
 #add_subdirectory("${PROJECT_NAME}-test")
+
+set_targets("${PROJECT_NAME}_TARGETS")
+
+add_custom_target("targets"
+    COMMAND "${CMAKE_COMMAND}" -E echo ${${PROJECT_NAME}_TARGETS}
+    VERBATIM
+)

@@ -194,6 +194,40 @@ function(
 endfunction()
 
 macro(
+    conan_user
+    conanCommand
+    userName
+    remoteName
+    userPassword
+)
+    if("" STREQUAL "${conanCommand}" OR NOT EXISTS "${conanCommand}")
+        message(FATAL_ERROR "Not defined or not exists conanCommand: '${conanCommand}'")
+    endif()
+    if("" STREQUAL "${userPassword}")
+        execute_process(
+            COMMAND "${conanCommand}"
+                    user
+                    "${userName}"
+                    --remote
+                    "${remoteName}"
+                    --password
+            COMMAND_ERROR_IS_FATAL ANY
+        )
+    else()
+        execute_process(
+            COMMAND "${conanCommand}"
+                    user
+                    "${userName}"
+                    --remote
+                    "${remoteName}"
+                    --password
+                    "${userPassword}"
+            COMMAND_ERROR_IS_FATAL ANY
+        )
+    endif()
+endmacro()
+
+macro(
     conan_install
     conanCommand
     conanFile

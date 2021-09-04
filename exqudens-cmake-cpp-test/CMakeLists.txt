@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
-project("${CMAKE_PROJECT_NAME}-conan-test" VERSION "${CMAKE_PROJECT_VERSION}")
+project("${CMAKE_PROJECT_NAME}-cpp-test" VERSION "${CMAKE_PROJECT_VERSION}" LANGUAGES "C" "CXX")
 
 message("project: '${PROJECT_NAME}-${PROJECT_VERSION}'")
 
@@ -81,105 +81,18 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_LIBRARY_OUTPUT_DIRECT
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_MINSIZEREL     "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG          "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 
-set(CMAKE_MODULE_PATH "")
-set(CMAKE_PREFIX_PATH "")
-set(CONAN_INSTALL_PREFIX "${PROJECT_BINARY_DIR}/conan-install")
+set("${PROJECT_NAME}_CMAKE_INSTALL_PREFIX" "${PROJECT_BINARY_DIR}/cmake-install")
 
-include("../conan.cmake")
-
-set_conan_boolean(CONAN_BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS}")
-set_conan_msvc_compiler_runtime(CONAN_MSVC_COMPILER_RUNTIME "${CMAKE_MSVC_RUNTIME_LIBRARY}")
-
-if(NOT DEFINED "CONAN_PROGRAM_PATH" AND NOT DEFINED "CONAN_COMMAND")
-    set_conan_path(CONAN_PROGRAM_PATH "$ENV{PATH}")
-    set_conan_command(CONAN_COMMAND "${CONAN_PROGRAM_PATH}")
-elseif(NOT DEFINED "CONAN_COMMAND")
-    set_conan_command(CONAN_COMMAND "${CONAN_PROGRAM_PATH}")
-endif()
-
-if(DEFINED "CONAN_COMMAND")
-    set(CONAN_PACKAGE_NAMES
-        "${CMAKE_PROJECT_NAME}-lib"
-    )
-
-    set_conan_settings(CONAN_SETTINGS
-        "${CMAKE_SYSTEM_NAME}"
-        "${CMAKE_SYSTEM_PROCESSOR}"
-        "${CMAKE_CXX_COMPILER_ID}"
-        "${CMAKE_CXX_COMPILER_VERSION}"
-        "${CMAKE_MSVC_RUNTIME_LIBRARY}"
-        "${CMAKE_CXX_STANDARD}"
-        "${CMAKE_BUILD_TYPE}"
-        )
-
-    set_conan_options(CONAN_OPTIONS
-        "${BUILD_SHARED_LIBS}"
-        "${CMAKE_PROJECT_NAME}-lib:shared=${CONAN_BUILD_SHARED_LIBS}"
-        )
-
-    add_custom_target_conan_install("${PROJECT_NAME}-conan-install"
-        "${CONAN_COMMAND}"
-        "${PROJECT_SOURCE_DIR}/conanfile.py"
-        "${CONAN_INSTALL_PREFIX}"
-        "${CONAN_SETTINGS}"
-        "${CONAN_OPTIONS}"
-        )
-
-    if(EXISTS "${CONAN_INSTALL_PREFIX}/conan_paths.cmake")
-        set(CMAKE_MODULE_PATH "")
-        set(CMAKE_PREFIX_PATH "")
-        include("${CONAN_INSTALL_PREFIX}/conan_paths.cmake")
-        set(CMAKE_MODULE_PATH "")
-        set(CMAKE_PREFIX_PATH "")
-        foreach(packageName ${CONAN_PACKAGE_NAMES})
-            string(TOUPPER "${packageName}" packageNameUpper)
-            if(DEFINED "CONAN_${packageNameUpper}_ROOT" AND IS_DIRECTORY "${CONAN_${packageNameUpper}_ROOT}")
-                if("" STREQUAL "${CMAKE_PREFIX_PATH}")
-                    set(CMAKE_PREFIX_PATH "${CONAN_${packageNameUpper}_ROOT}")
-                else()
-                    set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH}" "${CONAN_${packageNameUpper}_ROOT}")
-                endif()
-            endif()
-        endforeach()
-    endif()
-endif()
-
-if(NOT "" STREQUAL "${CMAKE_PREFIX_PATH}")
-    find_package("${CMAKE_PROJECT_NAME}-lib" "${CMAKE_PROJECT_VERSION}" QUIET CONFIG)
-endif()
-
-include("../util.cmake")
-
-set_not_found_package_names(NOT_FOUND_PACKAGE_NAMES
-    ${CONAN_PACKAGE_NAMES}
+add_library("${PROJECT_NAME}-lib"
+    "src/test/cpp/exqudens/cmake/Application.hpp"
+    "src/test/cpp/exqudens/cmake/Application.cpp"
+)
+target_include_directories("${PROJECT_NAME}-lib" PUBLIC
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/test/cpp>"
+    "$<INSTALL_INTERFACE:include>"
 )
 
-if(NOT "" STREQUAL "${NOT_FOUND_PACKAGE_NAMES}")
-    foreach(package ${NOT_FOUND_PACKAGE_NAMES})
-        message(WARNING "${package}_FOUND: '${${package}_FOUND}'")
-    endforeach()
-    return()
-endif()
-
-find_package("ZLIB" "1.2.11" #[[REQUIRED]] QUIET)
-find_package("PNG" "1.6.37" #[[REQUIRED]] QUIET)
-find_package("json-c" "0.15" #[[REQUIRED]] QUIET)
-
-message("ZLIB_FOUND: '${ZLIB_FOUND}'")
-message("PNG_FOUND: '${PNG_FOUND}'")
-message("json-c_FOUND: '${json-c_FOUND}'")
-
-set_not_found_package_names(NOT_FOUND_PACKAGE_NAMES
-    "ZLIB"
-    "PNG"
-    "json-c"
+add_executable("${PROJECT_NAME}-executable" "src/test/cpp/main.cpp")
+target_link_libraries("${PROJECT_NAME}-executable" PRIVATE
+    "${PROJECT_NAME}-lib"
 )
-
-message("NOT_FOUND_PACKAGE_NAMES: '${NOT_FOUND_PACKAGE_NAMES}'")
-
-if(NOT "" STREQUAL "${NOT_FOUND_PACKAGE_NAMES}")
-    foreach(name ${NOT_FOUND_PACKAGE_NAMES})
-        message(WARNING "${name}_FOUND: '${${name}_FOUND}'")
-    endforeach()
-    return()
-endif()

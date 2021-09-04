@@ -1,4 +1,3 @@
-# declare script commands
 if("file_upload" STREQUAL "${CMAKE_ARGV3}")
     # file = ${CMAKE_ARGV4}
     # url = ${CMAKE_ARGV5}
@@ -9,7 +8,6 @@ elseif("file_download" STREQUAL "${CMAKE_ARGV3}")
     file(DOWNLOAD ${CMAKE_ARGV4} ${CMAKE_ARGV5})
 endif()
 
-# declare macro 'add_custom_targets_upload_file'
 macro(add_custom_targets_upload_file
     name
     clean
@@ -36,7 +34,6 @@ macro(add_custom_targets_upload_file
     endif()
 endmacro()
 
-# declare macro 'add_custom_targets_download_file'
 macro(add_custom_targets_download_file
     name
     clean
@@ -63,7 +60,6 @@ macro(add_custom_targets_download_file
     endif()
 endmacro()
 
-# declare macro 'add_custom_targets_zip_directory'
 macro(add_custom_targets_zip_directory
     name
     clean
@@ -91,7 +87,6 @@ macro(add_custom_targets_zip_directory
     endif()
 endmacro()
 
-# declare macro 'add_custom_targets_unzip_directory'
 macro(add_custom_targets_unzip_directory
     name
     clean
@@ -125,7 +120,6 @@ macro(add_custom_targets_unzip_directory
     endif()
 endmacro()
 
-# declare macro 'add_custom_targets_install'
 macro(add_custom_targets_install
     name
     clean
@@ -158,7 +152,6 @@ macro(add_custom_targets_install
     endif()
 endmacro()
 
-# declare macro 'add_custom_targets_dependency'
 macro(add_custom_targets_dependency
     name
     clean
@@ -237,7 +230,6 @@ macro(add_custom_targets_dependency
     endif()
 endmacro()
 
-# declare function 'set_if_not_defined'
 function(set_if_not_defined variableName)
     if(NOT DEFINED ${variableName})
         if(${ARGC} EQUAL 2)
@@ -256,7 +248,6 @@ function(set_if_not_defined variableName)
     endif()
 endfunction()
 
-# declare function 'set_home_prefix'
 function(set_home_prefix variableName)
     if("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Windows")
         file(TO_CMAKE_PATH "$ENV{USERPROFILE}" homePrefix)
@@ -273,7 +264,6 @@ function(set_home_prefix variableName)
     set("${variableName}" "${homePrefix}" PARENT_SCOPE)
 endfunction()
 
-# declare function 'set_home_prefix_if_not_defined'
 function(set_home_prefix_if_not_defined variableName)
     if(NOT DEFINED ${variableName})
         set_home_prefix(homePrefix)

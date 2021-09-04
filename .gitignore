@@ -1,15 +1,17 @@
 # Directories
 .idea/
 .vs/
+.vscode/
 idea-build/
 vs-build/
+vsc-build/
 build/
-downloads/
-packages/
+tmp/
 
 # Files
 *.iml
 *.iws
 *.ipr
 *.ids
+CMakeUserPresets.json
 CMakeSettings.json
