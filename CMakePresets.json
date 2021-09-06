@@ -2,7 +2,7 @@
   "version": 2,
   "cmakeMinimumRequired": {
     "major": 3,
-    "minor": 20
+    "minor": 21
   },
   "configurePresets": [
     {
@@ -22,19 +22,19 @@
       "name": "msvc16x86x64",
       "hidden": true,
       "cacheVariables": {
-        "COMPILER_NAME": {
+        "CXX_COMPILER_NAME": {
           "type": "STRING",
           "value": "msvc"
         },
-        "COMPILER_VERSION": {
+        "CXX_COMPILER_VERSION": {
           "type": "STRING",
           "value": "16"
         },
-        "COMPILER_ARCH": {
+        "CXX_COMPILER_ARCH": {
           "type": "STRING",
           "value": "x86"
         },
-        "TARGET_ARCH": {
+        "CXX_TARGET_ARCH": {
           "type": "STRING",
           "value": "x64"
         },
@@ -64,88 +64,9 @@
         }
       }
     },
-
     {
-      "name": "release-shared",
+      "name": "gcc",
       "hidden": true,
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": {
-          "type": "STRING",
-          "value": "Release"
-        },
-        "BUILD_SHARED_LIBS": {
-          "type": "BOOL",
-          "value": true
-        },
-        "CMAKE_MSVC_RUNTIME_LIBRARY": {
-          "type": "STRING",
-          "value": "MultiThreadedDLL"
-        }
-      }
-    },
-    {
-      "name": "release-static",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": {
-          "type": "STRING",
-          "value": "Release"
-        },
-        "BUILD_SHARED_LIBS": {
-          "type": "BOOL",
-          "value": false
-        },
-        "CMAKE_MSVC_RUNTIME_LIBRARY": {
-          "type": "STRING",
-          "value": "MultiThreaded"
-        }
-      }
-    },
-
-    {
-      "name": "windows-ninja-msvc",
-      "hidden": true,
-      "cmakeExecutable": "cmake.exe",
-      "generator": "Ninja",
-      "cacheVariables": {
-        "COMPILER_NAME": {
-          "type": "STRING",
-          "value": "msvc"
-        },
-        "COMPILER_VERSION": {
-          "type": "STRING",
-          "value": "16"
-        },
-        "CMAKE_AR": {
-          "type": "FILEPATH",
-          "value": "lib.exe"
-        },
-        "CMAKE_CXX_COMPILER": {
-          "type": "FILEPATH",
-          "value": "cl.exe"
-        },
-        "CMAKE_C_COMPILER": {
-          "type": "FILEPATH",
-          "value": "cl.exe"
-        },
-        "CMAKE_LINKER": {
-          "type": "FILEPATH",
-          "value": "link.exe"
-        },
-        "CMAKE_MT": {
-          "type": "FILEPATH",
-          "value": "mt.exe"
-        },
-        "CMAKE_RC_COMPILER": {
-          "type": "FILEPATH",
-          "value": "rc.exe"
-        }
-      }
-    },
-    {
-      "name": "windows-ninja-gcc",
-      "hidden": true,
-      "generator": "Ninja",
       "cacheVariables": {
         "CMAKE_AR": {
           "type": "FILEPATH",
@@ -173,254 +94,62 @@
         }
       }
     },
-
     {
-      "name": "windows-vs-host-x86-target-x86",
-      "cmakeExecutable": "cmake.exe",
+      "name": "release-static",
       "hidden": true,
-      "generator": "Ninja",
       "cacheVariables": {
-        "COMPILER_NAME": {
+        "CMAKE_BUILD_TYPE": {
           "type": "STRING",
-          "value": "msvc"
-        }
-      },
-      "toolset": {
-        "value": "host=x86",
-        "strategy": "external"
-      },
-      "architecture": {
-        "value": "x86",
-        "strategy": "external"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "hostOS": [
-            "Windows"
-          ]
+          "value": "Release"
+        },
+        "BUILD_SHARED_LIBS": {
+          "type": "BOOL",
+          "value": false
+        },
+        "CMAKE_MSVC_RUNTIME_LIBRARY": {
+          "type": "STRING",
+          "value": "MultiThreaded"
         }
       }
     },
     {
-      "name": "windows-vs-host-x86-target-x64",
-      "cmakeExecutable": "cmake.exe",
+      "name": "release-shared",
       "hidden": true,
-      "generator": "Ninja",
       "cacheVariables": {
-        "COMPILER_NAME": {
+        "CMAKE_BUILD_TYPE": {
           "type": "STRING",
-          "value": "msvc"
-        }
-      },
-      "toolset": {
-        "value": "host=x86",
-        "strategy": "external"
-      },
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "hostOS": [
-            "Windows"
-          ]
+          "value": "Release"
+        },
+        "BUILD_SHARED_LIBS": {
+          "type": "BOOL",
+          "value": true
+        },
+        "CMAKE_MSVC_RUNTIME_LIBRARY": {
+          "type": "STRING",
+          "value": "MultiThreadedDLL"
         }
       }
     },
 
-
-
     {
-      "name": "windows-ninja-msvc16x86x64",
-      "inherits": [ "windows", "ninja", "msvc16x86x64" ],
-      "binaryDir": "${sourceDir}/build/0"
-    },
-
-    {
-      "name": "windows-ninja-msvc-x86-release-shared",
-      "inherits": [ "windows-ninja-msvc", "release-shared" ],
+      "name": "windows-ninja-msvc16x86x64-release-static",
+      "inherits": [ "windows", "ninja", "msvc16x86x64", "release-static" ],
       "binaryDir": "${sourceDir}/build/0"
     },
     {
-      "name": "windows-ninja-msvc-x86-release-static",
-      "inherits": [ "windows-ninja-msvc", "release-static" ],
+      "name": "windows-ninja-msvc16x86x64-release-shared",
+      "inherits": [ "windows", "ninja", "msvc16x86x64", "release-shared" ],
       "binaryDir": "${sourceDir}/build/1"
-    },
-
-    {
-      "name": "windows-ninja-msvc-x86_x64-release-shared",
-      "inherits": [ "windows-ninja-msvc", "release-shared" ],
-      "binaryDir": "${sourceDir}/build/2"
-    },
-    {
-      "name": "windows-ninja-msvc-x86_x64-release-static",
-      "inherits": [ "windows-ninja-msvc", "release-static" ],
-      "binaryDir": "${sourceDir}/build/3"
-    },
-
-    {
-      "name": "windows-ninja-gcc-x86-release-shared",
-      "inherits": [ "windows-ninja-gcc", "release-shared" ],
-      "binaryDir": "${sourceDir}/build/4"
-    },
-    {
-      "name": "windows-ninja-gcc-x86-release-static",
-      "inherits": [ "windows-ninja-gcc", "release-static" ],
-      "binaryDir": "${sourceDir}/build/5"
-    },
-
-    {
-      "name": "windows-ninja-gcc-x86_x64-release-shared",
-      "inherits": [ "windows-ninja-gcc", "release-shared" ],
-      "binaryDir": "${sourceDir}/build/6"
-    },
-    {
-      "name": "windows-ninja-gcc-x86_x64-release-static",
-      "inherits": [ "windows-ninja-gcc", "release-static" ],
-      "binaryDir": "${sourceDir}/build/7"
-    },
-
-    {
-      "name": "windows-vs-x86-release-shared",
-      "inherits": [ "windows-vs-host-x86-target-x86", "release-shared" ],
-      "binaryDir": "${sourceDir}/vs-build/0"
-    },
-    {
-      "name": "windows-vs-x86-release-static",
-      "inherits": [ "windows-vs-host-x86-target-x86", "release-static" ],
-      "binaryDir": "${sourceDir}/vs-build/1"
-    },
-
-    {
-      "name": "windows-vs-x86_x64-release-shared",
-      "inherits": [ "windows-vs-host-x86-target-x64", "release-shared" ],
-      "binaryDir": "${sourceDir}/vs-build/2"
-    },
-    {
-      "name": "windows-vs-x86_x64-release-static",
-      "inherits": [ "windows-vs-host-x86-target-x64", "release-static" ],
-      "binaryDir": "${sourceDir}/vs-build/3"
-    },
-
-    {
-      "name": "windows-clion-vs-2019-community-x86-release-shared",
-      "inherits": [ "windows-vs-host-x86-target-x86", "release-shared" ],
-      "binaryDir": "${sourceDir}/idea-build/0",
-      "vendor": {
-        "jetbrains.com/clion": {
-          "toolchain": "visual-studio-2019-community-host-x86-target-x86"
-        }
-      }
-    },
-    {
-      "name": "windows-clion-vs-2019-community-x86-release-static",
-      "inherits": [ "windows-vs-host-x86-target-x86", "release-static" ],
-      "binaryDir": "${sourceDir}/idea-build/1",
-      "vendor": {
-        "jetbrains.com/clion": {
-          "toolchain": "visual-studio-2019-community-host-x86-target-x86"
-        }
-      }
-    },
-
-    {
-      "name": "windows-clion-vs-2019-community-x86_x64-release-shared",
-      "inherits": [ "windows-vs-host-x86-target-x64", "release-shared" ],
-      "binaryDir": "${sourceDir}/idea-build/2",
-      "vendor": {
-        "jetbrains.com/clion": {
-          "toolchain": "visual-studio-2019-community-host-x86-target-x64"
-        }
-      }
-    },
-    {
-      "name": "windows-clion-vs-2019-community-x86_x64-release-static",
-      "inherits": [ "windows-vs-host-x86-target-x64", "release-static" ],
-      "binaryDir": "${sourceDir}/idea-build/3",
-      "vendor": {
-        "jetbrains.com/clion": {
-          "toolchain": "visual-studio-2019-community-host-x86-target-x64"
-        }
-      }
     }
   ],
   "buildPresets": [
     {
-      "name": "windows-ninja-msvc16x86x64",
-      "configurePreset": "windows-ninja-msvc16x86x64"
-    },
-
-    {
-      "name": "windows-vs-x86-release-shared",
-      "configurePreset": "windows-vs-x86-release-shared"
+      "name": "windows-ninja-msvc16x86x64-release-static",
+      "configurePreset": "windows-ninja-msvc16x86x64-release-static"
     },
     {
-      "name": "windows-vs-x86-release-static",
-      "configurePreset": "windows-vs-x86-release-static"
-    },
-
-    {
-      "name": "windows-vs-x86_x64-release-shared",
-      "configurePreset": "windows-vs-x86_x64-release-shared"
-    },
-    {
-      "name": "windows-vs-x86_x64-release-static",
-      "configurePreset": "windows-vs-x86_x64-release-static"
-    },
-
-    {
-      "name": "windows-clion-vs-2019-community-x86-release-shared",
-      "configurePreset": "windows-clion-vs-2019-community-x86-release-shared"
-    },
-    {
-      "name": "windows-clion-vs-2019-community-x86-release-static",
-      "configurePreset": "windows-clion-vs-2019-community-x86-release-static"
-    },
-
-    {
-      "name": "windows-clion-vs-2019-community-x86_x64-release-shared",
-      "configurePreset": "windows-clion-vs-2019-community-x86_x64-release-shared"
-    },
-    {
-      "name": "windows-clion-vs-2019-community-x86_x64-release-static",
-      "configurePreset": "windows-clion-vs-2019-community-x86_x64-release-static"
-    },
-
-    {
-      "name": "windows-ninja-msvc-x86-release-shared",
-      "configurePreset": "windows-ninja-msvc-x86-release-shared"
-    },
-    {
-      "name": "windows-ninja-msvc-x86-release-static",
-      "configurePreset": "windows-ninja-msvc-x86-release-static"
-    },
-
-    {
-      "name": "windows-ninja-msvc-x86_x64-release-shared",
-      "configurePreset": "windows-ninja-msvc-x86_x64-release-shared"
-    },
-    {
-      "name": "windows-ninja-msvc-x86_x64-release-static",
-      "configurePreset": "windows-ninja-msvc-x86_x64-release-static"
-    },
-
-    {
-      "name": "windows-ninja-gcc-x86-release-shared",
-      "configurePreset": "windows-ninja-gcc-x86-release-shared"
-    },
-    {
-      "name": "windows-ninja-gcc-x86-release-static",
-      "configurePreset": "windows-ninja-gcc-x86-release-static"
-    },
-
-    {
-      "name": "windows-ninja-gcc-x86_x64-release-shared",
-      "configurePreset": "windows-ninja-gcc-x86_x64-release-shared"
-    },
-    {
-      "name": "windows-ninja-gcc-x86_x64-release-static",
-      "configurePreset": "windows-ninja-gcc-x86_x64-release-static"
+      "name": "windows-ninja-msvc16x86x64-release-shared",
+      "configurePreset": "windows-ninja-msvc16x86x64-release-shared"
     }
   ]
 }
