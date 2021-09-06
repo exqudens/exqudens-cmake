@@ -5,132 +5,125 @@ function(set_if_not_defined var)
     endif()
 endfunction()
 
-function(set_substring_strip var startAnchor stopAnchor input)
-    string(LENGTH "${startAnchor}" "startAnchorLength")
-    string(FIND "${input}" "${startAnchor}" startIndex)
-    string(FIND "${input}" "${stopAnchor}" stopIndex)
-    if("-1" STREQUAL "${startIndex}" OR "-1" STREQUAL "${stopIndex}")
-        message(FATAL_ERROR "Can't find 'startAnchor' or 'stopAnchor' in 'input'")
+function(string_substring_from var input fromExclusive)
+    if("" STREQUAL "${fromExclusive}")
+        message(FATAL_ERROR "Empty value not supported for 'fromExclusive'.")
     endif()
-    math(EXPR startIndex "${startIndex} + ${startAnchorLength}")
-    math(EXPR substringLength "${stopIndex} - ${startIndex}")
-    string(SUBSTRING "${input}" "${startIndex}" "${substringLength}" result)
-    string(STRIP "${result}" result)
+    string(FIND "${input}" "${fromExclusive}" fromStartIndex)
+    if("-1" STREQUAL "${fromStartIndex}")
+        message(FATAL_ERROR "Can't find 'fromExclusive' in 'input'")
+    endif()
+    string(LENGTH "${input}" inputLength)
+    string(LENGTH "${fromExclusive}" "fromLength")
+    math(EXPR fromEndIndex "${fromStartIndex} + ${fromLength}")
+    math(EXPR substringLength "${inputLength} - ${fromEndIndex}")
+    string(SUBSTRING "${input}" "${fromEndIndex}" "${substringLength}" result)
     set("${var}" "${result}" PARENT_SCOPE)
 endfunction()
 
-function(set_msvc_env prefix)
-    set(messageMode "DEBUG")
-
-    if("" STREQUAL ${prefix})
-        message(FATAL_ERROR "Not defined or empty 'prefix': '${prefix}'.")
+function(string_substring_to var input toExclusive)
+    if("" STREQUAL "${toExclusive}")
+        message(FATAL_ERROR "Empty value not supported for 'toExclusive'.")
     endif()
+    string(FIND "${input}" "${toExclusive}" toStartIndex)
+    if("-1" STREQUAL "${toStartIndex}")
+        message(FATAL_ERROR "Can't find 'toExclusive' in 'input'")
+    endif()
+    string(LENGTH "${input}" inputLength)
+    string(SUBSTRING "${input}" 0 "${toStartIndex}" result)
+    set("${var}" "${result}" PARENT_SCOPE)
+endfunction()
 
-    set(cmakeParseArgumentsPrefix "FUNCTION")
-    set(cmakeParseArgumentsOneValueArgs
-        "VSWHERE_COMMAND"
-        "COMPILER_VERSION"
-        "COMPILER_ARCH"
-        "TARGET_ARCH"
-    )
-    set(cmakeParseArgumentsMultiValueArgs
-        ""
-    )
-    set(cmakeParseArgumentsOptions
-        ""
-    )
-    cmake_parse_arguments(
-        PARSE_ARGV
-        1
-        "${cmakeParseArgumentsPrefix}"
-        "${cmakeParseArgumentsOptions}"
-        "${cmakeParseArgumentsOneValueArgs}"
-        "${cmakeParseArgumentsMultiValueArgs}"
-    )
-    set(cmakeParseArgumentsRequired
-        "COMPILER_VERSION"
-        "COMPILER_ARCH"
-        "TARGET_ARCH"
-    )
-    foreach(n ${cmakeParseArgumentsRequired})
-        if(NOT DEFINED "${cmakeParseArgumentsPrefix}_${n}")
-            message(FATAL_ERROR "'${n}' not defined.")
+function(string_substring_between var input fromExclusive toExclusive)
+    string_substring_from(result "${input}" "${fromExclusive}")
+    string_substring_to(result "${result}" "${toExclusive}")
+    set("${var}" "${result}" PARENT_SCOPE)
+endfunction()
+
+function(set_msvc_path var vswhereCommand compilerVersion)
+    foreach(name var compilerVersion)
+        if("" STREQUAL "${${name}}")
+            message(FATAL_ERROR "'${name}' is required and not defined.")
         endif()
     endforeach()
 
-    message(${messageMode} "FUNCTION_VSWHERE_COMMAND: '${FUNCTION_VSWHERE_COMMAND}'")
-    message(${messageMode} "FUNCTION_COMPILER_VERSION: '${FUNCTION_COMPILER_VERSION}'")
-    message(${messageMode} "FUNCTION_COMPILER_ARCH: '${FUNCTION_COMPILER_ARCH}'")
-    message(${messageMode} "FUNCTION_TARGET_ARCH: '${FUNCTION_TARGET_ARCH}'")
-
-    if(NOT "x86" STREQUAL "${FUNCTION_COMPILER_ARCH}" AND NOT "x64" STREQUAL "${FUNCTION_COMPILER_ARCH}")
-        message(FATAL_ERROR "Unsupported or not specified COMPILER_ARCH: '${FUNCTION_COMPILER_ARCH}'. Supported values 'x86' or 'x64'")
-    endif()
-
-    if(NOT "x86" STREQUAL "${FUNCTION_TARGET_ARCH}" AND NOT "x64" STREQUAL "${FUNCTION_TARGET_ARCH}")
-        message(FATAL_ERROR "Unsupported or not specified TARGET_ARCH: '${FUNCTION_TARGET_ARCH}'. Supported values 'x86' or 'x64'")
-    endif()
-
-    if("${FUNCTION_COMPILER_ARCH}" STREQUAL "${FUNCTION_TARGET_ARCH}")
-        set(vcvarsallBatConf "${FUNCTION_COMPILER_ARCH}")
+    if(NOT "" STREQUAL "${vswhereCommand}")
+        cmake_path(CONVERT "${vswhereCommand}" TO_CMAKE_PATH_LIST vswhereCommand NORMALIZE)
     else()
-        set(vcvarsallBatConf "${FUNCTION_COMPILER_ARCH}_${FUNCTION_TARGET_ARCH}")
+        set(vswhereCommand "C:/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe")
     endif()
 
-    if(
-        DEFINED "${${prefix}_MSVC_INCLUDE}"
-        OR DEFINED "${${prefix}_MSVC_LIBPATH}"
-        OR DEFINED "${${prefix}_MSVC_LIB}"
-        OR DEFINED "${${prefix}_MSVC_PATH}"
-    )
-        message(WARNING "Already DEFINED '${prefix}_MSVC_INCLUDE' or '${prefix}_MSVC_LIBPATH' or '${prefix}_MSVC_LIB' or '${prefix}_MSVC_PATH'")
-        message(WARNING "${prefix}_MSVC_INCLUDE: '${${prefix}_MSVC_INCLUDE}'")
-        message(WARNING "${prefix}_MSVC_LIBPATH: '${${prefix}_MSVC_LIBPATH}'")
-        message(WARNING "${prefix}_MSVC_LIB: '${${prefix}_MSVC_LIB}'")
-        message(WARNING "${prefix}_MSVC_PATH: '${${prefix}_MSVC_PATH}'")
-    endif()
-
-    if("16" STREQUAL "${FUNCTION_COMPILER_VERSION}" OR "2019" STREQUAL "${FUNCTION_COMPILER_VERSION}")
+    if("16" STREQUAL "${compilerVersion}" OR "2019" STREQUAL "${compilerVersion}")
         set(vswhereVersionArgs "-version" "[16.0, 17.0)")
-    elseif("15" STREQUAL "${FUNCTION_COMPILER_VERSION}" OR "2017" STREQUAL "${FUNCTION_COMPILER_VERSION}")
+    elseif("15" STREQUAL "${compilerVersion}" OR "2017" STREQUAL "${compilerVersion}")
         set(vswhereVersionArgs "-version" "[15.0, 16.0)")
     else()
         #set(vswhereVersionArgs "-latest")
-        message(FATAL_ERROR "Unsupported or not specified COMPILER_VERSION: '${FUNCTION_COMPILER_VERSION}'. Supported values ['15', '16', '2017', '2019']")
-    endif()
-
-    if(NOT "" STREQUAL "${FUNCTION_VSWHERE_COMMAND}")
-        cmake_path(CONVERT "${FUNCTION_VSWHERE_COMMAND}" TO_CMAKE_PATH_LIST "FUNCTION_VSWHERE_COMMAND" NORMALIZE)
-    else()
-        set(FUNCTION_VSWHERE_COMMAND "C:/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe")
+        string(JOIN " " errorMessage
+            "Unsupported or not specified 'compilerVersion': '${compilerVersion}'."
+            "Supported values ['15', '16', '2017', '2019']."
+        )
+        message(FATAL_ERROR "${errorMessage}")
     endif()
 
     execute_process(
-        COMMAND "${FUNCTION_VSWHERE_COMMAND}" ${vswhereVersionArgs} "-property" "installationPath"
-        OUTPUT_VARIABLE "instancePath"
+        COMMAND "${vswhereCommand}" ${vswhereVersionArgs} "-property" "installationPath"
+        OUTPUT_VARIABLE "result"
         COMMAND_ECHO "STDERR"
         ENCODING "UTF-8"
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    cmake_path(CONVERT "${instancePath}" TO_CMAKE_PATH_LIST "instancePath" NORMALIZE)
-    string(REGEX REPLACE "[\r]" "" "instancePath" "${instancePath}")
-    string(REGEX REPLACE "[\n]" ";" "instancePath" "${instancePath}")
-    list(GET "instancePath" 0 "instancePath")
 
-    file(GLOB_RECURSE "instanceFiles" "${instancePath}/*")
+    cmake_path(CONVERT "${result}" TO_CMAKE_PATH_LIST result NORMALIZE)
+    string(REGEX REPLACE "[\r]" "" result "${result}")
+    string(REGEX REPLACE "[\n]" ";" result "${result}")
+    list(GET result 0 result)
+
+    set("${var}" "${result}" PARENT_SCOPE)
+endfunction()
+
+function(set_msvc_env prefix vswhereCommand compilerVersion compilerArch targetArch)
+    foreach(name prefix compilerVersion compilerArch targetArch)
+        if("" STREQUAL "${${name}}")
+            message(FATAL_ERROR "'${name}' is required and not defined.")
+        endif()
+    endforeach()
+
+    if(NOT "x86" STREQUAL "${compilerArch}" AND NOT "x64" STREQUAL "${compilerArch}")
+        string(JOIN " " errorMessage
+            "Unsupported or not specified 'compilerArch': '${compilerArch}'."
+            "Supported values ['x86', 'x64']."
+        )
+        message(FATAL_ERROR "${errorMessage}")
+    endif()
+
+    if(NOT "x86" STREQUAL "${targetArch}" AND NOT "x64" STREQUAL "${targetArch}")
+        string(JOIN " " errorMessage
+            "Unsupported or not specified 'targetArch': '${targetArch}'."
+            "Supported values [ 'x86', 'x64' ]."
+        )
+        message(FATAL_ERROR "${errorMessage}")
+    endif()
+
+    if("${compilerArch}" STREQUAL "${targetArch}")
+        set(vcvarsallBatConf "${compilerArch}")
+    else()
+        set(vcvarsallBatConf "${compilerArch}_${targetArch}")
+    endif()
+
+    set_msvc_path(msvcPath "${vswhereCommand}" "${compilerVersion}")
+
+    file(GLOB_RECURSE msvcFiles "${msvcPath}/*")
     set(vcvarsallBatName "vcvarsall.bat")
-    foreach(file ${instanceFiles})
-        get_filename_component("fileName" "${file}" NAME)
-        get_filename_component("path" "${file}" DIRECTORY)
+    foreach(file IN LISTS msvcFiles)
+        get_filename_component(fileName "${file}" NAME)
+        get_filename_component(path "${file}" DIRECTORY)
         if("${fileName}" STREQUAL "${vcvarsallBatName}")
             set(vcvarsallBatFile "${file}")
             set(vcvarsallBatPath "${path}")
             break()
         endif()
     endforeach()
-
-    message(${messageMode} "vcvarsallBatFile: '${vcvarsallBatFile}'")
-    message(${messageMode} "vcvarsallBatPath: '${vcvarsallBatPath}'")
 
     set(vcvarsallBatArgs
         "&&" "call" "echo" "INCLUDE_START"
@@ -152,43 +145,46 @@ function(set_msvc_env prefix)
     execute_process(
         COMMAND "cmd" "/c" "${vcvarsallBatName}" "${vcvarsallBatConf}" ${vcvarsallBatArgs}
         WORKING_DIRECTORY "${vcvarsallBatPath}"
-        OUTPUT_VARIABLE "instanceEnv"
+        OUTPUT_VARIABLE "msvcEnv"
         COMMAND_ECHO "STDERR"
         ENCODING "UTF-8"
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 
-    message(${messageMode} "instanceEnv: '${instanceEnv}'")
+    string_substring_between(msvcInclude "${msvcEnv}" "INCLUDE_START" "INCLUDE_STOP")
+    string(STRIP "${msvcInclude}" msvcInclude)
+    string(REGEX REPLACE "[\r]" "" msvcInclude "${msvcInclude}")
+    string(REGEX REPLACE "[\n]" "" msvcInclude "${msvcInclude}")
 
-    set_substring_strip("msvcInclude" "INCLUDE_START" "INCLUDE_STOP" "${instanceEnv}")
-    string(REGEX REPLACE "[\r]" "" "msvcInclude" "${msvcInclude}")
-    string(REGEX REPLACE "[\n]" "" "msvcInclude" "${msvcInclude}")
+    string_substring_between(msvcLibPath "${msvcEnv}" "LIBPATH_START" "LIBPATH_STOP")
+    string(STRIP "${msvcLibPath}" msvcLibPath)
+    string(REGEX REPLACE "[\r]" "" msvcLibPath "${msvcLibPath}")
+    string(REGEX REPLACE "[\n]" "" msvcLibPath "${msvcLibPath}")
 
-    set_substring_strip("msvcLibPath" "LIBPATH_START" "LIBPATH_STOP" "${instanceEnv}")
-    string(REGEX REPLACE "[\r]" "" "msvcLibPath" "${msvcLibPath}")
-    string(REGEX REPLACE "[\n]" "" "msvcLibPath" "${msvcLibPath}")
+    string_substring_between(msvcLib "${msvcEnv}" "LIB_START" "LIB_STOP")
+    string(STRIP "${msvcLib}" msvcLib)
+    string(REGEX REPLACE "[\r]" "" msvcLib "${msvcLib}")
+    string(REGEX REPLACE "[\n]" "" msvcLib "${msvcLib}")
 
-    set_substring_strip("msvcLibPath" "LIB_START" "LIB_STOP" "${instanceEnv}")
-    string(REGEX REPLACE "[\r]" "" "msvcLibPath" "${msvcLibPath}")
-    string(REGEX REPLACE "[\n]" "" "msvcLibPath" "${msvcLibPath}")
+    string_substring_between(msvcClPath "${msvcEnv}" "CLPATH_START" "CLPATH_STOP")
+    string(STRIP "${msvcClPath}" msvcClPath)
+    string(REGEX REPLACE "[\r]" "" msvcClPath "${msvcClPath}")
+    string(REGEX REPLACE "[\n]" ";" msvcClPath "${msvcClPath}")
+    list(GET msvcClPath 0 msvcClPath)
+    get_filename_component(msvcClPath "${msvcClPath}" DIRECTORY)
+    cmake_path(CONVERT "${msvcClPath}" TO_NATIVE_PATH_LIST msvcClPath NORMALIZE)
 
-    set_substring_strip("msvcClPath" "CLPATH_START" "CLPATH_STOP" "${instanceEnv}")
-    string(REGEX REPLACE "[\r]" "" "msvcClPath" "${msvcClPath}")
-    string(REGEX REPLACE "[\n]" ";" "msvcClPath" "${msvcClPath}")
-    list(GET "msvcClPath" 0 "msvcClPath")
-    get_filename_component("msvcClPath" "${msvcClPath}" DIRECTORY)
-    cmake_path(CONVERT "${msvcClPath}" TO_NATIVE_PATH_LIST "msvcClPath" NORMALIZE)
-
-    set_substring_strip("msvcRcPath" "RCPATH_START" "RCPATH_STOP" "${instanceEnv}")
-    string(REGEX REPLACE "[\r]" "" "msvcRcPath" "${msvcRcPath}")
-    string(REGEX REPLACE "[\n]" ";" "msvcRcPath" "${msvcRcPath}")
-    list(GET "msvcRcPath" 0 "msvcRcPath")
-    get_filename_component("msvcRcPath" "${msvcRcPath}" DIRECTORY)
-    cmake_path(CONVERT "${msvcRcPath}" TO_NATIVE_PATH_LIST "msvcRcPath" NORMALIZE)
+    string_substring_between(msvcRcPath "${msvcEnv}" "RCPATH_START" "RCPATH_STOP")
+    string(STRIP "${msvcRcPath}" msvcRcPath)
+    string(REGEX REPLACE "[\r]" "" msvcRcPath "${msvcRcPath}")
+    string(REGEX REPLACE "[\n]" ";" msvcRcPath "${msvcRcPath}")
+    list(GET msvcRcPath 0 msvcRcPath)
+    get_filename_component(msvcRcPath "${msvcRcPath}" DIRECTORY)
+    cmake_path(CONVERT "${msvcRcPath}" TO_NATIVE_PATH_LIST msvcRcPath NORMALIZE)
 
     set("${prefix}_MSVC_INCLUDE" "${msvcInclude}" PARENT_SCOPE)
     set("${prefix}_MSVC_LIBPATH" "${msvcLibPath}" PARENT_SCOPE)
-    set("${prefix}_MSVC_LIB" "${msvcLibPath}" PARENT_SCOPE)
+    set("${prefix}_MSVC_LIB" "${msvcLib}" PARENT_SCOPE)
     set("${prefix}_MSVC_PATH" "${msvcClPath}" "${msvcRcPath}" PARENT_SCOPE)
 endfunction()
 
