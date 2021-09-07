@@ -65,6 +65,70 @@ print_variables("${PROJECT_NAME}" "${MESSAGE_MODE}" "${PROJECT_NAME} after-confi
     ${${PROJECT_NAME}_PRINT_VARIABLES}
 )
 
+set_conan_settings(CONAN_SETTINGS
+    "${CMAKE_SYSTEM_NAME}"
+    "${CXX_TARGET_ARCH}"
+    "${CMAKE_CXX_COMPILER_ID}"
+    "${CMAKE_CXX_COMPILER_VERSION}"
+    "${CMAKE_MSVC_RUNTIME_LIBRARY}"
+    "${CMAKE_CXX_STANDARD}"
+    "${CMAKE_BUILD_TYPE}"
+)
+
+set_conan_options(CONAN_OPTIONS
+    "shared=${CONAN_BUILD_SHARED_LIBS}"
+    "exqudens-cpp-test-lib:shared=${CONAN_BUILD_SHARED_LIBS}"
+    "gtest:shared=${CONAN_BUILD_SHARED_LIBS}"
+)
+
+if(NOT EXISTS "${${PROJECT_NAME}_CONAN_INSTALL_PREFIX}")
+    execute_process(
+        COMMAND "${CONAN_COMMAND}"
+                install
+                "${PROJECT_SOURCE_DIR}/conanfile.py"
+                --install-folder
+                "${${PROJECT_NAME}_CONAN_INSTALL_PREFIX}"
+                ${CONAN_SETTINGS}
+                ${CONAN_OPTIONS}
+        COMMAND_ECHO "STDERR"
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ENCODING "UTF-8"
+        COMMAND_ERROR_IS_FATAL ANY
+    )
+endif()
+
+if(NOT EXISTS "${${PROJECT_NAME}_CONAN_INSTALL_PREFIX}/conan-packages.cmake")
+    message(FATAL_ERROR "Not exists: '${${PROJECT_NAME}_CONAN_INSTALL_PREFIX}/conan-packages.cmake'")
+endif()
+
+include("${${PROJECT_NAME}_CONAN_INSTALL_PREFIX}/conan-packages.cmake")
+set(CMAKE_MODULE_PATH "${${PROJECT_NAME}_CONAN_INSTALL_PREFIX}")
+foreach(packageName ${CONAN_PACKAGE_NAMES})
+    if(
+        "" STREQUAL "${CONAN_PACKAGE_${packageName}_BUILD_PATHS}"
+        OR "" STREQUAL "${CONAN_PACKAGE_${packageName}_CMAKE_FIND_PACKAGE_NAME}"
+        OR NOT IS_DIRECTORY "${CONAN_PACKAGE_${packageName}_BUILD_PATHS}"
+    )
+        message(FATAL_ERROR "Error with package '${packageName}'.")
+    endif()
+
+    if("" STREQUAL "${CMAKE_PREFIX_PATH}")
+        set(CMAKE_PREFIX_PATH "${CONAN_PACKAGE_${packageName}_BUILD_PATHS}")
+    else()
+        set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH}" "${CONAN_PACKAGE_${packageName}_BUILD_PATHS}")
+    endif()
+
+    find_package("${CONAN_PACKAGE_${packageName}_CMAKE_FIND_PACKAGE_NAME}" QUIET)
+endforeach()
+
+set_not_found_package_names(NOT_FOUND_PACKAGE_NAMES ${CONAN_CMAKE_PACKAGE_NAMES})
+if(NOT "" STREQUAL "${NOT_FOUND_PACKAGE_NAMES}")
+    foreach(package ${NOT_FOUND_PACKAGE_NAMES})
+        message(WARNING "${package}_FOUND: '${${package}_FOUND}'")
+    endforeach()
+    return()
+endif()
+
 add_library("${PROJECT_NAME}-lib"
     "src/test/cpp/exqudens/cmake/Application.hpp"
     "src/test/cpp/exqudens/cmake/Application.cpp"

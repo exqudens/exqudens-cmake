@@ -229,7 +229,7 @@ function(
         set(value "--settings" "os=${cmakeSystemName}")
 
         # arch
-        if("AMD64" STREQUAL "${cxxTargetArch}" OR "IA64" STREQUAL "${cxxTargetArch}")
+        if("x64" STREQUAL "${cxxTargetArch}" OR "AMD64" STREQUAL "${cxxTargetArch}" OR "IA64" STREQUAL "${cxxTargetArch}")
             set(value "${value}" "--settings" "arch=x86_64")
         elseif("x86" STREQUAL "${cxxTargetArch}")
             set(value "${value}" "--settings" "arch=x86")
@@ -242,7 +242,7 @@ function(
 
     # compiler
     if("MSVC" STREQUAL "${cmakeCxxCompilerId}")
-        set(value "${value}" "--settings" "compiler=\"Visual Studio\"")
+        set(value "${value}" "--settings" "compiler=Visual Studio")
 
         # compiler.version
         if("19" VERSION_LESS_EQUAL "${cmakeCxxCompilerVersion}" AND "20" VERSION_GREATER "${cmakeCxxCompilerVersion}")
