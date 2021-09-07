@@ -61,6 +61,10 @@
         "CMAKE_RC_COMPILER": {
           "type": "FILEPATH",
           "value": "rc.exe"
+        },
+        "CONAN_COMMAND": {
+          "type": "FILEPATH",
+          "value": "conan.exe"
         }
       }
     },

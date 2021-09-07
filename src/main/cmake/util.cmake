@@ -1,7 +1,6 @@
 function(set_if_not_defined var)
-    cmake_parse_arguments(PARSE_ARGV 1 FUNCTION "" "" "")
-    if(NOT DEFINED "${var}" AND DEFINED "FUNCTION_UNPARSED_ARGUMENTS")
-        set("${var}" "${FUNCTION_UNPARSED_ARGUMENTS}" PARENT_SCOPE)
+    if("" STREQUAL "${${var}}" AND NOT "" STREQUAL "${ARGN}")
+        set("${var}" "${ARGN}" PARENT_SCOPE)
     endif()
 endfunction()
 
@@ -43,7 +42,7 @@ endfunction()
 function(set_msvc_path var vswhereCommand compilerVersion)
     foreach(name var compilerVersion)
         if("" STREQUAL "${${name}}")
-            message(FATAL_ERROR "'${name}' is required and not defined.")
+            message(FATAL_ERROR "Empty value not supported for '${name}'.")
         endif()
     endforeach()
 
@@ -70,8 +69,9 @@ function(set_msvc_path var vswhereCommand compilerVersion)
         COMMAND "${vswhereCommand}" ${vswhereVersionArgs} "-property" "installationPath"
         OUTPUT_VARIABLE "result"
         COMMAND_ECHO "STDERR"
-        ENCODING "UTF-8"
         OUTPUT_STRIP_TRAILING_WHITESPACE
+        ENCODING "UTF-8"
+        COMMAND_ERROR_IS_FATAL ANY
     )
 
     cmake_path(CONVERT "${result}" TO_CMAKE_PATH_LIST result NORMALIZE)
@@ -85,7 +85,7 @@ endfunction()
 function(set_msvc_env prefix vswhereCommand compilerVersion compilerArch targetArch)
     foreach(name prefix compilerVersion compilerArch targetArch)
         if("" STREQUAL "${${name}}")
-            message(FATAL_ERROR "'${name}' is required and not defined.")
+            message(FATAL_ERROR "Empty value not supported for '${name}'.")
         endif()
     endforeach()
 
@@ -147,8 +147,9 @@ function(set_msvc_env prefix vswhereCommand compilerVersion compilerArch targetA
         WORKING_DIRECTORY "${vcvarsallBatPath}"
         OUTPUT_VARIABLE "msvcEnv"
         COMMAND_ECHO "STDERR"
-        ENCODING "UTF-8"
         OUTPUT_STRIP_TRAILING_WHITESPACE
+        ENCODING "UTF-8"
+        COMMAND_ERROR_IS_FATAL ANY
     )
 
     string_substring_between(msvcInclude "${msvcEnv}" "INCLUDE_START" "INCLUDE_STOP")
@@ -188,23 +189,215 @@ function(set_msvc_env prefix vswhereCommand compilerVersion compilerArch targetA
     set("${prefix}_MSVC_PATH" "${msvcClPath}" "${msvcRcPath}" PARENT_SCOPE)
 endfunction()
 
+function(set_conan_msvc_compiler_runtime var cmakeMsvcRuntimeLibrary)
+    if("" STREQUAL "${var}")
+        message(FATAL_ERROR "Empty value not supported for 'var'.")
+    endif()
+
+    if("${cmakeMsvcRuntimeLibrary}" STREQUAL "MultiThreaded")
+        set(value "MT")
+    elseif("${cmakeMsvcRuntimeLibrary}" STREQUAL "MultiThreadedDLL")
+        set(value "MD")
+    elseif("${cmakeMsvcRuntimeLibrary}" STREQUAL "MultiThreadedDebug")
+        set(value "MTd")
+    elseif("${cmakeMsvcRuntimeLibrary}" STREQUAL "MultiThreadedDebugDLL")
+        set(value "MDd")
+    else()
+        message(FATAL_ERROR "Unsupported 'cmakeMsvcRuntimeLibrary': '${cmakeMsvcRuntimeLibrary}'")
+    endif()
+
+    set("${var}" "${value}" PARENT_SCOPE)
+endfunction()
+
 function(
-    set_not_found_package_names
-    variableName
+    set_conan_settings
+    var
+    cmakeSystemName
+    cxxTargetArch
+    cmakeCxxCompilerId
+    cmakeCxxCompilerVersion
+    cmakeMsvcRuntimeLibrary
+    cmakeCxxStandard
+    cmakeBuildType
 )
-    if("${ARGC}" GREATER_EQUAL "2")
-        set("start" "1")
-        math(EXPR "stop" "${ARGC} - 1")
-        foreach(i RANGE "${start}" "${stop}")
-            set(argument "${ARGV${i}}")
-            if(NOT "${${argument}_FOUND}")
-                list(APPEND value "${argument}")
+    if("" STREQUAL "${var}")
+        message(FATAL_ERROR "Empty value not supported for 'var'.")
+    endif()
+
+    # os
+    if("Windows" STREQUAL "${cmakeSystemName}")
+        set(value "--settings" "os=${cmakeSystemName}")
+
+        # arch
+        if("AMD64" STREQUAL "${cxxTargetArch}" OR "IA64" STREQUAL "${cxxTargetArch}")
+            set(value "${value}" "--settings" "arch=x86_64")
+        elseif("x86" STREQUAL "${cxxTargetArch}")
+            set(value "${value}" "--settings" "arch=x86")
+        else()
+            message(FATAL_ERROR "Unsupported 'cxxTargetArch': '${cxxTargetArch}'")
+        endif()
+    else()
+        message(FATAL_ERROR "Unsupported 'cmakeSystemName': '${cmakeSystemName}'")
+    endif()
+
+    # compiler
+    if("MSVC" STREQUAL "${cmakeCxxCompilerId}")
+        set(value "${value}" "--settings" "compiler=\"Visual Studio\"")
+
+        # compiler.version
+        if("19" VERSION_LESS_EQUAL "${cmakeCxxCompilerVersion}" AND "20" VERSION_GREATER "${cmakeCxxCompilerVersion}")
+            set(value "${value}" "--settings" "compiler.version=16")
+        elseif("17" VERSION_LESS_EQUAL "${cmakeCxxCompilerVersion}" AND "18" VERSION_GREATER "${cmakeCxxCompilerVersion}")
+            set(value "${value}" "--settings" "compiler.version=15")
+        else()
+            message(FATAL_ERROR "Unsupported 'cmakeCxxCompilerVersion': '${cmakeCxxCompilerVersion}'")
+        endif()
+
+        # compiler.runtime
+        set_conan_msvc_compiler_runtime(conanCompilerRuntime "${cmakeMsvcRuntimeLibrary}")
+        set(value "${value}" "--settings" "compiler.runtime=${conanCompilerRuntime}")
+    elseif("GNU" STREQUAL "${cmakeCxxCompilerId}")
+        set(value "${value}" "--settings" "compiler=gcc")
+
+        # compiler.version
+        if("8" VERSION_LESS_EQUAL "${cmakeCxxCompilerVersion}" AND "9" VERSION_GREATER "${cmakeCxxCompilerVersion}")
+            set(value "${value}" "--settings" "compiler.version=8")
+        elseif("9" VERSION_LESS_EQUAL "${cmakeCxxCompilerVersion}" AND "10" VERSION_GREATER "${cmakeCxxCompilerVersion}")
+            set(value "${value}" "--settings" "compiler.version=9")
+        elseif("10" VERSION_LESS_EQUAL "${cmakeCxxCompilerVersion}" AND "11" VERSION_GREATER "${cmakeCxxCompilerVersion}")
+            set(value "${value}" "--settings" "compiler.version=10")
+        else()
+            message(FATAL_ERROR "Unsupported 'cmakeCxxCompilerVersion': '${cmakeCxxCompilerVersion}'")
+        endif()
+
+        # compiler.libcxx
+        if("11" LESS_EQUAL "${cmakeCxxStandard}")
+            set(value "${value}" "--settings" "compiler.libcxx=libstdc++11")
+        else()
+            set(value "${value}" "--settings" "compiler.libcxx=libstdc++")
+        endif()
+    else()
+        message(FATAL_ERROR "Unsupported 'cmakeCxxCompilerId': '${cmakeCxxCompilerId}'")
+    endif()
+
+    # build_type
+    if("MinSizeRel" STREQUAL "${cmakeBuildType}")
+        set(value "${value}" "--settings" "build_type=${cmakeBuildType}")
+    elseif("Release" STREQUAL "${cmakeBuildType}")
+        set(value "${value}" "--settings" "build_type=${cmakeBuildType}")
+    elseif("RelWithDebInfo" STREQUAL "${cmakeBuildType}")
+        set(value "${value}" "--settings" "build_type=${cmakeBuildType}")
+    elseif("Debug" STREQUAL "${cmakeBuildType}")
+        set(value "${value}" "--settings" "build_type=${cmakeBuildType}")
+    else()
+        message(FATAL_ERROR "Unsupported 'cmakeBuildType': '${cmakeBuildType}'")
+    endif()
+
+    # additional
+    if(NOT "" STREQUAL "${ARGN}")
+        foreach(arg ${ARGN})
+            list(APPEND value "--settings" "${arg}")
+        endforeach()
+    endif()
+
+    set("${var}" "${value}" PARENT_SCOPE)
+endfunction()
+
+function(set_python_boolean var cmakeBoolean)
+    if("" STREQUAL "${var}")
+        message(FATAL_ERROR "Empty value not supported for 'var'.")
+    endif()
+
+    if("${cmakeBoolean}")
+        set(value "True")
+    else()
+        set(value "False")
+    endif()
+
+    set("${var}" "${value}" PARENT_SCOPE)
+endfunction()
+
+function(set_conan_options var)
+    if("" STREQUAL "${var}")
+        message(FATAL_ERROR "Empty value not supported for 'var'.")
+    endif()
+
+    # all options
+    if(NOT "" STREQUAL "${ARGN}")
+        foreach(arg ${ARGN})
+            if(NOT "" STREQUAL "${arg}" AND NOT "${arg}" IN_LIST "value")
+                list(APPEND value "--options" "${arg}")
             endif()
         endforeach()
     endif()
-    set("${variableName}" "${value}" PARENT_SCOPE)
+
+    set("${var}" "${value}" PARENT_SCOPE)
 endfunction()
 
+function(set_not_found_package_names var)
+    if("" STREQUAL "${var}")
+        message(FATAL_ERROR "Empty value not supported for 'var'.")
+    endif()
+
+    if(NOT "" STREQUAL "${ARGN}")
+        foreach(arg ${ARGN})
+            if(NOT "${${arg}_FOUND}")
+                list(APPEND value "${arg}")
+            endif()
+        endforeach()
+    endif()
+
+    set("${var}" "${value}" PARENT_SCOPE)
+endfunction()
+
+macro(print_variables projectName messageMode prefix)
+    if("" STREQUAL "${projectName}")
+        message(FATAL_ERROR "Empty value not supported for 'projectName'.")
+    endif()
+
+    if("" STREQUAL "${ARGN}")
+        get_cmake_property("${projectName}_VARIABLES" VARIABLES)
+        foreach(n ${${PROJECT_NAME}_VARIABLES})
+            if("" STREQUAL "${messageMode}")
+                message("${prefix}${n}: '${${n}}'")
+            else()
+                message("${messageMode}" "${prefix}${n}: '${${n}}'")
+            endif()
+        endforeach()
+    else()
+        foreach(n ${ARGN})
+            if("<nl>" STREQUAL "${n}")
+                if("" STREQUAL "${messageMode}")
+                    message("${prefix}")
+                else()
+                    message("${messageMode}" "${prefix}")
+                endif()
+            else()
+                if("" STREQUAL "${messageMode}")
+                    message("${prefix}${n}: '${${n}}'")
+                else()
+                    message("${messageMode}" "${prefix}${n}: '${${n}}'")
+                endif()
+            endif()
+        endforeach()
+    endif()
+endmacro()
+
+macro(print_environment_variables messageMode prefix)
+    if("" STREQUAL "${ARGN}")
+        message(FATAL_ERROR "Empty value not supported for 'ARGN'.")
+    endif()
+
+    foreach(n ${ARGN})
+        if("" STREQUAL "${messageMode}")
+            message("${prefix}${n}: '$ENV{${n}}'")
+        else()
+            message("${messageMode}" "${prefix}ENV{${n}}: '$ENV{${n}}'")
+        endif()
+    endforeach()
+endmacro()
+
+#[[
 macro(
     set_targets_recursive
     targets
@@ -223,3 +416,4 @@ function(set_targets var)
     set_targets_recursive(targets ${CMAKE_CURRENT_SOURCE_DIR})
     set(${var} ${targets} PARENT_SCOPE)
 endfunction()
+]]
