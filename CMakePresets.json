@@ -19,7 +19,7 @@
       "generator": "Ninja"
     },
     {
-      "name": "msvc16x86x64",
+      "name": "msvc-16-x86-x64",
       "hidden": true,
       "cacheVariables": {
         "CXX_COMPILER_NAME": {
@@ -99,13 +99,19 @@
       }
     },
     {
-      "name": "release-static",
+      "name": "release",
       "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": {
           "type": "STRING",
           "value": "Release"
-        },
+        }
+      }
+    },
+    {
+      "name": "static",
+      "hidden": true,
+      "cacheVariables": {
         "BUILD_SHARED_LIBS": {
           "type": "BOOL",
           "value": false
@@ -117,13 +123,9 @@
       }
     },
     {
-      "name": "release-shared",
+      "name": "shared",
       "hidden": true,
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": {
-          "type": "STRING",
-          "value": "Release"
-        },
         "BUILD_SHARED_LIBS": {
           "type": "BOOL",
           "value": true
@@ -136,24 +138,24 @@
     },
 
     {
-      "name": "windows-ninja-msvc16x86x64-release-static",
-      "inherits": [ "windows", "ninja", "msvc16x86x64", "release-static" ],
+      "name": "windows.ninja.msvc-16-x86-x64.release.static",
+      "inherits": [ "windows", "ninja", "msvc-16-x86-x64", "release", "static" ],
       "binaryDir": "${sourceDir}/build/0"
     },
     {
-      "name": "windows-ninja-msvc16x86x64-release-shared",
-      "inherits": [ "windows", "ninja", "msvc16x86x64", "release-shared" ],
+      "name": "windows.ninja.msvc-16-x86-x64.release.shared",
+      "inherits": [ "windows", "ninja", "msvc-16-x86-x64", "release", "shared" ],
       "binaryDir": "${sourceDir}/build/1"
     }
   ],
   "buildPresets": [
     {
-      "name": "windows-ninja-msvc16x86x64-release-static",
-      "configurePreset": "windows-ninja-msvc16x86x64-release-static"
+      "name": "windows.ninja.msvc-16-x86-x64.release.static",
+      "configurePreset": "windows.ninja.msvc-16-x86-x64.release.static"
     },
     {
-      "name": "windows-ninja-msvc16x86x64-release-shared",
-      "configurePreset": "windows-ninja-msvc16x86x64-release-shared"
+      "name": "windows.ninja.msvc-16-x86-x64.release.shared",
+      "configurePreset": "windows.ninja.msvc-16-x86-x64.release.shared"
     }
   ]
 }
