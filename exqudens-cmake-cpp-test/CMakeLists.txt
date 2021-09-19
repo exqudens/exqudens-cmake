@@ -3,12 +3,7 @@ project("${CMAKE_PROJECT_NAME}-cpp-test" VERSION "${CMAKE_PROJECT_VERSION}" LANG
 
 message("project: '${PROJECT_NAME}-${PROJECT_VERSION}'")
 
-if(MSVC)
-    set("${PROJECT_NAME}_CXX_IMPLICIT_INCLUDE_DIRECTORIES" "${${CMAKE_PROJECT_NAME}_CXX_IMPLICIT_INCLUDE_DIRECTORIES}")
-    set("${PROJECT_NAME}_CXX_IMPLICIT_LINK_DIRECTORIES" "${${CMAKE_PROJECT_NAME}_CXX_IMPLICIT_LINK_DIRECTORIES}")
-endif()
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY                "${PROJECT_BINARY_DIR}/bin")
+#[[set(CMAKE_RUNTIME_OUTPUT_DIRECTORY                "${PROJECT_BINARY_DIR}/bin")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE        "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL     "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
@@ -24,7 +19,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY                "${PROJECT_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE        "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_MINSIZEREL     "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG          "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG          "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")]]
 
 set("${PROJECT_NAME}_CMAKE_INSTALL_PREFIX" "${PROJECT_BINARY_DIR}/cmake-install")
 
@@ -68,7 +63,9 @@ if(NOT "" STREQUAL "${CONAN_COMMAND}")
     endif()
 
     include("${${PROJECT_NAME}_CONAN_INSTALL_PREFIX}/conan-packages.cmake")
+
     set(CMAKE_MODULE_PATH "${${PROJECT_NAME}_CONAN_INSTALL_PREFIX}")
+
     foreach(
         conanPackageName
         cmakePackageName
@@ -98,13 +95,16 @@ if(NOT "" STREQUAL "${CONAN_COMMAND}")
             )
             message(FATAL_ERROR "${errorMessage}")
         endif()
+
         string(REPLACE "<sep>" ";" tmpCmakePackagePaths "${cmakePackagePaths}")
+
         foreach(cmakePackagePath ${tmpCmakePackagePaths})
             if(NOT IS_DIRECTORY "${cmakePackagePath}")
                 message(FATAL_ERROR "Not is directory 'cmakePackagePath': '${cmakePackagePath}'!")
             endif()
             list(APPEND CMAKE_PREFIX_PATH "${cmakePackagePath}")
         endforeach()
+
         if("<ignore>" STREQUAL "${cmakePackageVersion}" AND "MODULE" STREQUAL "${cmakePackageFindType}")
             find_package("${cmakePackageName}" QUIET)
         elseif(NOT "<ignore>" STREQUAL "${cmakePackageVersion}" AND "MODULE" STREQUAL "${cmakePackageFindType}")
@@ -114,6 +114,7 @@ if(NOT "" STREQUAL "${CONAN_COMMAND}")
         elseif(NOT "<ignore>" STREQUAL "${cmakePackageVersion}" AND NOT "MODULE" STREQUAL "${cmakePackageFindType}")
             find_package("${cmakePackageName}" "${cmakePackageVersion}" EXACT QUIET CONFIG)
         endif()
+
     endforeach()
 
     set_not_found_package_names(NOT_FOUND_PACKAGE_NAMES ${${PROJECT_NAME}_CMAKE_PACKAGE_NAMES})
@@ -124,6 +125,7 @@ if(NOT "" STREQUAL "${CONAN_COMMAND}")
         endforeach()
         return()
     endif()
+
 endif()
 
 add_library("${PROJECT_NAME}-lib"
@@ -133,15 +135,49 @@ add_library("${PROJECT_NAME}-lib"
     "src/test/cpp/exqudens/cmake/Procedures.cpp"
 )
 target_include_directories("${PROJECT_NAME}-lib" PUBLIC
-    "$<BUILD_INTERFACE:${${PROJECT_NAME}_CXX_IMPLICIT_INCLUDE_DIRECTORIES}>"
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/test/cpp>"
     "$<INSTALL_INTERFACE:include>"
 )
-target_link_directories("${PROJECT_NAME}-lib" PUBLIC
-    "${${PROJECT_NAME}_CXX_IMPLICIT_LINK_DIRECTORIES}"
+set_target_properties("${PROJECT_NAME}-lib" PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY                "${PROJECT_BINARY_DIR}/test/bin"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE        "${PROJECT_BINARY_DIR}/test/bin"
+    RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${PROJECT_BINARY_DIR}/test/bin"
+    RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL     "${PROJECT_BINARY_DIR}/test/bin"
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG          "${PROJECT_BINARY_DIR}/test/bin"
+
+    ARCHIVE_OUTPUT_DIRECTORY                "${PROJECT_BINARY_DIR}/test/lib"
+    ARCHIVE_OUTPUT_DIRECTORY_RELEASE        "${PROJECT_BINARY_DIR}/test/lib"
+    ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO "${PROJECT_BINARY_DIR}/test/lib"
+    ARCHIVE_OUTPUT_DIRECTORY_MINSIZEREL     "${PROJECT_BINARY_DIR}/test/lib"
+    ARCHIVE_OUTPUT_DIRECTORY_DEBUG          "${PROJECT_BINARY_DIR}/test/lib"
+
+    LIBRARY_OUTPUT_DIRECTORY                "${PROJECT_BINARY_DIR}/test/lib"
+    LIBRARY_OUTPUT_DIRECTORY_RELEASE        "${PROJECT_BINARY_DIR}/test/lib"
+    LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO "${PROJECT_BINARY_DIR}/test/lib"
+    LIBRARY_OUTPUT_DIRECTORY_MINSIZEREL     "${PROJECT_BINARY_DIR}/test/lib"
+    LIBRARY_OUTPUT_DIRECTORY_DEBUG          "${PROJECT_BINARY_DIR}/test/lib"
 )
 
 add_executable("${PROJECT_NAME}-executable" "src/test/cpp/main.cpp")
 target_link_libraries("${PROJECT_NAME}-executable" PRIVATE
     "${PROJECT_NAME}-lib"
+)
+set_target_properties("${PROJECT_NAME}-executable" PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY                "${PROJECT_BINARY_DIR}/test/bin"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE        "${PROJECT_BINARY_DIR}/test/bin"
+    RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${PROJECT_BINARY_DIR}/test/bin"
+    RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL     "${PROJECT_BINARY_DIR}/test/bin"
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG          "${PROJECT_BINARY_DIR}/test/bin"
+
+    ARCHIVE_OUTPUT_DIRECTORY                "${PROJECT_BINARY_DIR}/test/lib"
+    ARCHIVE_OUTPUT_DIRECTORY_RELEASE        "${PROJECT_BINARY_DIR}/test/lib"
+    ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO "${PROJECT_BINARY_DIR}/test/lib"
+    ARCHIVE_OUTPUT_DIRECTORY_MINSIZEREL     "${PROJECT_BINARY_DIR}/test/lib"
+    ARCHIVE_OUTPUT_DIRECTORY_DEBUG          "${PROJECT_BINARY_DIR}/test/lib"
+
+    LIBRARY_OUTPUT_DIRECTORY                "${PROJECT_BINARY_DIR}/test/lib"
+    LIBRARY_OUTPUT_DIRECTORY_RELEASE        "${PROJECT_BINARY_DIR}/test/lib"
+    LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO "${PROJECT_BINARY_DIR}/test/lib"
+    LIBRARY_OUTPUT_DIRECTORY_MINSIZEREL     "${PROJECT_BINARY_DIR}/test/lib"
+    LIBRARY_OUTPUT_DIRECTORY_DEBUG          "${PROJECT_BINARY_DIR}/test/lib"
 )
