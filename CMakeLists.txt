@@ -10,30 +10,7 @@ message("project: '${PROJECT_NAME}-${PROJECT_VERSION}'")
 include("src/main/cmake/util.cmake")
 include("src/main/cmake/config.cmake")
 
-set_if_not_defined(MESSAGE_MODE "STATUS")
-
-print_variables("${MESSAGE_MODE}" ""
-    CXX_INCLUDE_DIRECTORIES
-    CXX_LINK_DIRECTORIES
-    CMAKE_AR
-    CMAKE_CXX_COMPILER
-    CMAKE_C_COMPILER
-    CMAKE_LINKER
-    CMAKE_MT
-    CMAKE_RC_COMPILER
-    CONAN_COMMAND
-    CXX_INCLUDE_DIRECTORIES
-    CXX_LINK_DIRECTORIES
-)
-print_environment_variables("${MESSAGE_MODE}" ""
-    PATH
-    INCLUDE
-    LIBPATH
-    LIB
-    CLION_IDE
-)
-
-add_subdirectory("${PROJECT_NAME}-cpp-test")
+add_subdirectory("${PROJECT_NAME}-cpp-strings")
 #add_subdirectory("${PROJECT_NAME}-conan-test")
 #add_subdirectory("${PROJECT_NAME}-extension-test")
 #add_subdirectory("${PROJECT_NAME}-test")

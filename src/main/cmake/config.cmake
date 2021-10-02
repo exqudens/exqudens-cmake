@@ -39,6 +39,10 @@ else()
     endif()
 endif()
 
+set(CONAN_PACKAGE_TYPE "static")
+if("${BUILD_SHARED_LIBS}")
+    set(CONAN_PACKAGE_TYPE "shared")
+endif()
 set_python_boolean(CONAN_BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS}")
 
 if("${CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT}")
