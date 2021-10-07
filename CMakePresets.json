@@ -109,16 +109,22 @@
       }
     },
     {
+      "name": "debug",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Debug"
+        }
+      }
+    },
+    {
       "name": "static",
       "hidden": true,
       "cacheVariables": {
         "BUILD_SHARED_LIBS": {
           "type": "BOOL",
           "value": false
-        },
-        "CMAKE_MSVC_RUNTIME_LIBRARY": {
-          "type": "STRING",
-          "value": "MultiThreaded"
         }
       }
     },
@@ -129,23 +135,69 @@
         "BUILD_SHARED_LIBS": {
           "type": "BOOL",
           "value": true
-        },
+        }
+      }
+    },
+    {
+      "name": "mt",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_MSVC_RUNTIME_LIBRARY": {
+          "type": "STRING",
+          "value": "MultiThreaded"
+        }
+      }
+    },
+    {
+      "name": "md",
+      "hidden": true,
+      "cacheVariables": {
         "CMAKE_MSVC_RUNTIME_LIBRARY": {
           "type": "STRING",
           "value": "MultiThreadedDLL"
         }
       }
     },
+    {
+      "name": "mtd",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_MSVC_RUNTIME_LIBRARY": {
+          "type": "STRING",
+          "value": "MultiThreadedDebug"
+        }
+      }
+    },
+    {
+      "name": "mdd",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_MSVC_RUNTIME_LIBRARY": {
+          "type": "STRING",
+          "value": "MultiThreadedDebugDLL"
+        }
+      }
+    },
 
     {
       "name": "windows.ninja.msvc-16-x86-x64.release.static",
-      "inherits": [ "windows", "ninja", "msvc-16-x86-x64", "release", "static" ],
+      "inherits": [ "windows", "ninja", "msvc-16-x86-x64", "release", "static", "mt" ],
       "binaryDir": "${sourceDir}/build/0"
     },
     {
       "name": "windows.ninja.msvc-16-x86-x64.release.shared",
-      "inherits": [ "windows", "ninja", "msvc-16-x86-x64", "release", "shared" ],
+      "inherits": [ "windows", "ninja", "msvc-16-x86-x64", "release", "shared", "md" ],
       "binaryDir": "${sourceDir}/build/1"
+    },
+    {
+      "name": "windows.ninja.msvc-16-x86-x64.debug.static",
+      "inherits": [ "windows", "ninja", "msvc-16-x86-x64", "debug", "static", "mtd" ],
+      "binaryDir": "${sourceDir}/build/2"
+    },
+    {
+      "name": "windows.ninja.msvc-16-x86-x64.debug.shared",
+      "inherits": [ "windows", "ninja", "msvc-16-x86-x64", "debug", "shared", "mdd" ],
+      "binaryDir": "${sourceDir}/build/3"
     }
   ],
   "buildPresets": [
@@ -156,6 +208,14 @@
     {
       "name": "windows.ninja.msvc-16-x86-x64.release.shared",
       "configurePreset": "windows.ninja.msvc-16-x86-x64.release.shared"
+    },
+    {
+      "name": "windows.ninja.msvc-16-x86-x64.debug.static",
+      "configurePreset": "windows.ninja.msvc-16-x86-x64.debug.static"
+    },
+    {
+      "name": "windows.ninja.msvc-16-x86-x64.debug.shared",
+      "configurePreset": "windows.ninja.msvc-16-x86-x64.debug.shared"
     }
   ]
 }
