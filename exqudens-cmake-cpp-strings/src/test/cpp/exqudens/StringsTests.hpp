@@ -1,9 +1,21 @@
 #pragma once
 
+#include <vector>
+#include <iostream>
+
+#include <type_traits>
+
 #include "gtest/gtest.h"
 #include "exqudens/Strings.hpp"
 
 namespace exqudens {
+
+  TEST(StringsTests, toString) {
+    std::string expectedToStringResult = "[1, 22, 333]";
+    std::vector<bool> stringVector = {true, false, true};
+    std::string actualToStringResult = Strings::toString(stringVector);
+    ASSERT_EQ(expectedToStringResult, actualToStringResult);
+  }
 
   TEST(StringsTests, testSplit) {
     std::vector<std::string> expectedSplitResult = {"a", "bb", "ccc"};

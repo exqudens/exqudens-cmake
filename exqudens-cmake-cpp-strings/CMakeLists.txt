@@ -178,8 +178,23 @@ set_target_properties("${PROJECT_NAME}-test-app" PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY_MINSIZEREL     "${PROJECT_BINARY_DIR}/test/lib"
     LIBRARY_OUTPUT_DIRECTORY_DEBUG          "${PROJECT_BINARY_DIR}/test/lib"
 )
+add_custom_command(TARGET "${PROJECT_NAME}-test-app"
+    POST_BUILD
+    COMMAND "${CMAKE_COMMAND}"
+    ARGS -E copy_directory "${PROJECT_BINARY_DIR}/main/bin" "$<TARGET_PROPERTY:${PROJECT_NAME}-test-app,RUNTIME_OUTPUT_DIRECTORY>"
+    COMMAND "${CMAKE_COMMAND}"
+    ARGS -E copy_directory "${${PROJECT_NAME}_CONAN_INSTALL_PREFIX}/bin" "$<TARGET_PROPERTY:${PROJECT_NAME}-test-app,RUNTIME_OUTPUT_DIRECTORY>"
+    VERBATIM
+)
 
-set("${PROJECT_NAME}_TESTS_PATH"
+add_custom_target("${PROJECT_NAME}-test-app-clean"
+    COMMAND "${CMAKE_COMMAND}" -E rm -f "$<TARGET_PROPERTY:${PROJECT_NAME}-test-app,RUNTIME_OUTPUT_DIRECTORY>/*"
+    VERBATIM
+)
+
+add_dependencies("${PROJECT_NAME}-test-app" "${PROJECT_NAME}-test-app-clean")
+
+#[[set("${PROJECT_NAME}_TESTS_PATH"
     "${PROJECT_BINARY_DIR}/main/bin"
     "${${PROJECT_NAME}_CONAN_INSTALL_PREFIX}/bin"
 )
@@ -194,4 +209,4 @@ add_custom_target("${PROJECT_NAME}-tests"
     WORKING_DIRECTORY "$<TARGET_PROPERTY:${PROJECT_NAME}-test-app,RUNTIME_OUTPUT_DIRECTORY>"
     COMMENT "custom-target: '${PROJECT_NAME}-tests'"
     VERBATIM
-)
+)]]
