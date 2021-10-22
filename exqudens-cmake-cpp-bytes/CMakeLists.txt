@@ -114,8 +114,8 @@ if(NOT "" STREQUAL "${CONAN_COMMAND}")
 endif()
 
 add_library("${PROJECT_NAME}"
-    "src/main/cpp/exqudens/Strings.hpp"
-    "src/main/cpp/exqudens/Strings.cpp"
+    "src/main/cpp/exqudens/Bytes.hpp"
+    "src/main/cpp/exqudens/Bytes.cpp"
 )
 target_include_directories("${PROJECT_NAME}" PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/main/cpp>"
@@ -143,7 +143,7 @@ set_target_properties("${PROJECT_NAME}" PROPERTIES
 
 add_library("${PROJECT_NAME}-test-lib" INTERFACE
     "src/test/cpp/exqudens/TestApplication.hpp"
-    "src/test/cpp/exqudens/StringsTests.hpp"
+    "src/test/cpp/exqudens/BytesTests.hpp"
 )
 target_include_directories("${PROJECT_NAME}-test-lib" INTERFACE
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/test/cpp>"

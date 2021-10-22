@@ -10,6 +10,7 @@ message("project: '${PROJECT_NAME}-${PROJECT_VERSION}'")
 include("src/main/cmake/util.cmake")
 include("src/main/cmake/config.cmake")
 
+add_subdirectory("${PROJECT_NAME}-cpp-bytes")
 add_subdirectory("${PROJECT_NAME}-cpp-strings")
 #add_subdirectory("${PROJECT_NAME}-conan-test")
 #add_subdirectory("${PROJECT_NAME}-extension-test")

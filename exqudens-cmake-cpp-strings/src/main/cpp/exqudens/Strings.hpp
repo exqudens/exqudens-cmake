@@ -2,8 +2,6 @@
 
 #include <string>
 #include <vector>
-#include <typeinfo>
-#include <stdexcept>
 
 namespace exqudens {
 
@@ -11,68 +9,114 @@ namespace exqudens {
 
     public:
 
-      template <typename T>
-      static std::string toString(const T& object) {
-        return toString(&object);
-      }
+      static std::string toString(const bool& value);
+      static std::string toString(bool& value);
+      static std::string toString(const bool* value);
+      static std::string toString(bool* value);
 
-      template <typename T>
-      static std::string toString(T& object) {
-        return toString(&object);
-      }
+      static std::string toString(const char& value);
+      static std::string toString(char& value);
+      static std::string toString(const char* value);
+      static std::string toString(char* value);
 
-      template <typename T>
-      static std::string toString(T* object) {
-        if (object == nullptr) {
-          return "nullptr";
-        }
-        T value = *object;
-        if (typeid(bool) == typeid(value)) {
-          bool v = (bool) value;
-          return v ? "true" : "false";
-        } else if (std::is_integral<decltype(value)>::value) {
-          return std::to_string(value);
-        } else if (std::is_floating_point<decltype(value)>::value) {
-          return std::to_string(value);
-        } else {
-          throw std::invalid_argument(std::string("Unsupported type: ") + typeid(value).name());
-        }
-      }
+      static std::string toString(const char16_t& value);
+      static std::string toString(char16_t& value);
+      static std::string toString(const char16_t* value);
+      static std::string toString(char16_t* value);
 
-      template <typename T>
-      static std::string toString(const std::vector<T>& objects) {
-        return toString(&objects);
-      }
+      static std::string toString(const char32_t& value);
+      static std::string toString(char32_t& value);
+      static std::string toString(const char32_t* value);
+      static std::string toString(char32_t* value);
 
-      template <typename T>
-      static std::string toString(std::vector<T>& objects) {
-        return toString(&objects);
-      }
+      static std::string toString(const wchar_t& value);
+      static std::string toString(wchar_t& value);
+      static std::string toString(const wchar_t* value);
+      static std::string toString(wchar_t* value);
 
-      template <typename T>
-      static std::string toString(std::vector<T>* objects) {
-        if (objects == nullptr) {
-          return "nullptr";
-        }
-        std::vector<T> values = *objects;
-        std::vector<std::string> stringVector;
-        for (const T& object : values) {
-          stringVector.emplace_back(toString(object));
-        }
-        return join(stringVector, ", ", "[", "]");
-      }
+      static std::string toString(const signed char& value);
+      static std::string toString(signed char& value);
+      static std::string toString(const signed char* value);
+      static std::string toString(signed char* value);
+
+      static std::string toString(const unsigned char& value);
+      static std::string toString(unsigned char& value);
+      static std::string toString(const unsigned char* value);
+      static std::string toString(unsigned char* value);
+
+      static std::string toString(const short& value);
+      static std::string toString(short& value);
+      static std::string toString(const short* value);
+      static std::string toString(short* value);
+
+      static std::string toString(const unsigned short& value);
+      static std::string toString(unsigned short& value);
+      static std::string toString(const unsigned short* value);
+      static std::string toString(unsigned short* value);
+
+      static std::string toString(const int& value);
+      static std::string toString(int& value);
+      static std::string toString(const int* value);
+      static std::string toString(int* value);
+
+      static std::string toString(const unsigned int& value);
+      static std::string toString(unsigned int& value);
+      static std::string toString(const unsigned int* value);
+      static std::string toString(unsigned int* value);
+
+      static std::string toString(const long& value);
+      static std::string toString(long& value);
+      static std::string toString(const long* value);
+      static std::string toString(long* value);
+
+      static std::string join(const std::vector<std::string>& values);
+      static std::string join(std::vector<std::string>& values);
+      static std::string join(const std::vector<std::string>* values);
+      static std::string join(std::vector<std::string>* values);
+
+      static std::string join(const std::vector<std::string>& values, const std::string& delimiter);
+      static std::string join(std::vector<std::string>& values, std::string& delimiter);
+      static std::string join(const std::vector<std::string>* values, const std::string* delimiter);
+      static std::string join(std::vector<std::string>* values, std::string* delimiter);
+
+      static std::string join(
+          const std::vector<std::string>& values,
+          const std::string& delimiter,
+          const std::string& prefix,
+          const std::string& suffix
+      );
+      static std::string join(
+          std::vector<std::string>& values,
+          std::string& delimiter,
+          std::string& prefix,
+          std::string& suffix
+      );
+      static std::string join(
+          const std::vector<std::string>* values,
+          const std::string* delimiter,
+          const std::string* prefix,
+          const std::string* suffix
+      );
+      static std::string join(
+          std::vector<std::string>* values,
+          std::string* delimiter,
+          std::string* prefix,
+          std::string* suffix
+      );
+
+      static std::string toString(const std::vector<char>& value);
+      static std::string toString(std::vector<char>& value);
+      static std::string toString(const std::vector<char>* value);
+      static std::string toString(std::vector<char>* value);
 
       static std::vector<std::string> split(
           const std::string& value,
           const std::string& delimiter = ""
       );
 
-      static std::string join(
-          const std::vector<std::string>& values,
-          const std::string& delimiter = "",
-          const std::string& prefix = "",
-          const std::string& suffix = ""
-      );
+    private:
+
+      static char toChar(wchar_t value);
 
   };
 
