@@ -94,7 +94,7 @@ function(set_msvc_path var vswhereCommand compilerVersion)
 endfunction()
 
 function(set_msvc_env prefix vswhereCommand compilerVersion compilerArch targetArch)
-    foreach(name prefix compilerVersion compilerArch targetArch)
+    foreach(name compilerVersion compilerArch targetArch)
         if("" STREQUAL "${${name}}")
             message(FATAL_ERROR "Empty value not supported for '${name}'.")
         endif()
@@ -194,139 +194,86 @@ function(set_msvc_env prefix vswhereCommand compilerVersion compilerArch targetA
     get_filename_component(msvcRcPath "${msvcRcPath}" DIRECTORY)
     cmake_path(CONVERT "${msvcRcPath}" TO_NATIVE_PATH_LIST msvcRcPath NORMALIZE)
 
-    set("${prefix}_MSVC_INCLUDE" "${msvcInclude}" PARENT_SCOPE)
-    set("${prefix}_MSVC_LIBPATH" "${msvcLibPath}" PARENT_SCOPE)
-    set("${prefix}_MSVC_LIB" "${msvcLib}" PARENT_SCOPE)
-    set("${prefix}_MSVC_CL_PATH" "${msvcClPath}" PARENT_SCOPE)
-    set("${prefix}_MSVC_RC_PATH" "${msvcRcPath}" PARENT_SCOPE)
+    set("${prefix}_include" "${msvcInclude}" PARENT_SCOPE)
+    set("${prefix}_libpath" "${msvcLibPath}" PARENT_SCOPE)
+    set("${prefix}_lib" "${msvcLib}" PARENT_SCOPE)
+    set("${prefix}_cl_path" "${msvcClPath}" PARENT_SCOPE)
+    set("${prefix}_rc_path" "${msvcRcPath}" PARENT_SCOPE)
 endfunction()
 
-if("${CMAKE_ARGC}" GREATER "3")
+function(script_execute args)
+    set(oneValueKeywords
+        "processor"
+        "os"
+        "compiler"
+        "version"
+        "host"
+        "target"
+        "file"
+    )
+    cmake_parse_arguments("" "" "${oneValueKeywords}" "" "${args}")
+
     if(
-        "AMD64" STREQUAL "${CMAKE_ARGV3}"
+        NOT "" STREQUAL "${_processor}"
+        AND "Windows" STREQUAL "${_os}"
+        AND ("Visual Studio" STREQUAL "${_compiler}" OR "vs" STREQUAL "${_compiler}")
+        AND NOT "" STREQUAL "${_version}"
+        AND NOT "" STREQUAL "${_host}"
+        AND NOT "" STREQUAL "${_target}"
+        AND (NOT "" STREQUAL "${_file}" AND NOT EXISTS "${_file}")
     )
-        set(SCRIPT_PROCESSOR "${CMAKE_ARGV3}")
+        message("processor: '${_processor}'")
+        message("os: '${_os}'")
+        message("compiler: '${_compiler}'")
+        message("version: '${_version}'")
+        message("host: '${_host}'")
+        message("target: '${_target}'")
+        message("file: '${_file}'")
+
+        set_msvc_env("" "" "${_version}" "${_host}" "${_target}")
+
+        cmake_path(CONVERT "${_cl_path}" TO_CMAKE_PATH_LIST _cl_cmake_path NORMALIZE)
+        cmake_path(CONVERT "${_rc_path}" TO_CMAKE_PATH_LIST _rc_cmake_path NORMALIZE)
+
+        string(REPLACE "\\" "\\\\" _include_escaped "${_include}")
+        string(REPLACE ";" "\\;" _include_escaped "${_include_escaped}")
+
+        string(REPLACE "\\" "\\\\" _libpath_escaped "${_libpath}")
+        string(REPLACE ";" "\\;" _libpath_escaped "${_libpath_escaped}")
+
+        string(REPLACE "\\" "\\\\" _lib_escaped "${_lib}")
+        string(REPLACE ";" "\\;" _lib_escaped "${_lib_escaped}")
+
+        string(JOIN "\n" _content
+            "set(CMAKE_SYSTEM_PROCESSOR \"${_processor}\")"
+            "set(CMAKE_SYSTEM_NAME \"${_os}\")"
+            ""
+            "set(MSVC_CL_PATH \"${_cl_cmake_path}\")"
+            "set(MSVC_RC_PATH \"${_rc_cmake_path}\")"
+            ""
+            "set(CMAKE_C_COMPILER   \"\${MSVC_CL_PATH}/cl.exe\")"
+            "set(CMAKE_CXX_COMPILER \"\${MSVC_CL_PATH}/cl.exe\")"
+            "set(CMAKE_AR           \"\${MSVC_CL_PATH}/lib.exe\")"
+            "set(CMAKE_LINKER       \"\${MSVC_CL_PATH}/link.exe\")"
+            "set(CMAKE_RC_COMPILER  \"\${MSVC_RC_PATH}/rc.exe\")"
+            "set(CMAKE_MT           \"\${MSVC_RC_PATH}/mt.exe\")"
+            ""
+            "set(ENV{INCLUDE} \"${_include_escaped}\")"
+            "set(ENV{LIBPATH} \"${_libpath_escaped}\")"
+            "set(ENV{LIB} \"${_lib_escaped}\")"
+            ""
+            "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER)"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER)"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE NEVER)"
+            ""
+        )
+        file(WRITE "${_file}" "${_content}")
     endif()
-endif()
+endfunction()
 
-if("${CMAKE_ARGC}" GREATER "4")
-    if(
-        "Windows" STREQUAL "${CMAKE_ARGV4}"
-        OR "Linux" STREQUAL "${CMAKE_ARGV4}"
-        OR "Darwin" STREQUAL "${CMAKE_ARGV4}"
-    )
-        set(SCRIPT_OS_NAME "${CMAKE_ARGV4}")
-    endif()
-endif()
-
-if("${CMAKE_ARGC}" GREATER "5")
-    if(
-        "vs" STREQUAL "${CMAKE_ARGV5}"
-        OR "gcc" STREQUAL "${CMAKE_ARGV5}"
-    )
-        set(SCRIPT_COMPILER_NAME "${CMAKE_ARGV5}")
-    endif()
-endif()
-
-if("${CMAKE_ARGC}" GREATER "6")
-    if(
-        ("17" STREQUAL "${CMAKE_ARGV6}" OR "2022" STREQUAL "${CMAKE_ARGV6}")
-        OR ("16" STREQUAL "${CMAKE_ARGV6}" OR "2019" STREQUAL "${CMAKE_ARGV6}")
-    )
-        set(SCRIPT_COMPILER_VERSION "${CMAKE_ARGV6}")
-    endif()
-endif()
-
-if("${CMAKE_ARGC}" GREATER "7")
-    if(
-        "x86" STREQUAL "${CMAKE_ARGV7}"
-        OR "x64" STREQUAL "${CMAKE_ARGV7}"
-    )
-        set(SCRIPT_COMPILER_ARCH "${CMAKE_ARGV7}")
-    endif()
-endif()
-
-if("${CMAKE_ARGC}" GREATER "8")
-    if(
-        "x86" STREQUAL "${CMAKE_ARGV8}"
-        OR "x64" STREQUAL "${CMAKE_ARGV8}"
-    )
-        set(SCRIPT_TARGET_ARCH "${CMAKE_ARGV8}")
-    endif()
-endif()
-
-if("${CMAKE_ARGC}" GREATER "9")
-    if(
-        NOT "" STREQUAL "${CMAKE_ARGV9}"
-        AND NOT EXISTS "${CMAKE_ARGV9}"
-    )
-        set(SCRIPT_FILE "${CMAKE_ARGV9}")
-    endif()
-endif()
-
-if(
-    NOT "" STREQUAL "${SCRIPT_PROCESSOR}"
-    AND "Windows" STREQUAL "${SCRIPT_OS_NAME}"
-    AND "vs" STREQUAL "${SCRIPT_COMPILER_NAME}"
-    AND NOT "" STREQUAL "${SCRIPT_COMPILER_VERSION}"
-    AND NOT "" STREQUAL "${SCRIPT_COMPILER_ARCH}"
-    AND NOT "" STREQUAL "${SCRIPT_TARGET_ARCH}"
-    AND NOT "" STREQUAL "${SCRIPT_FILE}"
-)
-
-    set_msvc_env("SCRIPT" "" "${SCRIPT_COMPILER_VERSION}" "${SCRIPT_COMPILER_ARCH}" "${SCRIPT_TARGET_ARCH}")
-
-    cmake_path(CONVERT "${SCRIPT_MSVC_CL_PATH}" TO_CMAKE_PATH_LIST SCRIPT_MSVC_CL_CMAKE_PATH NORMALIZE)
-    cmake_path(CONVERT "${SCRIPT_MSVC_RC_PATH}" TO_CMAKE_PATH_LIST SCRIPT_MSVC_RC_CMAKE_PATH NORMALIZE)
-
-    string(REPLACE "\\" "\\\\" SCRIPT_MSVC_INCLUDE_ESCAPED "${SCRIPT_MSVC_INCLUDE}")
-    string(REPLACE ";" "\\;" SCRIPT_MSVC_INCLUDE_ESCAPED "${SCRIPT_MSVC_INCLUDE_ESCAPED}")
-
-    string(REPLACE "\\" "\\\\" SCRIPT_MSVC_LIBPATH_ESCAPED "${SCRIPT_MSVC_LIBPATH}")
-    string(REPLACE ";" "\\;" SCRIPT_MSVC_LIBPATH_ESCAPED "${SCRIPT_MSVC_LIBPATH_ESCAPED}")
-
-    string(REPLACE "\\" "\\\\" SCRIPT_MSVC_LIB_ESCAPED "${SCRIPT_MSVC_LIB}")
-    string(REPLACE ";" "\\;" SCRIPT_MSVC_LIB_ESCAPED "${SCRIPT_MSVC_LIB_ESCAPED}")
-
-    string(JOIN "\n" content
-        "set(CMAKE_SYSTEM_PROCESSOR \"${SCRIPT_PROCESSOR}\")"
-        "set(CMAKE_SYSTEM_NAME \"${SCRIPT_OS_NAME}\")"
-        ""
-        "set(MSVC_CL_PATH \"${SCRIPT_MSVC_CL_CMAKE_PATH}\")"
-        "set(MSVC_RC_PATH \"${SCRIPT_MSVC_RC_CMAKE_PATH}\")"
-        ""
-        "set(CMAKE_C_COMPILER   \"\${MSVC_CL_PATH}/cl.exe\")"
-        "set(CMAKE_CXX_COMPILER \"\${MSVC_CL_PATH}/cl.exe\")"
-        "set(CMAKE_AR           \"\${MSVC_CL_PATH}/lib.exe\")"
-        "set(CMAKE_LINKER       \"\${MSVC_CL_PATH}/link.exe\")"
-        "set(CMAKE_RC_COMPILER  \"\${MSVC_RC_PATH}/rc.exe\")"
-        "set(CMAKE_MT           \"\${MSVC_RC_PATH}/mt.exe\")"
-        ""
-        "set(ENV{INCLUDE} \"${SCRIPT_MSVC_INCLUDE_ESCAPED}\")"
-        "set(ENV{LIBPATH} \"${SCRIPT_MSVC_LIBPATH_ESCAPED}\")"
-        "set(ENV{LIB} \"${SCRIPT_MSVC_LIB_ESCAPED}\")"
-        ""
-        "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
-        "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER)"
-        "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER)"
-        "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE NEVER)"
-        ""
-    )
-    file(WRITE "${SCRIPT_FILE}" "${content}")
-
-    return()
-
-endif()
-
-string(JOIN " " error
-    "Unsupported:"
-    "processor: '${SCRIPT_PROCESSOR}'"
-    "os: '${SCRIPT_OS_NAME}'"
-    "compiler: '${SCRIPT_COMPILER_NAME}'"
-    "version: '${SCRIPT_COMPILER_VERSION}'"
-    "host_arch: '${SCRIPT_COMPILER_ARCH}'"
-    "target_arch: '${SCRIPT_TARGET_ARCH}'"
-    "file: '${SCRIPT_FILE}'"
-    "Usage: <processor> <os> <compiler> <version> <host_arch> <target_arch> <file>"
-)
-message(FATAL_ERROR "${error}")
+math(EXPR max "${CMAKE_ARGC} - 1")
+foreach(i RANGE "${max}")
+    list(APPEND args "${CMAKE_ARGV${i}}")
+endforeach()
+script_execute("${args}")
