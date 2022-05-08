@@ -1,9 +1,3 @@
-function(set_if_not_defined var)
-    if("" STREQUAL "${${var}}" AND NOT "" STREQUAL "${ARGN}")
-        set("${var}" "${ARGN}" PARENT_SCOPE)
-    endif()
-endfunction()
-
 function(string_substring_from var input fromExclusive)
     if("" STREQUAL "${fromExclusive}")
         message(FATAL_ERROR "Empty value not supported for 'fromExclusive'.")
@@ -203,193 +197,136 @@ function(set_msvc_env prefix vswhereCommand compilerVersion compilerArch targetA
     set("${prefix}_MSVC_INCLUDE" "${msvcInclude}" PARENT_SCOPE)
     set("${prefix}_MSVC_LIBPATH" "${msvcLibPath}" PARENT_SCOPE)
     set("${prefix}_MSVC_LIB" "${msvcLib}" PARENT_SCOPE)
-    set("${prefix}_MSVC_PATH" "${msvcClPath}" "${msvcRcPath}" PARENT_SCOPE)
+    set("${prefix}_MSVC_CL_PATH" "${msvcClPath}" PARENT_SCOPE)
+    set("${prefix}_MSVC_RC_PATH" "${msvcRcPath}" PARENT_SCOPE)
 endfunction()
 
-function(set_conan_msvc_compiler_runtime var cmakeMsvcRuntimeLibrary)
-    if("" STREQUAL "${var}")
-        message(FATAL_ERROR "Empty value not supported for 'var'.")
+if("${CMAKE_ARGC}" GREATER "3")
+    if(
+        "AMD64" STREQUAL "${CMAKE_ARGV3}"
+    )
+        set(SCRIPT_PROCESSOR "${CMAKE_ARGV3}")
     endif()
+endif()
 
-    if("${cmakeMsvcRuntimeLibrary}" STREQUAL "MultiThreaded")
-        set(value "MT")
-    elseif("${cmakeMsvcRuntimeLibrary}" STREQUAL "MultiThreadedDLL")
-        set(value "MD")
-    elseif("${cmakeMsvcRuntimeLibrary}" STREQUAL "MultiThreadedDebug")
-        set(value "MTd")
-    elseif("${cmakeMsvcRuntimeLibrary}" STREQUAL "MultiThreadedDebugDLL")
-        set(value "MDd")
-    else()
-        message(FATAL_ERROR "Unsupported 'cmakeMsvcRuntimeLibrary': '${cmakeMsvcRuntimeLibrary}'")
+if("${CMAKE_ARGC}" GREATER "4")
+    if(
+        "Windows" STREQUAL "${CMAKE_ARGV4}"
+        OR "Linux" STREQUAL "${CMAKE_ARGV4}"
+        OR "Darwin" STREQUAL "${CMAKE_ARGV4}"
+    )
+        set(SCRIPT_OS_NAME "${CMAKE_ARGV4}")
     endif()
+endif()
 
-    set("${var}" "${value}" PARENT_SCOPE)
-endfunction()
+if("${CMAKE_ARGC}" GREATER "5")
+    if(
+        "vs" STREQUAL "${CMAKE_ARGV5}"
+        OR "gcc" STREQUAL "${CMAKE_ARGV5}"
+    )
+        set(SCRIPT_COMPILER_NAME "${CMAKE_ARGV5}")
+    endif()
+endif()
 
-function(
-    set_conan_settings
-    var
-    cmakeSystemName
-    cxxTargetArch
-    cmakeCxxCompilerId
-    cmakeCxxCompilerVersion
-    cmakeMsvcRuntimeLibrary
-    cmakeCxxStandard
-    cmakeBuildType
+if("${CMAKE_ARGC}" GREATER "6")
+    if(
+        ("17" STREQUAL "${CMAKE_ARGV6}" OR "2022" STREQUAL "${CMAKE_ARGV6}")
+        OR ("16" STREQUAL "${CMAKE_ARGV6}" OR "2019" STREQUAL "${CMAKE_ARGV6}")
+    )
+        set(SCRIPT_COMPILER_VERSION "${CMAKE_ARGV6}")
+    endif()
+endif()
+
+if("${CMAKE_ARGC}" GREATER "7")
+    if(
+        "x86" STREQUAL "${CMAKE_ARGV7}"
+        OR "x64" STREQUAL "${CMAKE_ARGV7}"
+    )
+        set(SCRIPT_COMPILER_ARCH "${CMAKE_ARGV7}")
+    endif()
+endif()
+
+if("${CMAKE_ARGC}" GREATER "8")
+    if(
+        "x86" STREQUAL "${CMAKE_ARGV8}"
+        OR "x64" STREQUAL "${CMAKE_ARGV8}"
+    )
+        set(SCRIPT_TARGET_ARCH "${CMAKE_ARGV8}")
+    endif()
+endif()
+
+if("${CMAKE_ARGC}" GREATER "9")
+    if(
+        NOT "" STREQUAL "${CMAKE_ARGV9}"
+        AND NOT EXISTS "${CMAKE_ARGV9}"
+    )
+        set(SCRIPT_FILE "${CMAKE_ARGV9}")
+    endif()
+endif()
+
+if(
+    NOT "" STREQUAL "${SCRIPT_PROCESSOR}"
+    AND "Windows" STREQUAL "${SCRIPT_OS_NAME}"
+    AND "vs" STREQUAL "${SCRIPT_COMPILER_NAME}"
+    AND NOT "" STREQUAL "${SCRIPT_COMPILER_VERSION}"
+    AND NOT "" STREQUAL "${SCRIPT_COMPILER_ARCH}"
+    AND NOT "" STREQUAL "${SCRIPT_TARGET_ARCH}"
+    AND NOT "" STREQUAL "${SCRIPT_FILE}"
 )
-    if("" STREQUAL "${var}")
-        message(FATAL_ERROR "Empty value not supported for 'var'.")
-    endif()
 
-    # os
-    if("Windows" STREQUAL "${cmakeSystemName}")
-        set(value "--settings" "os=${cmakeSystemName}")
+    set_msvc_env("SCRIPT" "" "${SCRIPT_COMPILER_VERSION}" "${SCRIPT_COMPILER_ARCH}" "${SCRIPT_TARGET_ARCH}")
 
-        # arch
-        if("x64" STREQUAL "${cxxTargetArch}" OR "AMD64" STREQUAL "${cxxTargetArch}" OR "IA64" STREQUAL "${cxxTargetArch}")
-            set(value "${value}" "--settings" "arch=x86_64")
-        elseif("x86" STREQUAL "${cxxTargetArch}")
-            set(value "${value}" "--settings" "arch=x86")
-        else()
-            message(FATAL_ERROR "Unsupported 'cxxTargetArch': '${cxxTargetArch}'")
-        endif()
-    else()
-        message(FATAL_ERROR "Unsupported 'cmakeSystemName': '${cmakeSystemName}'")
-    endif()
+    cmake_path(CONVERT "${SCRIPT_MSVC_CL_PATH}" TO_CMAKE_PATH_LIST SCRIPT_MSVC_CL_CMAKE_PATH NORMALIZE)
+    cmake_path(CONVERT "${SCRIPT_MSVC_RC_PATH}" TO_CMAKE_PATH_LIST SCRIPT_MSVC_RC_CMAKE_PATH NORMALIZE)
 
-    # compiler
-    if("MSVC" STREQUAL "${cmakeCxxCompilerId}")
-        set(value "${value}" "--settings" "compiler=Visual Studio")
+    string(REPLACE "\\" "\\\\" SCRIPT_MSVC_INCLUDE_ESCAPED "${SCRIPT_MSVC_INCLUDE}")
+    string(REPLACE ";" "\\;" SCRIPT_MSVC_INCLUDE_ESCAPED "${SCRIPT_MSVC_INCLUDE_ESCAPED}")
 
-        # compiler.version
-        if("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "19.30" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "19.40")
-            set(value "${value}" "--settings" "compiler.version=17")
-        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "19.20" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "19.30")
-            set(value "${value}" "--settings" "compiler.version=16")
-        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "19.10" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "19.20")
-            set(value "${value}" "--settings" "compiler.version=15")
-        else()
-            message(FATAL_ERROR "Unsupported 'cmakeCxxCompilerVersion': '${cmakeCxxCompilerVersion}'")
-        endif()
+    string(REPLACE "\\" "\\\\" SCRIPT_MSVC_LIBPATH_ESCAPED "${SCRIPT_MSVC_LIBPATH}")
+    string(REPLACE ";" "\\;" SCRIPT_MSVC_LIBPATH_ESCAPED "${SCRIPT_MSVC_LIBPATH_ESCAPED}")
 
-        # compiler.runtime
-        set_conan_msvc_compiler_runtime(conanCompilerRuntime "${cmakeMsvcRuntimeLibrary}")
-        set(value "${value}" "--settings" "compiler.runtime=${conanCompilerRuntime}")
-    elseif("GNU" STREQUAL "${cmakeCxxCompilerId}")
-        set(value "${value}" "--settings" "compiler=gcc")
+    string(REPLACE "\\" "\\\\" SCRIPT_MSVC_LIB_ESCAPED "${SCRIPT_MSVC_LIB}")
+    string(REPLACE ";" "\\;" SCRIPT_MSVC_LIB_ESCAPED "${SCRIPT_MSVC_LIB_ESCAPED}")
 
-        # compiler.version
-        if("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "13" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "14")
-            set(value "${value}" "--settings" "compiler.version=13")
-        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "12" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "13")
-            set(value "${value}" "--settings" "compiler.version=12")
-        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "11" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "12")
-            set(value "${value}" "--settings" "compiler.version=11")
-        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "10" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "11")
-            set(value "${value}" "--settings" "compiler.version=10")
-        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "9" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "10")
-            set(value "${value}" "--settings" "compiler.version=9")
-        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "8" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "9")
-            set(value "${value}" "--settings" "compiler.version=8")
-        else()
-            message(FATAL_ERROR "Unsupported 'cmakeCxxCompilerVersion': '${cmakeCxxCompilerVersion}'")
-        endif()
+    string(JOIN "\n" content
+        "set(CMAKE_SYSTEM_PROCESSOR \"${SCRIPT_PROCESSOR}\")"
+        "set(CMAKE_SYSTEM_NAME \"${SCRIPT_OS_NAME}\")"
+        ""
+        "set(MSVC_CL_PATH \"${SCRIPT_MSVC_CL_CMAKE_PATH}\")"
+        "set(MSVC_RC_PATH \"${SCRIPT_MSVC_RC_CMAKE_PATH}\")"
+        ""
+        "set(CMAKE_C_COMPILER   \"\${MSVC_CL_PATH}/cl.exe\")"
+        "set(CMAKE_CXX_COMPILER \"\${MSVC_CL_PATH}/cl.exe\")"
+        "set(CMAKE_AR           \"\${MSVC_CL_PATH}/lib.exe\")"
+        "set(CMAKE_LINKER       \"\${MSVC_CL_PATH}/link.exe\")"
+        "set(CMAKE_RC_COMPILER  \"\${MSVC_RC_PATH}/rc.exe\")"
+        "set(CMAKE_MT           \"\${MSVC_RC_PATH}/mt.exe\")"
+        ""
+        "set(ENV{INCLUDE} \"${SCRIPT_MSVC_INCLUDE_ESCAPED}\")"
+        "set(ENV{LIBPATH} \"${SCRIPT_MSVC_LIBPATH_ESCAPED}\")"
+        "set(ENV{LIB} \"${SCRIPT_MSVC_LIB_ESCAPED}\")"
+        ""
+        "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
+        "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER)"
+        "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER)"
+        "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE NEVER)"
+        ""
+    )
+    file(WRITE "${SCRIPT_FILE}" "${content}")
 
-        # compiler.libcxx
-        if("${cmakeCxxStandard}" VERSION_GREATER_EQUAL "11")
-            set(value "${value}" "--settings" "compiler.libcxx=libstdc++11")
-        else()
-            set(value "${value}" "--settings" "compiler.libcxx=libstdc++")
-        endif()
-    else()
-        message(FATAL_ERROR "Unsupported 'cmakeCxxStandard': '${cmakeCxxStandard}'")
-    endif()
+    return()
 
-    # build_type
-    if("MinSizeRel" STREQUAL "${cmakeBuildType}")
-        set(value "${value}" "--settings" "build_type=${cmakeBuildType}")
-    elseif("Release" STREQUAL "${cmakeBuildType}")
-        set(value "${value}" "--settings" "build_type=${cmakeBuildType}")
-    elseif("RelWithDebInfo" STREQUAL "${cmakeBuildType}")
-        set(value "${value}" "--settings" "build_type=${cmakeBuildType}")
-    elseif("Debug" STREQUAL "${cmakeBuildType}")
-        set(value "${value}" "--settings" "build_type=${cmakeBuildType}")
-    else()
-        message(FATAL_ERROR "Unsupported 'cmakeBuildType': '${cmakeBuildType}'")
-    endif()
+endif()
 
-    # additional
-    if(NOT "" STREQUAL "${ARGN}")
-        foreach(arg ${ARGN})
-            list(APPEND value "--settings" "${arg}")
-        endforeach()
-    endif()
-
-    set("${var}" "${value}" PARENT_SCOPE)
-endfunction()
-
-function(set_python_boolean var cmakeBoolean)
-    if("" STREQUAL "${var}")
-        message(FATAL_ERROR "Empty value not supported for 'var'.")
-    endif()
-
-    if("${cmakeBoolean}")
-        set(value "True")
-    else()
-        set(value "False")
-    endif()
-
-    set("${var}" "${value}" PARENT_SCOPE)
-endfunction()
-
-function(set_conan_options var)
-    if("" STREQUAL "${var}")
-        message(FATAL_ERROR "Empty value not supported for 'var'.")
-    endif()
-
-    # all options
-    if(NOT "" STREQUAL "${ARGN}")
-        foreach(arg ${ARGN})
-            if(NOT "" STREQUAL "${arg}" AND NOT "${arg}" IN_LIST "value")
-                list(APPEND value "--options" "${arg}")
-            endif()
-        endforeach()
-    endif()
-
-    set("${var}" "${value}" PARENT_SCOPE)
-endfunction()
-
-function(set_not_found_package_names var)
-    if("" STREQUAL "${var}")
-        message(FATAL_ERROR "Empty value not supported for 'var'.")
-    endif()
-
-    if(NOT "" STREQUAL "${ARGN}")
-        foreach(arg ${ARGN})
-            if(NOT "${${arg}_FOUND}")
-                list(APPEND value "${arg}")
-            endif()
-        endforeach()
-    endif()
-
-    set("${var}" "${value}" PARENT_SCOPE)
-endfunction()
-
-function(
-    set_target_names
-    var
-    dir
+string(JOIN " " error
+    "Unsupported:"
+    "processor: '${SCRIPT_PROCESSOR}'"
+    "os: '${SCRIPT_OS_NAME}'"
+    "compiler: '${SCRIPT_COMPILER_NAME}'"
+    "version: '${SCRIPT_COMPILER_VERSION}'"
+    "host_arch: '${SCRIPT_COMPILER_ARCH}'"
+    "target_arch: '${SCRIPT_TARGET_ARCH}'"
+    "file: '${SCRIPT_FILE}'"
+    "Usage: <processor> <os> <compiler> <version> <host_arch> <target_arch> <file>"
 )
-    get_property(subdirectories DIRECTORY "${dir}" PROPERTY SUBDIRECTORIES)
-    foreach(subdir ${subdirectories})
-        set_target_names(subTargets "${subdir}")
-    endforeach()
-    if(NOT "${subTargets}" STREQUAL "")
-        list(APPEND targets "${subTargets}")
-    endif()
-    get_property(currentTargets DIRECTORY "${dir}" PROPERTY BUILDSYSTEM_TARGETS)
-    if(NOT "${currentTargets}" STREQUAL "")
-        list(APPEND targets "${currentTargets}")
-    endif()
-    set(${var} "${targets}" PARENT_SCOPE)
-endfunction()
+message(FATAL_ERROR "${error}")

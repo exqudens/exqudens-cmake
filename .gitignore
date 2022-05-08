@@ -2,9 +2,6 @@
 .idea/
 .vs/
 .vscode/
-idea-build/
-vs-build/
-vsc-build/
 build/
 tmp/
 
