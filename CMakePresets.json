@@ -29,6 +29,10 @@
       "name": "msvc-16-x64-x64",
       "hidden": true,
       "cacheVariables": {
+        "TOOLCHAIN": {
+          "type": "BOOL",
+          "value": true
+        },
         "CXX_COMPILER_NAME": {
           "type": "STRING",
           "value": "msvc"

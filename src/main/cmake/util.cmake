@@ -203,7 +203,8 @@ function(set_msvc_env prefix vswhereCommand compilerVersion compilerArch targetA
     set("${prefix}_MSVC_INCLUDE" "${msvcInclude}" PARENT_SCOPE)
     set("${prefix}_MSVC_LIBPATH" "${msvcLibPath}" PARENT_SCOPE)
     set("${prefix}_MSVC_LIB" "${msvcLib}" PARENT_SCOPE)
-    set("${prefix}_MSVC_PATH" "${msvcClPath}" "${msvcRcPath}" PARENT_SCOPE)
+    set("${prefix}_MSVC_CL_PATH" "${msvcClPath}" PARENT_SCOPE)
+    set("${prefix}_MSVC_RC_PATH" "${msvcRcPath}" PARENT_SCOPE)
 endfunction()
 
 function(set_conan_msvc_compiler_runtime var cmakeMsvcRuntimeLibrary)
@@ -393,3 +394,93 @@ function(
     endif()
     set(${var} "${targets}" PARENT_SCOPE)
 endfunction()
+
+function(script_execute args)
+    set(oneValueKeywords
+        "command"
+        "processor"
+        "os"
+        "compiler"
+        "version"
+        "host"
+        "target"
+        "file"
+    )
+    cmake_parse_arguments("func" "" "${oneValueKeywords}" "" "${args}")
+
+    if(
+        "generate-toolchain" STREQUAL "${func_command}"
+        AND NOT "" STREQUAL "${func_processor}"
+        AND "Windows" STREQUAL "${func_os}"
+        AND ("msvc" STREQUAL "${func_compiler}" OR "Visual Studio" STREQUAL "${func_compiler}" OR "vs" STREQUAL "${func_compiler}")
+        AND NOT "" STREQUAL "${func_version}"
+        AND NOT "" STREQUAL "${func_host}"
+        AND NOT "" STREQUAL "${func_target}"
+        AND (NOT "" STREQUAL "${func_file}" AND NOT EXISTS "${func_file}")
+    )
+        message("command: '${func_command}'")
+        message("processor: '${func_processor}'")
+        message("os: '${func_os}'")
+        message("compiler: '${func_compiler}'")
+        message("version: '${func_version}'")
+        message("host: '${func_host}'")
+        message("target: '${func_target}'")
+        message("file: '${func_file}'")
+
+        set_msvc_env("func" "" "${func_version}" "${func_host}" "${func_target}")
+
+        cmake_path(CONVERT "${func_MSVC_CL_PATH}" TO_CMAKE_PATH_LIST func_cl_cmake_path NORMALIZE)
+        cmake_path(CONVERT "${func_MSVC_RC_PATH}" TO_CMAKE_PATH_LIST func_rc_cmake_path NORMALIZE)
+
+        string(REPLACE "\\" "\\\\" func_include_escaped "${func_MSVC_INCLUDE}")
+        string(REPLACE ";" "\\;" func_include_escaped "${func_include_escaped}")
+
+        string(REPLACE "\\" "\\\\" func_libpath_escaped "${func_MSVC_LIBPATH}")
+        string(REPLACE ";" "\\;" func_libpath_escaped "${func_libpath_escaped}")
+
+        string(REPLACE "\\" "\\\\" func_lib_escaped "${func_MSVC_LIB}")
+        string(REPLACE ";" "\\;" func_lib_escaped "${func_lib_escaped}")
+
+        cmake_path(CONVERT "${func_MSVC_INCLUDE}" TO_CMAKE_PATH_LIST func_cmake_include NORMALIZE)
+        set(func_cmake_libpath "${func_MSVC_LIBPATH}" "${func_MSVC_LIB}")
+        cmake_path(CONVERT "${func_cmake_libpath}" TO_CMAKE_PATH_LIST func_cmake_libpath NORMALIZE)
+
+        string(JOIN "\n" func_content
+            "set(CMAKE_SYSTEM_PROCESSOR \"${func_processor}\")"
+            "set(CMAKE_SYSTEM_NAME \"${func_os}\")"
+            ""
+            "set(MSVC_CL_PATH \"${func_cl_cmake_path}\")"
+            "set(MSVC_RC_PATH \"${func_rc_cmake_path}\")"
+            ""
+            "set(CMAKE_C_COMPILER   \"\${MSVC_CL_PATH}/cl.exe\")"
+            "set(CMAKE_CXX_COMPILER \"\${MSVC_CL_PATH}/cl.exe\")"
+            "set(CMAKE_AR           \"\${MSVC_CL_PATH}/lib.exe\")"
+            "set(CMAKE_LINKER       \"\${MSVC_CL_PATH}/link.exe\")"
+            "set(CMAKE_RC_COMPILER  \"\${MSVC_RC_PATH}/rc.exe\")"
+            "set(CMAKE_MT           \"\${MSVC_RC_PATH}/mt.exe\")"
+            ""
+            "set(ENV{INCLUDE} \"${func_include_escaped}\")"
+            "set(ENV{LIBPATH} \"${func_libpath_escaped}\")"
+            "set(ENV{LIB} \"${func_lib_escaped}\")"
+            ""
+            "set(CMAKE_C_STANDARD_INCLUDE_DIRECTORIES \"${func_cmake_include}\")"
+            "set(CMAKE_C_STANDARD_LINK_DIRECTORIES \"${func_cmake_libpath}\")"
+            ""
+            "set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES \"${func_cmake_include}\")"
+            "set(CMAKE_CXX_STANDARD_LINK_DIRECTORIES \"${func_cmake_libpath}\")"
+            ""
+            "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
+            ""
+        )
+        file(WRITE "${func_file}" "${func_content}")
+    endif()
+endfunction()
+
+math(EXPR MAX "${CMAKE_ARGC} - 1")
+foreach(i RANGE "${MAX}")
+    list(APPEND ARGS "${CMAKE_ARGV${i}}")
+endforeach()
+script_execute("${ARGS}")

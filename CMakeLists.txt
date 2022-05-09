@@ -5,6 +5,21 @@ list(GET INFO_LIST 0 RAW_NAME)
 list(GET INFO_LIST 1 RAW_VERSION)
 string(STRIP "${RAW_NAME}" NAME)
 string(STRIP "${RAW_VERSION}" VERSION)
+if("${TOOLCHAIN}")
+    execute_process(
+        COMMAND "${CMAKE_COMMAND}" "-P" "src/main/cmake/util.cmake"
+                command "generate-toolchain"
+                processor "$ENV{PROCESSOR_ARCHITECTURE}"
+                os "${CMAKE_HOST_SYSTEM_NAME}"
+                compiler "${CXX_COMPILER_NAME}"
+                version "${CXX_COMPILER_VERSION}"
+                host "${CXX_COMPILER_ARCH}"
+                target "${CXX_TARGET_ARCH}"
+                file "${CMAKE_BINARY_DIR}/toolchain.cmake"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    )
+    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_BINARY_DIR}/toolchain.cmake")
+endif()
 project("${NAME}" VERSION "${VERSION}" LANGUAGES "NONE")
 
 message("project: '${PROJECT_NAME}-${PROJECT_VERSION}'")
@@ -15,16 +30,25 @@ include("src/main/cmake/config.cmake")
 #set(CMAKE_CXX_COMPILER_LAUNCHER "set INCLUDE=abc")
 #message("CMAKE_CXX_COMPILER_LAUNCHER: '${CMAKE_CXX_COMPILER_LAUNCHER}'")
 
-add_custom_target("echo-env-home"
-    COMMAND "echo" "%HOME%"
-    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    VERBATIM
-)
+add_executable("${PROJECT_NAME}" "src/main/cpp/main.cpp")
+set_target_properties("${PROJECT_NAME}" PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY                "${PROJECT_BINARY_DIR}/main/bin"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE        "${PROJECT_BINARY_DIR}/main/bin"
+    RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${PROJECT_BINARY_DIR}/main/bin"
+    RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL     "${PROJECT_BINARY_DIR}/main/bin"
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG          "${PROJECT_BINARY_DIR}/main/bin"
 
-add_custom_target("echo-env-include"
-    COMMAND "echo" "%INCLUDE%"
-    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    VERBATIM
+    ARCHIVE_OUTPUT_DIRECTORY                "${PROJECT_BINARY_DIR}/main/lib"
+    ARCHIVE_OUTPUT_DIRECTORY_RELEASE        "${PROJECT_BINARY_DIR}/main/lib"
+    ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO "${PROJECT_BINARY_DIR}/main/lib"
+    ARCHIVE_OUTPUT_DIRECTORY_MINSIZEREL     "${PROJECT_BINARY_DIR}/main/lib"
+    ARCHIVE_OUTPUT_DIRECTORY_DEBUG          "${PROJECT_BINARY_DIR}/main/lib"
+
+    LIBRARY_OUTPUT_DIRECTORY                "${PROJECT_BINARY_DIR}/main/lib"
+    LIBRARY_OUTPUT_DIRECTORY_RELEASE        "${PROJECT_BINARY_DIR}/main/lib"
+    LIBRARY_OUTPUT_DIRECTORY_RELWITHDEBINFO "${PROJECT_BINARY_DIR}/main/lib"
+    LIBRARY_OUTPUT_DIRECTORY_MINSIZEREL     "${PROJECT_BINARY_DIR}/main/lib"
+    LIBRARY_OUTPUT_DIRECTORY_DEBUG          "${PROJECT_BINARY_DIR}/main/lib"
 )
 
 set_target_names(ALL_TARGETS "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -32,3 +56,6 @@ message("all-targets:")
 foreach(t ${ALL_TARGETS})
     message("  ${t}")
 endforeach()
+
+message("MAX: '${MAX}'")
+message("ARGS: '${ARGS}'")
