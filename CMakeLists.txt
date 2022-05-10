@@ -7,14 +7,13 @@ string(STRIP "${RAW_NAME}" NAME)
 string(STRIP "${RAW_VERSION}" VERSION)
 if("${TOOLCHAIN}")
     execute_process(
-        COMMAND "${CMAKE_COMMAND}" "-P" "src/main/cmake/util.cmake"
-                command "generate-toolchain"
+        COMMAND "${CMAKE_COMMAND}" "-P" "src/main/cmake/util.cmake" "toolchain"
                 processor "$ENV{PROCESSOR_ARCHITECTURE}"
                 os "${CMAKE_HOST_SYSTEM_NAME}"
                 compiler "${CXX_COMPILER_NAME}"
                 version "${CXX_COMPILER_VERSION}"
-                host "${CXX_COMPILER_ARCH}"
-                target "${CXX_TARGET_ARCH}"
+                host "$ENV{PROCESSOR_ARCHITECTURE}"
+                target "$ENV{PROCESSOR_ARCHITECTURE}"
                 file "${CMAKE_BINARY_DIR}/toolchain.cmake"
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     )
@@ -59,3 +58,5 @@ endforeach()
 
 message("MAX: '${MAX}'")
 message("ARGS: '${ARGS}'")
+message("CMAKE_CXX_COMPILER_ID: '${CMAKE_CXX_COMPILER_ID}'")
+message("CMAKE_CXX_COMPILER_VERSION: '${CMAKE_CXX_COMPILER_VERSION}'")

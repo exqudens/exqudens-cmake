@@ -396,6 +396,10 @@ function(
 endfunction()
 
 function(script_execute args)
+    set(options
+        "help"
+        "toolchain"
+    )
     set(oneValueKeywords
         "command"
         "processor"
@@ -406,28 +410,133 @@ function(script_execute args)
         "target"
         "file"
     )
-    cmake_parse_arguments("func" "" "${oneValueKeywords}" "" "${args}")
+    cmake_parse_arguments("func" "${options}" "${oneValueKeywords}" "" "${args}")
+
+    if("TRUE" STREQUAL "${func_help}")
+        get_filename_component(func_current_file_name "${CMAKE_CURRENT_LIST_FILE}" NAME)
+
+        string(JOIN " " func_usage_1 "cmake" "-P" "${func_current_file_name}" "help")
+        string(JOIN " " func_usage_2 "cmake" "-P" "${func_current_file_name}" "toolchain"
+            "processor" "'x86|x64|x86_64|AMD64|IA64|EM64T|X86'"
+            "os" "'Windows'"
+            "compiler" "'MSVC|msvc|Visual Studio|vs'"
+            "version" "'2019|2022|16|17'"
+            "host" "'x86|x64'"
+            "target" "'x86|x64'"
+            "file" "'toolchain.cmake|build/toolchain.cmake'"
+        )
+
+        string(JOIN "\n" func_content
+            "Usage:"
+            "  ${func_usage_1}"
+            "  ${func_usage_2}"
+        )
+        message("${func_content}")
+        return()
+    endif()
 
     if(
-        "generate-toolchain" STREQUAL "${func_command}"
-        AND NOT "" STREQUAL "${func_processor}"
+        "TRUE" STREQUAL "${func_toolchain}"
+        AND (
+            "x86" STREQUAL "${func_processor}"
+            OR "X86" STREQUAL "${func_processor}"
+            OR "x64" STREQUAL "${func_processor}"
+            OR "x86_64" STREQUAL "${func_processor}"
+            OR "AMD64" STREQUAL "${func_processor}"
+            OR "IA64" STREQUAL "${func_processor}"
+            OR "EM64T" STREQUAL "${func_processor}"
+        )
         AND "Windows" STREQUAL "${func_os}"
-        AND ("msvc" STREQUAL "${func_compiler}" OR "Visual Studio" STREQUAL "${func_compiler}" OR "vs" STREQUAL "${func_compiler}")
+        AND (
+            "MSVC" STREQUAL "${func_compiler}"
+            OR "msvc" STREQUAL "${func_compiler}"
+            OR "Visual Studio" STREQUAL "${func_compiler}"
+            OR "vs" STREQUAL "${func_compiler}"
+        )
         AND NOT "" STREQUAL "${func_version}"
-        AND NOT "" STREQUAL "${func_host}"
-        AND NOT "" STREQUAL "${func_target}"
+        AND (
+            "x86" STREQUAL "${func_host}"
+            OR "X86" STREQUAL "${func_host}"
+            OR "x64" STREQUAL "${func_host}"
+            OR "x86_64" STREQUAL "${func_host}"
+            OR "AMD64" STREQUAL "${func_host}"
+            OR "IA64" STREQUAL "${func_host}"
+            OR "EM64T" STREQUAL "${func_host}"
+        )
+        AND (
+            "x86" STREQUAL "${func_target}"
+            OR "X86" STREQUAL "${func_target}"
+            OR "x64" STREQUAL "${func_target}"
+            OR "x86_64" STREQUAL "${func_target}"
+            OR "AMD64" STREQUAL "${func_target}"
+            OR "IA64" STREQUAL "${func_target}"
+            OR "EM64T" STREQUAL "${func_target}"
+        )
         AND (NOT "" STREQUAL "${func_file}" AND NOT EXISTS "${func_file}")
     )
-        message("command: '${func_command}'")
-        message("processor: '${func_processor}'")
-        message("os: '${func_os}'")
-        message("compiler: '${func_compiler}'")
-        message("version: '${func_version}'")
-        message("host: '${func_host}'")
-        message("target: '${func_target}'")
+        if(
+            "x86" STREQUAL "${func_processor}"
+            OR "X86" STREQUAL "${func_processor}"
+        )
+            set(func_processor_resolved "x86")
+        elseif(
+            "x64" STREQUAL "${func_processor}"
+            OR "x86_64" STREQUAL "${func_processor}"
+            OR "AMD64" STREQUAL "${func_processor}"
+            OR "IA64" STREQUAL "${func_processor}"
+            OR "EM64T" STREQUAL "${func_processor}"
+        )
+            set(func_processor_resolved "x86_64")
+        endif()
+
+        if(
+            "MSVC" STREQUAL "${func_compiler}"
+            OR "msvc" STREQUAL "${func_compiler}"
+            OR "Visual Studio" STREQUAL "${func_compiler}"
+            OR "vs" STREQUAL "${func_compiler}"
+        )
+            set(func_compiler_resolved "Visual Studio")
+        endif()
+
+        if(
+            "x86" STREQUAL "${func_host}"
+            OR "X86" STREQUAL "${func_host}"
+        )
+            set(func_host_resolved "x86")
+        elseif(
+            "x64" STREQUAL "${func_host}"
+            OR "x86_64" STREQUAL "${func_host}"
+            OR "AMD64" STREQUAL "${func_host}"
+            OR "IA64" STREQUAL "${func_host}"
+            OR "EM64T" STREQUAL "${func_host}"
+        )
+            set(func_host_resolved "x64")
+        endif()
+
+        if(
+            "x86" STREQUAL "${func_target}"
+            OR "X86" STREQUAL "${func_target}"
+        )
+            set(func_target_resolved "x86")
+        elseif(
+            "x64" STREQUAL "${func_target}"
+            OR "x86_64" STREQUAL "${func_target}"
+            OR "AMD64" STREQUAL "${func_target}"
+            OR "IA64" STREQUAL "${func_target}"
+            OR "EM64T" STREQUAL "${func_target}"
+        )
+            set(func_target_resolved "x64")
+        endif()
+
+        message("processor: '${func_processor}' -> '${func_processor_resolved}'")
+        message("os: '${func_os}' -> '${func_os}'")
+        message("compiler: '${func_compiler}' -> '${func_compiler_resolved}'")
+        message("version: '${func_version}' -> '${func_version}'")
+        message("host: '${func_host}' -> '${func_host_resolved}'")
+        message("target: '${func_target}' -> '${func_target_resolved}'")
         message("file: '${func_file}'")
 
-        set_msvc_env("func" "" "${func_version}" "${func_host}" "${func_target}")
+        set_msvc_env("func" "" "${func_version}" "${func_host_resolved}" "${func_target_resolved}")
 
         cmake_path(CONVERT "${func_MSVC_CL_PATH}" TO_CMAKE_PATH_LIST func_cl_cmake_path NORMALIZE)
         cmake_path(CONVERT "${func_MSVC_RC_PATH}" TO_CMAKE_PATH_LIST func_rc_cmake_path NORMALIZE)
@@ -442,11 +551,12 @@ function(script_execute args)
         string(REPLACE ";" "\\;" func_lib_escaped "${func_lib_escaped}")
 
         cmake_path(CONVERT "${func_MSVC_INCLUDE}" TO_CMAKE_PATH_LIST func_cmake_include NORMALIZE)
+
         set(func_cmake_libpath "${func_MSVC_LIBPATH}" "${func_MSVC_LIB}")
         cmake_path(CONVERT "${func_cmake_libpath}" TO_CMAKE_PATH_LIST func_cmake_libpath NORMALIZE)
 
         string(JOIN "\n" func_content
-            "set(CMAKE_SYSTEM_PROCESSOR \"${func_processor}\")"
+            "set(CMAKE_SYSTEM_PROCESSOR \"${func_processor_resolved}\")"
             "set(CMAKE_SYSTEM_NAME \"${func_os}\")"
             ""
             "set(MSVC_CL_PATH \"${func_cl_cmake_path}\")"
@@ -476,6 +586,7 @@ function(script_execute args)
             ""
         )
         file(WRITE "${func_file}" "${func_content}")
+        return()
     endif()
 endfunction()
 
