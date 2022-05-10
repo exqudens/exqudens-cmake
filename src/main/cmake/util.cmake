@@ -421,8 +421,8 @@ function(script_execute args)
             "os" "'Windows'"
             "compiler" "'MSVC|msvc|Visual Studio|vs'"
             "version" "'2019|2022|16|17'"
-            "host" "'x86|x64'"
-            "target" "'x86|x64'"
+            "host" "'x86|x64|x86_64|AMD64|IA64|EM64T|X86'"
+            "target" "'x86|x64|x86_64|AMD64|IA64|EM64T|X86'"
             "file" "'toolchain.cmake|build/toolchain.cmake'"
         )
 
