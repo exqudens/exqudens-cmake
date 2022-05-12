@@ -56,7 +56,19 @@ foreach(t ${ALL_TARGETS})
     message("  ${t}")
 endforeach()
 
-message("MAX: '${MAX}'")
-message("ARGS: '${ARGS}'")
-message("CMAKE_CXX_COMPILER_ID: '${CMAKE_CXX_COMPILER_ID}'")
-message("CMAKE_CXX_COMPILER_VERSION: '${CMAKE_CXX_COMPILER_VERSION}'")
+#[[find_file_in_parent(VAR1
+    "vcvarsall.bat"
+    "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30133/bin/Hostx64/x64/cl.exe"
+    "8"
+)
+
+message("VAR1_FILE: '${VAR1_FILE}'")
+message("VAR1_FILE: '${VAR1_DIR}'")
+
+find_file_in(VAR2
+    "vcvarsall.bat"
+    "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community"
+)
+
+message("VAR2_FILE: '${VAR2_FILE}'")
+message("VAR2_FILE: '${VAR2_DIR}'")]]
