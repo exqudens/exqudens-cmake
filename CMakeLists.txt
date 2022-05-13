@@ -12,8 +12,8 @@ if("${TOOLCHAIN}")
                 os "${CMAKE_HOST_SYSTEM_NAME}"
                 compiler "${CXX_COMPILER_NAME}"
                 version "${CXX_COMPILER_VERSION}"
-                host "$ENV{PROCESSOR_ARCHITECTURE}"
-                target "$ENV{PROCESSOR_ARCHITECTURE}"
+                host "${CXX_COMPILER_ARCH}"
+                target "${CXX_TARGET_ARCH}"
                 file "${CMAKE_BINARY_DIR}/toolchain.cmake"
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     )
