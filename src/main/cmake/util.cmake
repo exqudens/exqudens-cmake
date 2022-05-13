@@ -1,3 +1,5 @@
+cmake_policy(SET CMP0007 NEW)
+
 function(set_if_not_defined var)
     if("" STREQUAL "${${var}}" AND NOT "" STREQUAL "${ARGN}")
         set("${var}" "${ARGN}" PARENT_SCOPE)
@@ -154,11 +156,33 @@ function(set_msvc_path var vswhereCommand compilerVersion)
 endfunction()
 
 function(set_msvc_env prefix vswhereCommand compilerPath compilerVersion compilerArch targetArch)
-    foreach(i prefix compilerVersion compilerArch targetArch)
+    foreach(i prefix)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
         endif()
     endforeach()
+
+    if("" STREQUAL "${targetArch}")
+        get_filename_component(compilerDir "${compilerPath}" DIRECTORY)
+        get_filename_component(compilerDirName "${compilerDir}" NAME)
+        string(TOLOWER "${compilerDirName}" compilerDirNameLower)
+        if("x86" STREQUAL "${compilerDirNameLower}")
+            set(targetArch "x86")
+        elseif("x64" STREQUAL "${compilerDirNameLower}")
+            set(targetArch "x64")
+        endif()
+    endif()
+
+    if("" STREQUAL "${compilerArch}" AND NOT "" STREQUAL "${compilerDir}")
+        get_filename_component(compilerDirParent "${compilerDir}" DIRECTORY)
+        get_filename_component(compilerDirParentName "${compilerDirParent}" NAME)
+        string(TOLOWER "${compilerDirParentName}" compilerDirParentNameLower)
+        if("hostx86" STREQUAL "${compilerDirParentNameLower}")
+            set(compilerArch "x86")
+        elseif("hostx64" STREQUAL "${compilerDirParentNameLower}")
+            set(compilerArch "x64")
+        endif()
+    endif()
 
     if(NOT "x86" STREQUAL "${compilerArch}" AND NOT "x64" STREQUAL "${compilerArch}")
         string(JOIN " " errorMessage
@@ -182,9 +206,10 @@ function(set_msvc_env prefix vswhereCommand compilerPath compilerVersion compile
         set(vcvarsallBatConf "${compilerArch}_${targetArch}")
     endif()
 
+    set(vcvarsallBatName "vcvarsall.bat")
+
     if("" STREQUAL "${compilerPath}")
         set_msvc_path(msvcPath "${vswhereCommand}" "${compilerVersion}")
-        set(vcvarsallBatName "vcvarsall.bat")
         find_file_in(vcvarsall "${vcvarsallBatName}" "${msvcPath}")
         if("" STREQUAL "${vcvarsall_DIR}")
             message(FATAL_ERROR "Not found '${vcvarsallBatName}' in '${msvcPath}'")
@@ -452,8 +477,8 @@ function(
     set(${var} "${targets}" PARENT_SCOPE)
 endfunction()
 
-function(set_msvc_toolchain_content var vswhereCommand compilerPath compilerVersion compilerArch targetArch)
-    foreach(i var compilerVersion compilerArch targetArch)
+function(set_msvc_toolchain_content var processor os vswhereCommand compilerPath compilerVersion compilerArch targetArch)
+    foreach(i var processor os)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
         endif()
@@ -473,14 +498,26 @@ function(set_msvc_toolchain_content var vswhereCommand compilerPath compilerVers
     string(REPLACE "\\" "\\\\" func_lib_escaped "${func_MSVC_LIB}")
     string(REPLACE ";" "\\;" func_lib_escaped "${func_lib_escaped}")
 
+    cmake_path(CONVERT "$ENV{PATH}" TO_CMAKE_PATH_LIST envPath NORMALIZE)
+    list(PREPEND envPath "${func_rc_cmake_path}")
+    list(PREPEND envPath "${func_cl_cmake_path}")
+    list(FILTER envPath EXCLUDE REGEX "^$")
+    list(REMOVE_DUPLICATES envPath)
+    cmake_path(CONVERT "${envPath}" TO_NATIVE_PATH_LIST envPathNative NORMALIZE)
+
+    if("Windows" STREQUAL "${os}")
+        string(REPLACE "\\" "\\\\" envPathNative "${envPathNative}")
+        string(REPLACE ";" "\\;" envPathNative "${envPathNative}")
+    endif()
+
     cmake_path(CONVERT "${func_MSVC_INCLUDE}" TO_CMAKE_PATH_LIST func_cmake_include NORMALIZE)
 
     set(func_cmake_libpath "${func_MSVC_LIBPATH}" "${func_MSVC_LIB}")
     cmake_path(CONVERT "${func_cmake_libpath}" TO_CMAKE_PATH_LIST func_cmake_libpath NORMALIZE)
 
-    string(JOIN "\n" func_content
-        "set(CMAKE_SYSTEM_PROCESSOR \"${func_processor_resolved}\")"
-        "set(CMAKE_SYSTEM_NAME \"${func_os}\")"
+    string(JOIN "\n" content
+        "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
+        "set(CMAKE_SYSTEM_NAME \"${os}\")"
         ""
         "set(MSVC_CL_PATH \"${func_cl_cmake_path}\")"
         "set(MSVC_RC_PATH \"${func_rc_cmake_path}\")"
@@ -495,6 +532,7 @@ function(set_msvc_toolchain_content var vswhereCommand compilerPath compilerVers
         "set(ENV{INCLUDE} \"${func_include_escaped}\")"
         "set(ENV{LIBPATH} \"${func_libpath_escaped}\")"
         "set(ENV{LIB} \"${func_lib_escaped}\")"
+        "set(ENV{PATH} \"${envPathNative}\")"
         ""
         "set(CMAKE_C_STANDARD_INCLUDE_DIRECTORIES \"${func_cmake_include}\")"
         "set(CMAKE_C_STANDARD_LINK_DIRECTORIES \"${func_cmake_libpath}\")"
@@ -510,7 +548,50 @@ function(set_msvc_toolchain_content var vswhereCommand compilerPath compilerVers
         "link_directories(\"\${CMAKE_CXX_STANDARD_LINK_DIRECTORIES}\") # remove when CMAKE_CXX_STANDARD_LINK_DIRECTORIES is supported"
         ""
     )
-    set("${var}" "${func_content}" PARENT_SCOPE)
+    set("${var}" "${content}" PARENT_SCOPE)
+endfunction()
+
+function(set_gnu_toolchain_content var processor os path)
+    foreach(i var processor os path)
+        if("" STREQUAL ${${i}})
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
+
+    cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
+
+    get_filename_component(compilerDir "${path}" DIRECTORY)
+
+    cmake_path(CONVERT "$ENV{PATH}" TO_CMAKE_PATH_LIST envPath NORMALIZE)
+    list(PREPEND envPath "${compilerDir}")
+    list(FILTER envPath EXCLUDE REGEX "^$")
+    list(REMOVE_DUPLICATES envPath)
+    cmake_path(CONVERT "${envPath}" TO_NATIVE_PATH_LIST envPathNative NORMALIZE)
+
+    if("Windows" STREQUAL "${os}")
+        string(REPLACE "\\" "\\\\" envPathNative "${envPathNative}")
+        string(REPLACE ";" "\\;" envPathNative "${envPathNative}")
+    endif()
+
+    string(JOIN "\n" content
+        "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
+        "set(CMAKE_SYSTEM_NAME \"${os}\")"
+        ""
+        "set(CMAKE_C_COMPILER   \"${compilerDir}/gcc.exe\")"
+        "set(CMAKE_CXX_COMPILER \"${compilerDir}/g++.exe\")"
+        "set(CMAKE_AR           \"${compilerDir}/ar.exe\")"
+        "set(CMAKE_LINKER       \"${compilerDir}/ld.exe\")"
+        "set(CMAKE_RC_COMPILER  \"${compilerDir}/windres.exe\")"
+        ""
+        "set(ENV{PATH} \"${envPathNative}\")"
+        ""
+        "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
+        "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)"
+        "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)"
+        "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
+        ""
+    )
+    set("${var}" "${content}" PARENT_SCOPE)
 endfunction()
 
 function(set_msvc_toolchain_content_delegate var)
@@ -529,7 +610,7 @@ function(set_msvc_toolchain_content_delegate var)
         AND "msvc" STREQUAL "${func_compiler}"
         AND (NOT "" STREQUAL "${func_path}" AND EXISTS "${func_path}")
     )
-        set_msvc_toolchain_content(toolchain_content "" "${func_path}" "" "" "")
+        set_msvc_toolchain_content(toolchain_content "${func_processor}" "${func_os}" "" "${func_path}" "" "" "")
         set("${var}" "${toolchain_content}" PARENT_SCOPE)
     elseif(
         "Windows" STREQUAL "${func_os}"
@@ -537,7 +618,27 @@ function(set_msvc_toolchain_content_delegate var)
         AND ("x86" STREQUAL "${func_host}" OR "x64" STREQUAL "${func_host}")
         AND ("x86" STREQUAL "${func_target}" OR "x64" STREQUAL "${func_target}")
     )
-        set_msvc_toolchain_content(toolchain_content "" "" "${func_version}" "${func_host}" "${func_target}")
+        set_msvc_toolchain_content(toolchain_content "${func_processor}" "${func_os}" "" "" "${func_version}" "${func_host}" "${func_target}")
+        set("${var}" "${toolchain_content}" PARENT_SCOPE)
+    else()
+        set("${var}" "NOT_SUPPORTED" PARENT_SCOPE)
+    endif()
+endfunction()
+
+function(set_gnu_toolchain_content_delegate var)
+    set(oneValueKeywords
+        "processor"
+        "os"
+        "compiler"
+        "path"
+    )
+    cmake_parse_arguments(PARSE_ARGV 1 "func" "${options}" "${oneValueKeywords}" "")
+    if(
+        "Windows" STREQUAL "${func_os}"
+        AND "gnu" STREQUAL "${func_compiler}"
+        AND (NOT "" STREQUAL "${func_path}" AND EXISTS "${func_path}")
+    )
+        set_gnu_toolchain_content(toolchain_content "${func_processor}" "${func_os}" "${func_path}")
         set("${var}" "${toolchain_content}" PARENT_SCOPE)
     else()
         set("${var}" "NOT_SUPPORTED" PARENT_SCOPE)
@@ -576,22 +677,38 @@ function(script_execute args)
             path "${func_path}"
         )
 
-        if("NOT_SUPPORTED" STREQUAL "${toolchain_content}")
-            string(JOIN "\n" error_message
-                "Unsupported 'toolchain' set of arguments:"
-                "  processor: '${func_processor}'"
-                "  os: '${func_os}'"
-                "  compiler: '${func_compiler}'"
-                "  version: '${func_version}'"
-                "  host: '${func_host}'"
-                "  target: '${func_target}'"
-                "  path: '${func_path}'"
-                "  file: '${func_file}'"
-            )
-            message(FATAL_ERROR "${error_message}")
-        else()
+        if(NOT "NOT_SUPPORTED" STREQUAL "${toolchain_content}")
             file(WRITE "${func_file}" "${toolchain_content}")
+            return()
         endif()
+
+        set_gnu_toolchain_content_delegate(toolchain_content
+            processor "${func_processor}"
+            os "${func_os}"
+            compiler "${func_compiler}"
+            version "${func_version}"
+            host "${func_host}"
+            target "${func_target}"
+            path "${func_path}"
+        )
+
+        if(NOT "NOT_SUPPORTED" STREQUAL "${toolchain_content}")
+            file(WRITE "${func_file}" "${toolchain_content}")
+            return()
+        endif()
+
+        string(JOIN "\n" error_message
+            "Unsupported 'toolchain' set of arguments:"
+            "  processor: '${func_processor}'"
+            "  os: '${func_os}'"
+            "  compiler: '${func_compiler}'"
+            "  version: '${func_version}'"
+            "  host: '${func_host}'"
+            "  target: '${func_target}'"
+            "  path: '${func_path}'"
+            "  file: '${func_file}'"
+        )
+        message(FATAL_ERROR "${error_message}")
     elseif("TRUE" STREQUAL "${func_help}" OR "ON" STREQUAL "${func_help}")
         get_filename_component(func_current_file_name "${CMAKE_CURRENT_LIST_FILE}" NAME)
 
@@ -608,7 +725,7 @@ function(script_execute args)
         string(JOIN " " func_usage_3 "cmake" "-P" "${func_current_file_name}" "toolchain"
             "processor" "'<value>'"
             "os" "'Windows'"
-            "compiler" "'msvc'"
+            "compiler" "'msvc|gnu'"
             "path" "'path/to/cl.exe'"
             "file" "'toolchain.cmake|build/toolchain.cmake'"
         )

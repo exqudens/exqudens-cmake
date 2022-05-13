@@ -5,7 +5,7 @@ if("$ENV{CLION_IDE}")
 endif()
 
 if("${TOOLCHAIN}" AND "Windows" STREQUAL "${CMAKE_HOST_SYSTEM_NAME}" AND "msvc" STREQUAL "${CXX_COMPILER_NAME}")
-    link_directories("${CMAKE_CXX_STANDARD_LINK_DIRECTORIES}")
+    # do nothing
 elseif(NOT "${TOOLCHAIN}" AND "Windows" STREQUAL "${CMAKE_HOST_SYSTEM_NAME}" AND "msvc" STREQUAL "${CXX_COMPILER_NAME}")
     if(
         "" STREQUAL "${${PROJECT_NAME}_MSVC_INCLUDE}"
