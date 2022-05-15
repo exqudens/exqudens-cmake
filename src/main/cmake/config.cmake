@@ -1,4 +1,4 @@
-if("$ENV{CLION_IDE}")
+#[[if("$ENV{CLION_IDE}")
     set(TMP_ENV_PATH "$ENV{PATH}")
     list(REMOVE_AT TMP_ENV_PATH 0)
     set("ENV{PATH}" "${TMP_ENV_PATH}")
@@ -54,7 +54,10 @@ find_program(TMP_CONAN_COMMAND NAMES "conan.exe" "conan" NO_CACHE)
 find_program(TMP_DOXYGEN_COMMAND NAMES "doxygen.exe" "doxygen" NO_CACHE)
 
 set("CONAN_COMMAND" "${TMP_CONAN_COMMAND}" CACHE FILEPATH "" FORCE)
-set("DOXYGEN_COMMAND" "${TMP_DOXYGEN_COMMAND}" CACHE FILEPATH "" FORCE)
+set("DOXYGEN_COMMAND" "${TMP_DOXYGEN_COMMAND}" CACHE FILEPATH "" FORCE)]]
+
+find_program(CONAN_COMMAND NAMES "conan.exe" "conan" REQUIRED)
+find_program(DOXYGEN_COMMAND NAMES "doxygen.exe" "doxygen" REQUIRED)
 
 enable_language("C")
 enable_language("CXX")
@@ -80,10 +83,6 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN TRUE)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-if("" STREQUAL "CMAKE_MSVC_RUNTIME_LIBRARY")
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
-endif()
-
 if("${CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT}")
     set(CMAKE_INSTALL_PREFIX "${PROJECT_BINARY_DIR}/cmake-install" CACHE PATH "..." FORCE)
 endif()
@@ -96,6 +95,10 @@ if(MSVC)
     endif()
 endif()
 string(JOIN " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+
+if("" STREQUAL "${CMAKE_MSVC_RUNTIME_LIBRARY}")
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
+endif()
 
 if("${BUILD_SHARED_LIBS}")
     set(CONAN_RELEASE_COMPILER_RUNTIME "MD")
