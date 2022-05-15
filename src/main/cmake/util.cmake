@@ -1,3 +1,6 @@
+cmake_policy(PUSH)
+cmake_policy(SET CMP0054 NEW)
+cmake_policy(PUSH)
 cmake_policy(SET CMP0007 NEW)
 
 function(set_if_not_defined var)
@@ -486,28 +489,44 @@ function(set_msvc_toolchain_content var processor os vswhereCommand compilerPath
 
     set_msvc_env("func" "${vswhereCommand}" "${compilerPath}" "${compilerVersion}" "${compilerArch}" "${targetArch}")
 
-    cmake_path(CONVERT "${func_MSVC_CL_PATH}" TO_CMAKE_PATH_LIST func_cl_cmake_path NORMALIZE)
-    cmake_path(CONVERT "${func_MSVC_RC_PATH}" TO_CMAKE_PATH_LIST func_rc_cmake_path NORMALIZE)
+    cmake_path(CONVERT "${func_MSVC_INCLUDE}" TO_CMAKE_PATH_LIST func_include NORMALIZE)
+    list(FILTER func_include EXCLUDE REGEX "^$")
+    list(REMOVE_DUPLICATES func_include)
+    set(func_include_cmake "${func_include}")
+    cmake_path(CONVERT "${func_include}" TO_NATIVE_PATH_LIST func_include NORMALIZE)
 
-    string(REPLACE "\\" "\\\\" func_include_escaped "${func_MSVC_INCLUDE}")
-    string(REPLACE ";" "\\;" func_include_escaped "${func_include_escaped}")
+    cmake_path(CONVERT "${func_MSVC_LIBPATH}" TO_CMAKE_PATH_LIST func_libpath NORMALIZE)
+    list(FILTER func_libpath EXCLUDE REGEX "^$")
+    list(REMOVE_DUPLICATES func_libpath)
+    set(func_libpath_cmake "${func_libpath}")
+    cmake_path(CONVERT "${func_libpath}" TO_NATIVE_PATH_LIST func_libpath NORMALIZE)
 
-    string(REPLACE "\\" "\\\\" func_libpath_escaped "${func_MSVC_LIBPATH}")
-    string(REPLACE ";" "\\;" func_libpath_escaped "${func_libpath_escaped}")
+    cmake_path(CONVERT "${func_MSVC_LIB}" TO_CMAKE_PATH_LIST func_lib NORMALIZE)
+    list(FILTER func_lib EXCLUDE REGEX "^$")
+    list(REMOVE_DUPLICATES func_lib)
+    cmake_path(CONVERT "${func_lib}" TO_NATIVE_PATH_LIST func_lib NORMALIZE)
 
-    string(REPLACE "\\" "\\\\" func_lib_escaped "${func_MSVC_LIB}")
-    string(REPLACE ";" "\\;" func_lib_escaped "${func_lib_escaped}")
-
-    cmake_path(CONVERT "$ENV{PATH}" TO_CMAKE_PATH_LIST envPath NORMALIZE)
-    list(PREPEND envPath "${func_rc_cmake_path}")
-    list(PREPEND envPath "${func_cl_cmake_path}")
-    list(FILTER envPath EXCLUDE REGEX "^$")
-    list(REMOVE_DUPLICATES envPath)
-    cmake_path(CONVERT "${envPath}" TO_NATIVE_PATH_LIST envPathNative NORMALIZE)
+    cmake_path(CONVERT "$ENV{PATH}" TO_CMAKE_PATH_LIST func_path NORMALIZE)
+    cmake_path(CONVERT "${func_MSVC_CL_PATH}" TO_CMAKE_PATH_LIST func_cl_cmake NORMALIZE)
+    cmake_path(CONVERT "${func_MSVC_RC_PATH}" TO_CMAKE_PATH_LIST func_rc_cmake NORMALIZE)
+    list(PREPEND func_path "${func_rc_cmake}")
+    list(PREPEND func_path "${func_cl_cmake}")
+    list(FILTER func_path EXCLUDE REGEX "^$")
+    list(REMOVE_DUPLICATES func_path)
+    cmake_path(CONVERT "${func_path}" TO_NATIVE_PATH_LIST func_path NORMALIZE)
 
     if("Windows" STREQUAL "${os}")
-        string(REPLACE "\\" "\\\\" envPathNative "${envPathNative}")
-        string(REPLACE ";" "\\;" envPathNative "${envPathNative}")
+        string(REPLACE "\\" "\\\\" func_include "${func_include}")
+        string(REPLACE ";" "\\;" func_include "${func_include}")
+
+        string(REPLACE "\\" "\\\\" func_libpath "${func_libpath}")
+        string(REPLACE ";" "\\;" func_libpath "${func_libpath}")
+
+        string(REPLACE "\\" "\\\\" func_lib "${func_lib}")
+        string(REPLACE ";" "\\;" func_lib "${func_lib}")
+
+        string(REPLACE "\\" "\\\\" func_path "${func_path}")
+        string(REPLACE ";" "\\;" func_path "${func_path}")
     endif()
 
     cmake_path(CONVERT "${func_MSVC_INCLUDE}" TO_CMAKE_PATH_LIST func_cmake_include NORMALIZE)
@@ -519,8 +538,8 @@ function(set_msvc_toolchain_content var processor os vswhereCommand compilerPath
         "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
         "set(CMAKE_SYSTEM_NAME \"${os}\")"
         ""
-        "set(MSVC_CL_PATH \"${func_cl_cmake_path}\")"
-        "set(MSVC_RC_PATH \"${func_rc_cmake_path}\")"
+        "set(MSVC_CL_PATH \"${func_cl_cmake}\")"
+        "set(MSVC_RC_PATH \"${func_rc_cmake}\")"
         ""
         "set(CMAKE_C_COMPILER   \"\${MSVC_CL_PATH}/cl.exe\")"
         "set(CMAKE_CXX_COMPILER \"\${MSVC_CL_PATH}/cl.exe\")"
@@ -529,13 +548,13 @@ function(set_msvc_toolchain_content var processor os vswhereCommand compilerPath
         "set(CMAKE_RC_COMPILER  \"\${MSVC_RC_PATH}/rc.exe\")"
         "set(CMAKE_MT           \"\${MSVC_RC_PATH}/mt.exe\")"
         ""
-        "set(ENV{INCLUDE} \"${func_include_escaped}\")"
-        "set(ENV{LIBPATH} \"${func_libpath_escaped}\")"
-        "set(ENV{LIB} \"${func_lib_escaped}\")"
-        "set(ENV{PATH} \"${envPathNative}\")"
+        "set(ENV{INCLUDE} \"${func_include}\")"
+        "set(ENV{LIBPATH} \"${func_libpath}\")"
+        "set(ENV{LIB} \"${func_lib}\")"
+        "set(ENV{PATH} \"${func_path}\")"
         ""
-        "set(CMAKE_C_STANDARD_INCLUDE_DIRECTORIES \"${func_cmake_include}\")"
-        "set(CMAKE_C_STANDARD_LINK_DIRECTORIES \"${func_cmake_libpath}\")"
+        "set(CMAKE_C_STANDARD_INCLUDE_DIRECTORIES \"${func_include_cmake}\")"
+        "set(CMAKE_C_STANDARD_LINK_DIRECTORIES \"${func_libpath_cmake}\")"
         ""
         "set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES \"${func_cmake_include}\")"
         "set(CMAKE_CXX_STANDARD_LINK_DIRECTORIES \"${func_cmake_libpath}\")"
@@ -553,7 +572,7 @@ endfunction()
 
 function(set_gnu_toolchain_content var processor os path)
     foreach(i var processor os path)
-        if("" STREQUAL ${${i}})
+        if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
         endif()
     endforeach()
@@ -745,3 +764,6 @@ foreach(i RANGE "${MAX}")
     list(APPEND ARGS "${CMAKE_ARGV${i}}")
 endforeach()
 script_execute("${ARGS}")
+
+cmake_policy(POP)
+cmake_policy(POP)
