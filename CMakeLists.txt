@@ -158,7 +158,7 @@ set_target_properties("test-app" PROPERTIES
 )
 if("${BUILD_SHARED_LIBS}")
     add_custom_command(TARGET "test-app"
-        PRE_BUILD
+        POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CONAN_INSTALL_PREFIX}/bin" "$<TARGET_PROPERTY:test-app,RUNTIME_OUTPUT_DIRECTORY>"
         VERBATIM
     )
