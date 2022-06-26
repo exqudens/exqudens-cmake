@@ -506,11 +506,11 @@ function(set_msvc_toolchain_content var processor os vswhereCommand compilerPath
     list(REMOVE_DUPLICATES func_lib)
     cmake_path(CONVERT "${func_lib}" TO_NATIVE_PATH_LIST func_lib NORMALIZE)
 
-    cmake_path(CONVERT "$ENV{PATH}" TO_CMAKE_PATH_LIST func_path NORMALIZE)
     cmake_path(CONVERT "${func_MSVC_CL_PATH}" TO_CMAKE_PATH_LIST func_cl_cmake NORMALIZE)
     cmake_path(CONVERT "${func_MSVC_RC_PATH}" TO_CMAKE_PATH_LIST func_rc_cmake NORMALIZE)
     list(PREPEND func_path "${func_rc_cmake}")
     list(PREPEND func_path "${func_cl_cmake}")
+    list(APPEND func_path "\$ENV{PATH}")
     list(FILTER func_path EXCLUDE REGEX "^$")
     list(REMOVE_DUPLICATES func_path)
     cmake_path(CONVERT "${func_path}" TO_NATIVE_PATH_LIST func_path NORMALIZE)
