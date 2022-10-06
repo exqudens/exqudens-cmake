@@ -664,7 +664,7 @@ function(set_gnu_toolchain_content_delegate var)
     endif()
 endfunction()
 
-function(script_execute args)
+function(execute_script args)
     set(options
         "help"
         "toolchain"
@@ -763,7 +763,7 @@ math(EXPR MAX "${CMAKE_ARGC} - 1")
 foreach(i RANGE "${MAX}")
     list(APPEND ARGS "${CMAKE_ARGV${i}}")
 endforeach()
-script_execute("${ARGS}")
+execute_script("${ARGS}")
 
 cmake_policy(POP)
 cmake_policy(POP)
