@@ -387,8 +387,27 @@ function(
         else()
             set(value "${value}" "--settings" "compiler.libcxx=libstdc++")
         endif()
+    elseif("Clang" STREQUAL "${cmakeCxxCompilerId}")
+        set(value "${value}" "--settings" "compiler=clang")
+
+        # compiler.version
+        if("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "13" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "14")
+            set(value "${value}" "--settings" "compiler.version=13")
+        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "12" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "13")
+            set(value "${value}" "--settings" "compiler.version=12")
+        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "11" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "12")
+            set(value "${value}" "--settings" "compiler.version=11")
+        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "10" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "11")
+            set(value "${value}" "--settings" "compiler.version=10")
+        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "9" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "10")
+            set(value "${value}" "--settings" "compiler.version=9")
+        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "8" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "9")
+            set(value "${value}" "--settings" "compiler.version=8")
+        else()
+            message(FATAL_ERROR "Unsupported 'cmakeCxxCompilerVersion': '${cmakeCxxCompilerVersion}'")
+        endif()
     else()
-        message(FATAL_ERROR "Unsupported 'cmakeCxxStandard': '${cmakeCxxStandard}'")
+        message(FATAL_ERROR "Unsupported 'cmakeCxxCompilerId': '${cmakeCxxCompilerId}'")
     endif()
 
     # build_type
@@ -414,20 +433,6 @@ function(
     set("${var}" "${value}" PARENT_SCOPE)
 endfunction()
 
-function(set_python_boolean var cmakeBoolean)
-    if("" STREQUAL "${var}")
-        message(FATAL_ERROR "Empty value not supported for 'var'.")
-    endif()
-
-    if("${cmakeBoolean}")
-        set(value "True")
-    else()
-        set(value "False")
-    endif()
-
-    set("${var}" "${value}" PARENT_SCOPE)
-endfunction()
-
 function(set_conan_options var)
     if("" STREQUAL "${var}")
         message(FATAL_ERROR "Empty value not supported for 'var'.")
@@ -440,6 +445,20 @@ function(set_conan_options var)
                 list(APPEND value "--options" "${arg}")
             endif()
         endforeach()
+    endif()
+
+    set("${var}" "${value}" PARENT_SCOPE)
+endfunction()
+
+function(set_python_boolean var cmakeBoolean)
+    if("" STREQUAL "${var}")
+        message(FATAL_ERROR "Empty value not supported for 'var'.")
+    endif()
+
+    if("${cmakeBoolean}")
+        set(value "True")
+    else()
+        set(value "False")
     endif()
 
     set("${var}" "${value}" PARENT_SCOPE)
@@ -508,6 +527,7 @@ function(set_msvc_toolchain_content var processor os vswhereCommand compilerPath
 
     cmake_path(CONVERT "${func_MSVC_CL_PATH}" TO_CMAKE_PATH_LIST func_cl_cmake NORMALIZE)
     cmake_path(CONVERT "${func_MSVC_RC_PATH}" TO_CMAKE_PATH_LIST func_rc_cmake NORMALIZE)
+    set(func_path "")
     list(PREPEND func_path "${func_rc_cmake}")
     list(PREPEND func_path "${func_cl_cmake}")
     list(APPEND func_path "\$ENV{PATH}")
@@ -517,16 +537,12 @@ function(set_msvc_toolchain_content var processor os vswhereCommand compilerPath
 
     if("Windows" STREQUAL "${os}")
         string(REPLACE "\\" "\\\\" func_include "${func_include}")
-        string(REPLACE ";" "\\;" func_include "${func_include}")
 
         string(REPLACE "\\" "\\\\" func_libpath "${func_libpath}")
-        string(REPLACE ";" "\\;" func_libpath "${func_libpath}")
 
         string(REPLACE "\\" "\\\\" func_lib "${func_lib}")
-        string(REPLACE ";" "\\;" func_lib "${func_lib}")
 
         string(REPLACE "\\" "\\\\" func_path "${func_path}")
-        string(REPLACE ";" "\\;" func_path "${func_path}")
     endif()
 
     cmake_path(CONVERT "${func_MSVC_INCLUDE}" TO_CMAKE_PATH_LIST func_cmake_include NORMALIZE)
@@ -589,7 +605,6 @@ function(set_gnu_toolchain_content var processor os path)
 
     if("Windows" STREQUAL "${os}")
         string(REPLACE "\\" "\\\\" envPathNative "${envPathNative}")
-        string(REPLACE ";" "\\;" envPathNative "${envPathNative}")
     endif()
 
     string(JOIN "\n" content
@@ -601,6 +616,47 @@ function(set_gnu_toolchain_content var processor os path)
         "set(CMAKE_AR           \"${compilerDir}/ar.exe\")"
         "set(CMAKE_LINKER       \"${compilerDir}/ld.exe\")"
         "set(CMAKE_RC_COMPILER  \"${compilerDir}/windres.exe\")"
+        ""
+        "set(ENV{PATH} \"${envPathNative}\")"
+        ""
+        "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
+        "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)"
+        "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)"
+        "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
+        ""
+    )
+    set("${var}" "${content}" PARENT_SCOPE)
+endfunction()
+
+function(set_clang_toolchain_content var processor os path target)
+    foreach(i var processor os path)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
+
+    cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
+
+    get_filename_component(compilerDir "${path}" DIRECTORY)
+
+    cmake_path(CONVERT "$ENV{PATH}" TO_CMAKE_PATH_LIST envPath NORMALIZE)
+    list(PREPEND envPath "${compilerDir}")
+    list(FILTER envPath EXCLUDE REGEX "^$")
+    list(REMOVE_DUPLICATES envPath)
+    cmake_path(CONVERT "${envPath}" TO_NATIVE_PATH_LIST envPathNative NORMALIZE)
+
+    if("Windows" STREQUAL "${os}")
+        string(REPLACE "\\" "\\\\" envPathNative "${envPathNative}")
+    endif()
+
+    string(JOIN "\n" content
+        "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
+        "set(CMAKE_SYSTEM_NAME \"${os}\")"
+        ""
+        "set(CMAKE_C_COMPILER          \"${compilerDir}/clang.exe\")"
+        "set(CMAKE_C_COMPILER_TARGET   \"${target}\")"
+        "set(CMAKE_CXX_COMPILER        \"${compilerDir}/clang++.exe\")"
+        "set(CMAKE_CXX_COMPILER_TARGET \"${target}\")"
         ""
         "set(ENV{PATH} \"${envPathNative}\")"
         ""
@@ -664,6 +720,28 @@ function(set_gnu_toolchain_content_delegate var)
     endif()
 endfunction()
 
+function(set_clang_toolchain_content_delegate var)
+    set(oneValueKeywords
+        "processor"
+        "os"
+        "compiler"
+        "path"
+        "target"
+    )
+    cmake_parse_arguments(PARSE_ARGV 1 "func" "${options}" "${oneValueKeywords}" "")
+    if(
+        "Windows" STREQUAL "${func_os}"
+        AND "clang" STREQUAL "${func_compiler}"
+        AND (NOT "" STREQUAL "${func_path}" AND EXISTS "${func_path}")
+        AND NOT "" STREQUAL "${target}"
+    )
+        set_clang_toolchain_content(toolchain_content "${func_processor}" "${func_os}" "${func_path}" ${func_target})
+        set("${var}" "${toolchain_content}" PARENT_SCOPE)
+    else()
+        set("${var}" "NOT_SUPPORTED" PARENT_SCOPE)
+    endif()
+endfunction()
+
 function(execute_script args)
     set(options
         "help"
@@ -716,6 +794,21 @@ function(execute_script args)
             return()
         endif()
 
+        set_clang_toolchain_content_delegate(toolchain_content
+            processor "${func_processor}"
+            os "${func_os}"
+            compiler "${func_compiler}"
+            version "${func_version}"
+            host "${func_host}"
+            target "${func_target}"
+            path "${func_path}"
+        )
+
+        if(NOT "NOT_SUPPORTED" STREQUAL "${toolchain_content}")
+            file(WRITE "${func_file}" "${toolchain_content}")
+            return()
+        endif()
+
         string(JOIN "\n" error_message
             "Unsupported 'toolchain' set of arguments:"
             "  processor: '${func_processor}'"
@@ -748,12 +841,21 @@ function(execute_script args)
             "path" "'path/to/cl.exe'"
             "file" "'toolchain.cmake|build/toolchain.cmake'"
         )
+        string(JOIN " " func_usage_4 "cmake" "-P" "${func_current_file_name}" "toolchain"
+            "processor" "'<value>'"
+            "os" "'Windows'"
+            "compiler" "'clang'"
+            "path" "'path/to/clang.exe'"
+            "target" "'x86_64-pc-windows-msvc'"
+            "file" "'toolchain.cmake|build/toolchain.cmake'"
+        )
 
         string(JOIN "\n" func_content
             "Usage:"
             "  ${func_usage_1}"
             "  ${func_usage_2}"
             "  ${func_usage_3}"
+            "  ${func_usage_4}"
         )
         message("${func_content}")
     endif()
