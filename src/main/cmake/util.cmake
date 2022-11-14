@@ -4,15 +4,22 @@ cmake_policy(PUSH)
 cmake_policy(SET CMP0007 NEW)
 
 function(set_if_not_defined var)
+    foreach(i var)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
     if("" STREQUAL "${${var}}" AND NOT "" STREQUAL "${ARGN}")
         set("${var}" "${ARGN}" PARENT_SCOPE)
     endif()
 endfunction()
 
-function(string_substring_from var input fromExclusive)
-    if("" STREQUAL "${fromExclusive}")
-        message(FATAL_ERROR "Empty value not supported for 'fromExclusive'.")
-    endif()
+function(substring_from var input fromExclusive)
+    foreach(i var input fromExclusive)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
     string(FIND "${input}" "${fromExclusive}" fromStartIndex)
     if("-1" STREQUAL "${fromStartIndex}")
         message(FATAL_ERROR "Can't find 'fromExclusive' in 'input'")
@@ -25,10 +32,12 @@ function(string_substring_from var input fromExclusive)
     set("${var}" "${result}" PARENT_SCOPE)
 endfunction()
 
-function(string_substring_to var input toExclusive)
-    if("" STREQUAL "${toExclusive}")
-        message(FATAL_ERROR "Empty value not supported for 'toExclusive'.")
-    endif()
+function(substring_to var input toExclusive)
+    foreach(i var input toExclusive)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
     string(FIND "${input}" "${toExclusive}" toStartIndex)
     if("-1" STREQUAL "${toStartIndex}")
         message(FATAL_ERROR "Can't find 'toExclusive' in 'input'")
@@ -38,23 +47,40 @@ function(string_substring_to var input toExclusive)
     set("${var}" "${result}" PARENT_SCOPE)
 endfunction()
 
-function(string_substring_between var input fromExclusive toExclusive)
-    string_substring_from(result "${input}" "${fromExclusive}")
-    string_substring_to(result "${result}" "${toExclusive}")
-    set("${var}" "${result}" PARENT_SCOPE)
-endfunction()
-
-function(find_file_in_parent prefix name file_path max_parent_level)
-    foreach(i prefix name file_path)
+function(substring_between var input fromExclusive toExclusive)
+    foreach(i var input fromExclusive toExclusive)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
         endif()
     endforeach()
-    set(func_max "${max_parent_level}")
+    substring_from(result "${input}" "${fromExclusive}")
+    substring_to(result "${result}" "${toExclusive}")
+    set("${var}" "${result}" PARENT_SCOPE)
+endfunction()
+
+function(substring_between_replace var input fromExclusive toExclusive)
+    foreach(i var input fromExclusive toExclusive)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
+    substring_to(result1 "${input}" "${fromExclusive}")
+    substring_from(result2 "${input}" "${toExclusive}")
+    string(CONCAT result "${result1}" "${result2}")
+    set("${var}" "${result}" PARENT_SCOPE)
+endfunction()
+
+function(find_file_in_parent prefix name path maxParentLevel)
+    foreach(i prefix name path)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
+    set(func_max "${maxParentLevel}")
     if("" STREQUAL "${func_max}")
         set(func_max "1")
     endif()
-    set(func_path "${file_path}")
+    set(func_path "${path}")
     cmake_path(GET func_path ROOT_NAME func_path_root_name)
     cmake_path(GET func_path ROOT_DIRECTORY func_path_root_dir)
     set(func_path_root "${func_path_root_name}${func_path_root_dir}")
@@ -63,8 +89,7 @@ function(find_file_in_parent prefix name file_path max_parent_level)
             break()
         endif()
         cmake_path(GET func_path PARENT_PATH func_path)
-        #message(STATUS "find_file_in_parent processing: '${func_path}'")
-        file(GLOB_RECURSE func_files "${func_path}/*")
+        file(GLOB func_files LIST_DIRECTORIES "TRUE" "${func_path}/*")
         foreach(func_file IN LISTS func_files)
             get_filename_component(func_file_name "${func_file}" NAME)
             if("${func_file_name}" STREQUAL "${name}")
@@ -85,7 +110,7 @@ function(find_file_in prefix name path)
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
         endif()
     endforeach()
-    file(GLOB_RECURSE func_files "${path}/*")
+    file(GLOB_RECURSE func_files LIST_DIRECTORIES "TRUE" "${path}/*")
     foreach(func_file IN LISTS func_files)
         get_filename_component(func_file_name "${func_file}" NAME)
         if("${func_file_name}" STREQUAL "${name}")
@@ -98,56 +123,88 @@ function(find_file_in prefix name path)
     set("${prefix}_DIR" "${func_result_dir}" PARENT_SCOPE)
 endfunction()
 
-function(set_msvc_path var vswhereCommand compilerVersion)
-    foreach(i var compilerVersion)
+function(set_msvc_path var)
+    foreach(i var)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
         endif()
     endforeach()
 
-    if(NOT "" STREQUAL "${vswhereCommand}")
-        cmake_path(CONVERT "${vswhereCommand}" TO_CMAKE_PATH_LIST vswhereCommand NORMALIZE)
-    else()
-        set(vswhereCommand "C:/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe")
-    endif()
-
-    if("17" STREQUAL "${compilerVersion}" OR "2022" STREQUAL "${compilerVersion}")
-        set(vswhereVersionArgs "-version" "[17.0, 18.0)")
-    elseif("16" STREQUAL "${compilerVersion}" OR "2019" STREQUAL "${compilerVersion}")
-        set(vswhereVersionArgs "-version" "[16.0, 17.0)")
-    elseif("15" STREQUAL "${compilerVersion}" OR "2017" STREQUAL "${compilerVersion}")
-        set(vswhereVersionArgs "-version" "[15.0, 16.0)")
-    else()
-        #set(vswhereVersionArgs "-latest")
-        string(JOIN " " errorMessage
-            "Unsupported or not specified 'compilerVersion': '${compilerVersion}'."
-            "Supported values: ['15', '16', '17', '2017', '2019', '2022']."
-        )
-        message(FATAL_ERROR "${errorMessage}")
-    endif()
-
-    execute_process(
-        COMMAND "${vswhereCommand}" ${vswhereVersionArgs} "-property" "installationPath"
-        OUTPUT_VARIABLE "result"
-        COMMAND_ECHO "STDERR"
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ENCODING "UTF-8"
-        COMMAND_ERROR_IS_FATAL ANY
+    set(options)
+    set(oneValueKeywords
+        "COMMAND"
+        "VERSION"
+        "PROPERTY"
     )
+    set(multiValueKeywords
+        "PRODUCTS"
+    )
+    cmake_parse_arguments("set_msvc_path" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
 
-    if("" STREQUAL "${result}")
+    set(command "${set_msvc_path_COMMAND}")
+    set(version "${set_msvc_path_VERSION}")
+    set(property "${set_msvc_path_PROPERTY}")
+    set(products "${set_msvc_path_PRODUCTS}")
+
+    if("" STREQUAL "${command}")
+        set(command "C:/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe")
+    endif()
+
+    if("" STREQUAL "${version}")
+        set(version "-latest")
+    endif()
+
+    if("" STREQUAL "${property}")
+        set(property "installationPath")
+    endif()
+
+    if("" STREQUAL "${products}")
+        set(products
+            "Microsoft.VisualStudio.Product.Enterprise"
+            "Microsoft.VisualStudio.Product.Professional"
+            "Microsoft.VisualStudio.Product.Community"
+            "Microsoft.VisualStudio.Product.BuildTools"
+            #"Microsoft.VisualStudio.Product.TeamExplorer"
+            #"Microsoft.VisualStudio.Product.TestAgent"
+            #"Microsoft.VisualStudio.Product.TestController"
+        )
+    endif()
+
+    cmake_path(CONVERT "${command}" TO_CMAKE_PATH_LIST command NORMALIZE)
+
+    if("17" STREQUAL "${version}" OR "2022" STREQUAL "${version}")
+        set(versionArgs "-version" "[17.0, 18.0)")
+    elseif("16" STREQUAL "${version}" OR "2019" STREQUAL "${version}")
+        set(versionArgs "-version" "[16.0, 17.0)")
+    elseif("15" STREQUAL "${version}" OR "2017" STREQUAL "${version}")
+        set(versionArgs "-version" "[15.0, 16.0)")
+    elseif("latest" STREQUAL "${version}" OR "-latest" STREQUAL "${version}")
+        set(versionArgs "-latest")
+    else()
+        set(versionArgs "-version" "${version}")
+    endif()
+
+    set(propertyArgs "-property" "${property}")
+
+    set(result "")
+
+    foreach(i ${products})
+        set(productsArgs "-products" "${i}")
         execute_process(
-            COMMAND "${vswhereCommand}" ${vswhereVersionArgs} "-products" "Microsoft.VisualStudio.Product.BuildTools" "-property" "installationPath"
+            COMMAND "${command}" ${versionArgs} ${productsArgs} ${propertyArgs}
             OUTPUT_VARIABLE "result"
             COMMAND_ECHO "STDERR"
             OUTPUT_STRIP_TRAILING_WHITESPACE
             ENCODING "UTF-8"
             COMMAND_ERROR_IS_FATAL ANY
         )
-    endif()
+        if(NOT "" STREQUAL "${result}")
+            break()
+        endif()
+    endforeach()
 
     if("" STREQUAL "${result}")
-        message(FATAL_ERROR "Empty result from: '${vswhereCommand}'.")
+        message(FATAL_ERROR "Empty result from: '${command}'.")
     endif()
 
     cmake_path(CONVERT "${result}" TO_CMAKE_PATH_LIST result NORMALIZE)
@@ -212,7 +269,7 @@ function(set_msvc_env prefix vswhereCommand compilerPath compilerVersion compile
     set(vcvarsallBatName "vcvarsall.bat")
 
     if("" STREQUAL "${compilerPath}")
-        set_msvc_path(msvcPath "${vswhereCommand}" "${compilerVersion}")
+        set_msvc_path(msvcPath COMMAND "${vswhereCommand}" VERSION "${compilerVersion}")
         find_file_in(vcvarsall "${vcvarsallBatName}" "${msvcPath}")
         if("" STREQUAL "${vcvarsall_DIR}")
             message(FATAL_ERROR "Not found '${vcvarsallBatName}' in '${msvcPath}'")
@@ -254,22 +311,22 @@ function(set_msvc_env prefix vswhereCommand compilerPath compilerVersion compile
         COMMAND_ERROR_IS_FATAL ANY
     )
 
-    string_substring_between(msvcInclude "${msvcEnv}" "INCLUDE_START" "INCLUDE_STOP")
+    substring_between(msvcInclude "${msvcEnv}" "INCLUDE_START" "INCLUDE_STOP")
     string(STRIP "${msvcInclude}" msvcInclude)
     string(REGEX REPLACE "[\r]" "" msvcInclude "${msvcInclude}")
     string(REGEX REPLACE "[\n]" "" msvcInclude "${msvcInclude}")
 
-    string_substring_between(msvcLibPath "${msvcEnv}" "LIBPATH_START" "LIBPATH_STOP")
+    substring_between(msvcLibPath "${msvcEnv}" "LIBPATH_START" "LIBPATH_STOP")
     string(STRIP "${msvcLibPath}" msvcLibPath)
     string(REGEX REPLACE "[\r]" "" msvcLibPath "${msvcLibPath}")
     string(REGEX REPLACE "[\n]" "" msvcLibPath "${msvcLibPath}")
 
-    string_substring_between(msvcLib "${msvcEnv}" "LIB_START" "LIB_STOP")
+    substring_between(msvcLib "${msvcEnv}" "LIB_START" "LIB_STOP")
     string(STRIP "${msvcLib}" msvcLib)
     string(REGEX REPLACE "[\r]" "" msvcLib "${msvcLib}")
     string(REGEX REPLACE "[\n]" "" msvcLib "${msvcLib}")
 
-    string_substring_between(msvcClPath "${msvcEnv}" "CLPATH_START" "CLPATH_STOP")
+    substring_between(msvcClPath "${msvcEnv}" "CLPATH_START" "CLPATH_STOP")
     string(STRIP "${msvcClPath}" msvcClPath)
     string(REGEX REPLACE "[\r]" "" msvcClPath "${msvcClPath}")
     string(REGEX REPLACE "[\n]" ";" msvcClPath "${msvcClPath}")
@@ -277,7 +334,7 @@ function(set_msvc_env prefix vswhereCommand compilerPath compilerVersion compile
     get_filename_component(msvcClPath "${msvcClPath}" DIRECTORY)
     cmake_path(CONVERT "${msvcClPath}" TO_NATIVE_PATH_LIST msvcClPath NORMALIZE)
 
-    string_substring_between(msvcRcPath "${msvcEnv}" "RCPATH_START" "RCPATH_STOP")
+    substring_between(msvcRcPath "${msvcEnv}" "RCPATH_START" "RCPATH_STOP")
     string(STRIP "${msvcRcPath}" msvcRcPath)
     string(REGEX REPLACE "[\r]" "" msvcRcPath "${msvcRcPath}")
     string(REGEX REPLACE "[\n]" ";" msvcRcPath "${msvcRcPath}")
@@ -290,6 +347,176 @@ function(set_msvc_env prefix vswhereCommand compilerPath compilerVersion compile
     set("${prefix}_MSVC_LIB" "${msvcLib}" PARENT_SCOPE)
     set("${prefix}_MSVC_CL_PATH" "${msvcClPath}" PARENT_SCOPE)
     set("${prefix}_MSVC_RC_PATH" "${msvcRcPath}" PARENT_SCOPE)
+endfunction()
+
+function(set_msvc_toolchain_content var processor os vswhereCommand compilerPath compilerVersion compilerArch targetArch)
+    foreach(i var processor os)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
+
+    set_msvc_env("func" "${vswhereCommand}" "${compilerPath}" "${compilerVersion}" "${compilerArch}" "${targetArch}")
+
+    cmake_path(CONVERT "${func_MSVC_INCLUDE}" TO_CMAKE_PATH_LIST func_include NORMALIZE)
+    list(FILTER func_include EXCLUDE REGEX "^$")
+    list(REMOVE_DUPLICATES func_include)
+    set(func_include_cmake "${func_include}")
+    cmake_path(CONVERT "${func_include}" TO_NATIVE_PATH_LIST func_include NORMALIZE)
+
+    cmake_path(CONVERT "${func_MSVC_LIBPATH}" TO_CMAKE_PATH_LIST func_libpath NORMALIZE)
+    list(FILTER func_libpath EXCLUDE REGEX "^$")
+    list(REMOVE_DUPLICATES func_libpath)
+    set(func_libpath_cmake "${func_libpath}")
+    cmake_path(CONVERT "${func_libpath}" TO_NATIVE_PATH_LIST func_libpath NORMALIZE)
+
+    cmake_path(CONVERT "${func_MSVC_LIB}" TO_CMAKE_PATH_LIST func_lib NORMALIZE)
+    list(FILTER func_lib EXCLUDE REGEX "^$")
+    list(REMOVE_DUPLICATES func_lib)
+    cmake_path(CONVERT "${func_lib}" TO_NATIVE_PATH_LIST func_lib NORMALIZE)
+
+    cmake_path(CONVERT "${func_MSVC_CL_PATH}" TO_CMAKE_PATH_LIST func_cl_cmake NORMALIZE)
+    cmake_path(CONVERT "${func_MSVC_RC_PATH}" TO_CMAKE_PATH_LIST func_rc_cmake NORMALIZE)
+    set(func_path "")
+    list(PREPEND func_path "${func_rc_cmake}")
+    list(PREPEND func_path "${func_cl_cmake}")
+    list(APPEND func_path "\$ENV{PATH}")
+    list(FILTER func_path EXCLUDE REGEX "^$")
+    list(REMOVE_DUPLICATES func_path)
+    cmake_path(CONVERT "${func_path}" TO_NATIVE_PATH_LIST func_path NORMALIZE)
+
+    if("Windows" STREQUAL "${os}")
+        string(REPLACE "\\" "\\\\" func_include "${func_include}")
+
+        string(REPLACE "\\" "\\\\" func_libpath "${func_libpath}")
+
+        string(REPLACE "\\" "\\\\" func_lib "${func_lib}")
+
+        string(REPLACE "\\" "\\\\" func_path "${func_path}")
+    endif()
+
+    cmake_path(CONVERT "${func_MSVC_INCLUDE}" TO_CMAKE_PATH_LIST func_cmake_include NORMALIZE)
+
+    set(func_cmake_libpath "${func_MSVC_LIBPATH}" "${func_MSVC_LIB}")
+    cmake_path(CONVERT "${func_cmake_libpath}" TO_CMAKE_PATH_LIST func_cmake_libpath NORMALIZE)
+
+    string(JOIN "\n" content
+        "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
+        "set(CMAKE_SYSTEM_NAME \"${os}\")"
+        ""
+        "set(MSVC_CL_PATH \"${func_cl_cmake}\")"
+        "set(MSVC_RC_PATH \"${func_rc_cmake}\")"
+        ""
+        "set(CMAKE_C_COMPILER   \"\${MSVC_CL_PATH}/cl.exe\")"
+        "set(CMAKE_CXX_COMPILER \"\${MSVC_CL_PATH}/cl.exe\")"
+        "set(CMAKE_AR           \"\${MSVC_CL_PATH}/lib.exe\")"
+        "set(CMAKE_LINKER       \"\${MSVC_CL_PATH}/link.exe\")"
+        "set(CMAKE_RC_COMPILER  \"\${MSVC_RC_PATH}/rc.exe\")"
+        "set(CMAKE_MT           \"\${MSVC_RC_PATH}/mt.exe\")"
+        ""
+        "set(ENV{INCLUDE} \"${func_include}\")"
+        "set(ENV{LIBPATH} \"${func_libpath}\")"
+        "set(ENV{LIB} \"${func_lib}\")"
+        "set(ENV{PATH} \"${func_path}\")"
+        ""
+        "set(CMAKE_C_STANDARD_INCLUDE_DIRECTORIES \"${func_include_cmake}\")"
+        "set(CMAKE_C_STANDARD_LINK_DIRECTORIES \"${func_libpath_cmake}\")"
+        ""
+        "set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES \"${func_cmake_include}\")"
+        "set(CMAKE_CXX_STANDARD_LINK_DIRECTORIES \"${func_cmake_libpath}\")"
+        ""
+        "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
+        "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)"
+        "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)"
+        "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
+        ""
+        "link_directories(\"\${CMAKE_CXX_STANDARD_LINK_DIRECTORIES}\") # remove when CMAKE_CXX_STANDARD_LINK_DIRECTORIES is supported"
+        ""
+    )
+    set("${var}" "${content}" PARENT_SCOPE)
+endfunction()
+
+function(set_gnu_toolchain_content var processor os path)
+    foreach(i var processor os path)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
+
+    cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
+
+    get_filename_component(compilerDir "${path}" DIRECTORY)
+
+    cmake_path(CONVERT "$ENV{PATH}" TO_CMAKE_PATH_LIST envPath NORMALIZE)
+    list(PREPEND envPath "${compilerDir}")
+    list(FILTER envPath EXCLUDE REGEX "^$")
+    list(REMOVE_DUPLICATES envPath)
+    cmake_path(CONVERT "${envPath}" TO_NATIVE_PATH_LIST envPathNative NORMALIZE)
+
+    if("Windows" STREQUAL "${os}")
+        string(REPLACE "\\" "\\\\" envPathNative "${envPathNative}")
+    endif()
+
+    string(JOIN "\n" content
+        "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
+        "set(CMAKE_SYSTEM_NAME \"${os}\")"
+        ""
+        "set(CMAKE_C_COMPILER   \"${compilerDir}/gcc.exe\")"
+        "set(CMAKE_CXX_COMPILER \"${compilerDir}/g++.exe\")"
+        "set(CMAKE_AR           \"${compilerDir}/ar.exe\")"
+        "set(CMAKE_LINKER       \"${compilerDir}/ld.exe\")"
+        "set(CMAKE_RC_COMPILER  \"${compilerDir}/windres.exe\")"
+        ""
+        "set(ENV{PATH} \"${envPathNative}\")"
+        ""
+        "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
+        "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)"
+        "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)"
+        "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
+        ""
+    )
+    set("${var}" "${content}" PARENT_SCOPE)
+endfunction()
+
+function(set_clang_toolchain_content var processor os path target)
+    foreach(i var processor os path)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
+
+    cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
+
+    get_filename_component(compilerDir "${path}" DIRECTORY)
+
+    cmake_path(CONVERT "$ENV{PATH}" TO_CMAKE_PATH_LIST envPath NORMALIZE)
+    list(PREPEND envPath "${compilerDir}")
+    list(FILTER envPath EXCLUDE REGEX "^$")
+    list(REMOVE_DUPLICATES envPath)
+    cmake_path(CONVERT "${envPath}" TO_NATIVE_PATH_LIST envPathNative NORMALIZE)
+
+    if("Windows" STREQUAL "${os}")
+        string(REPLACE "\\" "\\\\" envPathNative "${envPathNative}")
+    endif()
+
+    string(JOIN "\n" content
+        "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
+        "set(CMAKE_SYSTEM_NAME \"${os}\")"
+        ""
+        "set(CMAKE_C_COMPILER          \"${compilerDir}/clang.exe\")"
+        "set(CMAKE_C_COMPILER_TARGET   \"${target}\")"
+        "set(CMAKE_CXX_COMPILER        \"${compilerDir}/clang++.exe\")"
+        "set(CMAKE_CXX_COMPILER_TARGET \"${target}\")"
+        ""
+        "set(ENV{PATH} \"${envPathNative}\")"
+        ""
+        "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
+        "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)"
+        "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)"
+        "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
+        ""
+    )
+    set("${var}" "${content}" PARENT_SCOPE)
 endfunction()
 
 function(set_conan_msvc_compiler_runtime var cmakeMsvcRuntimeLibrary)
@@ -496,177 +723,16 @@ function(
     if(NOT "${currentTargets}" STREQUAL "")
         list(APPEND targets "${currentTargets}")
     endif()
+    list(APPEND targets
+        "all"
+        "help"
+        "clean"
+        "test"
+        "install"
+        "package"
+        "package_source"
+    )
     set(${var} "${targets}" PARENT_SCOPE)
-endfunction()
-
-function(set_msvc_toolchain_content var processor os vswhereCommand compilerPath compilerVersion compilerArch targetArch)
-    foreach(i var processor os)
-        if("" STREQUAL "${${i}}")
-            message(FATAL_ERROR "Empty value not supported for '${i}'.")
-        endif()
-    endforeach()
-
-    set_msvc_env("func" "${vswhereCommand}" "${compilerPath}" "${compilerVersion}" "${compilerArch}" "${targetArch}")
-
-    cmake_path(CONVERT "${func_MSVC_INCLUDE}" TO_CMAKE_PATH_LIST func_include NORMALIZE)
-    list(FILTER func_include EXCLUDE REGEX "^$")
-    list(REMOVE_DUPLICATES func_include)
-    set(func_include_cmake "${func_include}")
-    cmake_path(CONVERT "${func_include}" TO_NATIVE_PATH_LIST func_include NORMALIZE)
-
-    cmake_path(CONVERT "${func_MSVC_LIBPATH}" TO_CMAKE_PATH_LIST func_libpath NORMALIZE)
-    list(FILTER func_libpath EXCLUDE REGEX "^$")
-    list(REMOVE_DUPLICATES func_libpath)
-    set(func_libpath_cmake "${func_libpath}")
-    cmake_path(CONVERT "${func_libpath}" TO_NATIVE_PATH_LIST func_libpath NORMALIZE)
-
-    cmake_path(CONVERT "${func_MSVC_LIB}" TO_CMAKE_PATH_LIST func_lib NORMALIZE)
-    list(FILTER func_lib EXCLUDE REGEX "^$")
-    list(REMOVE_DUPLICATES func_lib)
-    cmake_path(CONVERT "${func_lib}" TO_NATIVE_PATH_LIST func_lib NORMALIZE)
-
-    cmake_path(CONVERT "${func_MSVC_CL_PATH}" TO_CMAKE_PATH_LIST func_cl_cmake NORMALIZE)
-    cmake_path(CONVERT "${func_MSVC_RC_PATH}" TO_CMAKE_PATH_LIST func_rc_cmake NORMALIZE)
-    set(func_path "")
-    list(PREPEND func_path "${func_rc_cmake}")
-    list(PREPEND func_path "${func_cl_cmake}")
-    list(APPEND func_path "\$ENV{PATH}")
-    list(FILTER func_path EXCLUDE REGEX "^$")
-    list(REMOVE_DUPLICATES func_path)
-    cmake_path(CONVERT "${func_path}" TO_NATIVE_PATH_LIST func_path NORMALIZE)
-
-    if("Windows" STREQUAL "${os}")
-        string(REPLACE "\\" "\\\\" func_include "${func_include}")
-
-        string(REPLACE "\\" "\\\\" func_libpath "${func_libpath}")
-
-        string(REPLACE "\\" "\\\\" func_lib "${func_lib}")
-
-        string(REPLACE "\\" "\\\\" func_path "${func_path}")
-    endif()
-
-    cmake_path(CONVERT "${func_MSVC_INCLUDE}" TO_CMAKE_PATH_LIST func_cmake_include NORMALIZE)
-
-    set(func_cmake_libpath "${func_MSVC_LIBPATH}" "${func_MSVC_LIB}")
-    cmake_path(CONVERT "${func_cmake_libpath}" TO_CMAKE_PATH_LIST func_cmake_libpath NORMALIZE)
-
-    string(JOIN "\n" content
-        "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
-        "set(CMAKE_SYSTEM_NAME \"${os}\")"
-        ""
-        "set(MSVC_CL_PATH \"${func_cl_cmake}\")"
-        "set(MSVC_RC_PATH \"${func_rc_cmake}\")"
-        ""
-        "set(CMAKE_C_COMPILER   \"\${MSVC_CL_PATH}/cl.exe\")"
-        "set(CMAKE_CXX_COMPILER \"\${MSVC_CL_PATH}/cl.exe\")"
-        "set(CMAKE_AR           \"\${MSVC_CL_PATH}/lib.exe\")"
-        "set(CMAKE_LINKER       \"\${MSVC_CL_PATH}/link.exe\")"
-        "set(CMAKE_RC_COMPILER  \"\${MSVC_RC_PATH}/rc.exe\")"
-        "set(CMAKE_MT           \"\${MSVC_RC_PATH}/mt.exe\")"
-        ""
-        "set(ENV{INCLUDE} \"${func_include}\")"
-        "set(ENV{LIBPATH} \"${func_libpath}\")"
-        "set(ENV{LIB} \"${func_lib}\")"
-        "set(ENV{PATH} \"${func_path}\")"
-        ""
-        "set(CMAKE_C_STANDARD_INCLUDE_DIRECTORIES \"${func_include_cmake}\")"
-        "set(CMAKE_C_STANDARD_LINK_DIRECTORIES \"${func_libpath_cmake}\")"
-        ""
-        "set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES \"${func_cmake_include}\")"
-        "set(CMAKE_CXX_STANDARD_LINK_DIRECTORIES \"${func_cmake_libpath}\")"
-        ""
-        "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
-        "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)"
-        "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)"
-        "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
-        ""
-        "link_directories(\"\${CMAKE_CXX_STANDARD_LINK_DIRECTORIES}\") # remove when CMAKE_CXX_STANDARD_LINK_DIRECTORIES is supported"
-        ""
-    )
-    set("${var}" "${content}" PARENT_SCOPE)
-endfunction()
-
-function(set_gnu_toolchain_content var processor os path)
-    foreach(i var processor os path)
-        if("" STREQUAL "${${i}}")
-            message(FATAL_ERROR "Empty value not supported for '${i}'.")
-        endif()
-    endforeach()
-
-    cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
-
-    get_filename_component(compilerDir "${path}" DIRECTORY)
-
-    cmake_path(CONVERT "$ENV{PATH}" TO_CMAKE_PATH_LIST envPath NORMALIZE)
-    list(PREPEND envPath "${compilerDir}")
-    list(FILTER envPath EXCLUDE REGEX "^$")
-    list(REMOVE_DUPLICATES envPath)
-    cmake_path(CONVERT "${envPath}" TO_NATIVE_PATH_LIST envPathNative NORMALIZE)
-
-    if("Windows" STREQUAL "${os}")
-        string(REPLACE "\\" "\\\\" envPathNative "${envPathNative}")
-    endif()
-
-    string(JOIN "\n" content
-        "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
-        "set(CMAKE_SYSTEM_NAME \"${os}\")"
-        ""
-        "set(CMAKE_C_COMPILER   \"${compilerDir}/gcc.exe\")"
-        "set(CMAKE_CXX_COMPILER \"${compilerDir}/g++.exe\")"
-        "set(CMAKE_AR           \"${compilerDir}/ar.exe\")"
-        "set(CMAKE_LINKER       \"${compilerDir}/ld.exe\")"
-        "set(CMAKE_RC_COMPILER  \"${compilerDir}/windres.exe\")"
-        ""
-        "set(ENV{PATH} \"${envPathNative}\")"
-        ""
-        "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
-        "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)"
-        "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)"
-        "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
-        ""
-    )
-    set("${var}" "${content}" PARENT_SCOPE)
-endfunction()
-
-function(set_clang_toolchain_content var processor os path target)
-    foreach(i var processor os path)
-        if("" STREQUAL "${${i}}")
-            message(FATAL_ERROR "Empty value not supported for '${i}'.")
-        endif()
-    endforeach()
-
-    cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
-
-    get_filename_component(compilerDir "${path}" DIRECTORY)
-
-    cmake_path(CONVERT "$ENV{PATH}" TO_CMAKE_PATH_LIST envPath NORMALIZE)
-    list(PREPEND envPath "${compilerDir}")
-    list(FILTER envPath EXCLUDE REGEX "^$")
-    list(REMOVE_DUPLICATES envPath)
-    cmake_path(CONVERT "${envPath}" TO_NATIVE_PATH_LIST envPathNative NORMALIZE)
-
-    if("Windows" STREQUAL "${os}")
-        string(REPLACE "\\" "\\\\" envPathNative "${envPathNative}")
-    endif()
-
-    string(JOIN "\n" content
-        "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
-        "set(CMAKE_SYSTEM_NAME \"${os}\")"
-        ""
-        "set(CMAKE_C_COMPILER          \"${compilerDir}/clang.exe\")"
-        "set(CMAKE_C_COMPILER_TARGET   \"${target}\")"
-        "set(CMAKE_CXX_COMPILER        \"${compilerDir}/clang++.exe\")"
-        "set(CMAKE_CXX_COMPILER_TARGET \"${target}\")"
-        ""
-        "set(ENV{PATH} \"${envPathNative}\")"
-        ""
-        "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
-        "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)"
-        "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)"
-        "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
-        ""
-    )
-    set("${var}" "${content}" PARENT_SCOPE)
 endfunction()
 
 function(set_msvc_toolchain_content_delegate var)

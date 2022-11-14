@@ -25,132 +25,23 @@
       "hidden": true,
       "generator": "Ninja"
     },
-    {
-      "name": "release",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": {
-          "type": "STRING",
-          "value": "Release"
-        }
-      }
-    },
-    {
-      "name": "debug",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": {
-          "type": "STRING",
-          "value": "Debug"
-        }
-      }
-    },
-    {
-      "name": "static",
-      "hidden": true,
-      "cacheVariables": {
-        "BUILD_SHARED_LIBS": {
-          "type": "BOOL",
-          "value": false
-        }
-      }
-    },
-    {
-      "name": "shared",
-      "hidden": true,
-      "cacheVariables": {
-        "BUILD_SHARED_LIBS": {
-          "type": "BOOL",
-          "value": true
-        }
-      }
-    },
-    {
-      "name": "mt",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_MSVC_RUNTIME_LIBRARY": {
-          "type": "STRING",
-          "value": "MultiThreaded"
-        }
-      }
-    },
-    {
-      "name": "md",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_MSVC_RUNTIME_LIBRARY": {
-          "type": "STRING",
-          "value": "MultiThreadedDLL"
-        }
-      }
-    },
-    {
-      "name": "mtd",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_MSVC_RUNTIME_LIBRARY": {
-          "type": "STRING",
-          "value": "MultiThreadedDebug"
-        }
-      }
-    },
-    {
-      "name": "mdd",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_MSVC_RUNTIME_LIBRARY": {
-          "type": "STRING",
-          "value": "MultiThreadedDebugDLL"
-        }
-      }
-    },
 
     {
-      "name": "windows.ninja.debug.shared",
-      "inherits": [ "default", "windows", "ninja", "debug", "shared", "mdd" ],
-      "binaryDir": "${sourceDir}/build/0"
-    },
-    {
-      "name": "windows.ninja.debug.static",
-      "inherits": [ "default", "windows", "ninja", "debug", "static", "mtd" ],
-      "binaryDir": "${sourceDir}/build/1"
-    },
-    {
-      "name": "windows.ninja.release.shared",
-      "inherits": [ "default", "windows", "ninja", "release", "shared", "md" ],
-      "binaryDir": "${sourceDir}/build/2"
-    },
-    {
-      "name": "windows.ninja.release.static",
-      "inherits": [ "default", "windows", "ninja", "release", "static", "mt" ],
-      "binaryDir": "${sourceDir}/build/3"
+      "name": "windows.ninja",
+      "inherits": [ "default", "windows", "ninja" ],
+      "binaryDir": "${sourceDir}/build"
     }
   ],
   "buildPresets": [
     {
       "name": "default",
       "hidden": true,
-      "jobs": 3
+      "jobs": 8
     },
+
     {
-      "name": "windows.ninja.debug.shared",
-      "configurePreset": "windows.ninja.debug.shared",
-      "inherits": [ "default" ]
-    },
-    {
-      "name": "windows.ninja.debug.static",
-      "configurePreset": "windows.ninja.debug.static",
-      "inherits": [ "default" ]
-    },
-    {
-      "name": "windows.ninja.release.shared",
-      "configurePreset": "windows.ninja.release.shared",
-      "inherits": [ "default" ]
-    },
-    {
-      "name": "windows.ninja.release.static",
-      "configurePreset": "windows.ninja.release.static",
+      "name": "windows.ninja",
+      "configurePreset": "windows.ninja",
       "inherits": [ "default" ]
     }
   ],
@@ -164,7 +55,7 @@
       },
       "filter": {
         "exclude": {
-          "name": "(UiTestsA.test1)|(UiTestsB.test1)|(UiTestsC.test1)|(UiTestsD.test1)|(UiTestsE.test1)"
+          "name": "(UiTestsA\\.test1)|(UiTestsB\\.test1)|(UiTestsC\\.test1)|(UiTestsD\\.test1)|(UiTestsE\\.test1)"
         }
       },
       "execution": {
@@ -172,24 +63,10 @@
         "stopOnFailure": true
       }
     },
+
     {
-      "name": "windows.ninja.debug.shared",
-      "configurePreset": "windows.ninja.debug.shared",
-      "inherits": [ "default" ]
-    },
-    {
-      "name": "windows.ninja.debug.static",
-      "configurePreset": "windows.ninja.debug.static",
-      "inherits": [ "default" ]
-    },
-    {
-      "name": "windows.ninja.release.shared",
-      "configurePreset": "windows.ninja.release.shared",
-      "inherits": [ "default" ]
-    },
-    {
-      "name": "windows.ninja.release.static",
-      "configurePreset": "windows.ninja.release.static",
+      "name": "windows.ninja",
+      "configurePreset": "windows.ninja",
       "inherits": [ "default" ]
     }
   ]
