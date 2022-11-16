@@ -47,27 +47,31 @@ function(substring_to var input toExclusive)
     set("${var}" "${result}" PARENT_SCOPE)
 endfunction()
 
-function(substring_between var input fromExclusive toExclusive)
-    foreach(i var input fromExclusive toExclusive)
+function(string_replace_between prefix input fromExclusive toExclusive value)
+    foreach(i prefix input fromExclusive toExclusive)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
         endif()
     endforeach()
-    substring_from(result "${input}" "${fromExclusive}")
-    substring_to(result "${result}" "${toExclusive}")
-    set("${var}" "${result}" PARENT_SCOPE)
-endfunction()
 
-function(substring_between_replace var input fromExclusive toExclusive)
-    foreach(i var input fromExclusive toExclusive)
-        if("" STREQUAL "${${i}}")
-            message(FATAL_ERROR "Empty value not supported for '${i}'.")
-        endif()
-    endforeach()
-    substring_to(result1 "${input}" "${fromExclusive}")
-    substring_from(result2 "${input}" "${toExclusive}")
-    string(CONCAT result "${result1}" "${result2}")
-    set("${var}" "${result}" PARENT_SCOPE)
+    string(FIND "${input}" ${fromExclusive} fromExclusiveIndex)
+    string(FIND "${input}" ${toExclusive} toExclusiveIndex)
+    if("${fromExclusiveIndex}" GREATER_EQUAL "${toExclusiveIndex}")
+        message(FATAL_ERROR "fromExclusiveIndex: '${fromExclusiveIndex}' greater or equal than toExclusiveIndex: '${toExclusiveIndex}'.")
+    endif()
+
+    substring_to(part1 "${input}" "${fromExclusive}")
+    substring_from(part2 "${input}" "${toExclusive}")
+    string(CONCAT result "${part1}" "${value}" "${part2}")
+
+    substring_from(between "${input}" "${fromExclusive}")
+    substring_to(between "${between}" "${toExclusive}")
+
+    string(CONCAT replaced "${fromExclusive}" "${between}" "${toExclusive}")
+
+    set("${prefix}" "${result}" PARENT_SCOPE)
+    set("${prefix}_BETWEEN" "${between}" PARENT_SCOPE)
+    set("${prefix}_REPLACED" "${replaced}" PARENT_SCOPE)
 endfunction()
 
 function(find_file_in_parent prefix name path maxParentLevel)
@@ -89,7 +93,7 @@ function(find_file_in_parent prefix name path maxParentLevel)
             break()
         endif()
         cmake_path(GET func_path PARENT_PATH func_path)
-        file(GLOB func_files LIST_DIRECTORIES "TRUE" "${func_path}/*")
+        file(GLOB_RECURSE func_files LIST_DIRECTORIES "TRUE" "${func_path}/*")
         foreach(func_file IN LISTS func_files)
             get_filename_component(func_file_name "${func_file}" NAME)
             if("${func_file_name}" STREQUAL "${name}")
@@ -215,72 +219,102 @@ function(set_msvc_path var)
     set("${var}" "${result}" PARENT_SCOPE)
 endfunction()
 
-function(set_msvc_env prefix vswhereCommand compilerPath compilerVersion compilerArch targetArch)
+function(set_msvc_env prefix)
     foreach(i prefix)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
         endif()
     endforeach()
 
-    if("" STREQUAL "${targetArch}")
-        get_filename_component(compilerDir "${compilerPath}" DIRECTORY)
-        get_filename_component(compilerDirName "${compilerDir}" NAME)
-        string(TOLOWER "${compilerDirName}" compilerDirNameLower)
-        if("x86" STREQUAL "${compilerDirNameLower}")
-            set(targetArch "x86")
-        elseif("x64" STREQUAL "${compilerDirNameLower}")
-            set(targetArch "x64")
+    set(options)
+    set(oneValueKeywords
+        "COMMAND"
+        "VERSION"
+        "PROPERTY"
+        "HOST"
+        "TARGET"
+        "PATH"
+    )
+    set(multiValueKeywords
+        "PRODUCTS"
+    )
+    cmake_parse_arguments("set_msvc_env" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+
+    set(command "${set_msvc_env_COMMAND}")
+    set(version "${set_msvc_env_VERSION}")
+    set(property "${set_msvc_env_PROPERTY}")
+    set(host "${set_msvc_env_HOST}")
+    set(target "${set_msvc_env_TARGET}")
+    set(path "${set_msvc_env_PATH}")
+    set(products "${set_msvc_env_PRODUCTS}")
+
+    if(NOT "" STREQUAL "${path}")
+        if(NOT EXISTS "${path}")
+            message(FATAL_ERROR "Not exists: '${path}'")
+        elseif(IS_DIRECTORY "${path}")
+            message(FATAL_ERROR "Is directory: '${path}'")
         endif()
     endif()
 
-    if("" STREQUAL "${compilerArch}" AND NOT "" STREQUAL "${compilerDir}")
+    if("" STREQUAL "${target}")
+        get_filename_component(compilerDir "${path}" DIRECTORY)
+        get_filename_component(compilerDirName "${compilerDir}" NAME)
+        string(TOLOWER "${compilerDirName}" compilerDirNameLower)
+        if("x86" STREQUAL "${compilerDirNameLower}")
+            set(target "x86")
+        elseif("x64" STREQUAL "${compilerDirNameLower}")
+            set(target "x64")
+        endif()
+    endif()
+
+    if("" STREQUAL "${host}" AND NOT "" STREQUAL "${compilerDir}")
         get_filename_component(compilerDirParent "${compilerDir}" DIRECTORY)
         get_filename_component(compilerDirParentName "${compilerDirParent}" NAME)
         string(TOLOWER "${compilerDirParentName}" compilerDirParentNameLower)
         if("hostx86" STREQUAL "${compilerDirParentNameLower}")
-            set(compilerArch "x86")
+            set(host "x86")
         elseif("hostx64" STREQUAL "${compilerDirParentNameLower}")
-            set(compilerArch "x64")
+            set(host "x64")
         endif()
     endif()
 
-    if(NOT "x86" STREQUAL "${compilerArch}" AND NOT "x64" STREQUAL "${compilerArch}")
+    if(NOT "x86" STREQUAL "${host}" AND NOT "x64" STREQUAL "${host}")
         string(JOIN " " errorMessage
-            "Unsupported or not specified 'compilerArch': '${compilerArch}'."
+            "Unsupported or not specified 'host': '${host}'."
             "Supported values ['x86', 'x64']."
         )
         message(FATAL_ERROR "${errorMessage}")
     endif()
 
-    if(NOT "x86" STREQUAL "${targetArch}" AND NOT "x64" STREQUAL "${targetArch}")
+    if(NOT "x86" STREQUAL "${target}" AND NOT "x64" STREQUAL "${target}")
         string(JOIN " " errorMessage
-            "Unsupported or not specified 'targetArch': '${targetArch}'."
+            "Unsupported or not specified 'target': '${target}'."
             "Supported values [ 'x86', 'x64' ]."
         )
         message(FATAL_ERROR "${errorMessage}")
     endif()
 
-    if("${compilerArch}" STREQUAL "${targetArch}")
-        set(vcvarsallBatConf "${compilerArch}")
+    if("${host}" STREQUAL "${target}")
+        set(vcvarsallBatConf "${host}")
     else()
-        set(vcvarsallBatConf "${compilerArch}_${targetArch}")
+        set(vcvarsallBatConf "${host}_${target}")
     endif()
 
     set(vcvarsallBatName "vcvarsall.bat")
 
-    if("" STREQUAL "${compilerPath}")
-        set_msvc_path(msvcPath COMMAND "${vswhereCommand}" VERSION "${compilerVersion}")
+    if("" STREQUAL "${path}")
+        set_msvc_path(msvcPath COMMAND "${command}" VERSION "${version}" PROPERTY "${property}" PRODUCTS "${products}")
         find_file_in(vcvarsall "${vcvarsallBatName}" "${msvcPath}")
         if("" STREQUAL "${vcvarsall_DIR}")
             message(FATAL_ERROR "Not found '${vcvarsallBatName}' in '${msvcPath}'")
         endif()
-    elseif(NOT "" STREQUAL "${compilerPath}")
-        if(NOT EXISTS "${compilerPath}")
-            message(FATAL_ERROR "Not exists 'compilerPath': '${compilerPath}'")
+    elseif(NOT "" STREQUAL "${path}")
+        if(NOT EXISTS "${path}")
+            message(FATAL_ERROR "Not exists 'path': '${path}'")
         endif()
-        find_file_in_parent(vcvarsall "${vcvarsallBatName}" "${compilerPath}" "8")
+        find_file_in_parent(vcvarsall "${vcvarsallBatName}" "${path}" "9")
         if("" STREQUAL "${vcvarsall_DIR}")
-            message(FATAL_ERROR "Not found '${vcvarsallBatName}' in '8' parent dirs of '${compilerPath}'")
+            message(FATAL_ERROR "Not found '${vcvarsallBatName}' in '8' parent dirs of '${path}'")
         endif()
     endif()
 
@@ -311,22 +345,26 @@ function(set_msvc_env prefix vswhereCommand compilerPath compilerVersion compile
         COMMAND_ERROR_IS_FATAL ANY
     )
 
-    substring_between(msvcInclude "${msvcEnv}" "INCLUDE_START" "INCLUDE_STOP")
+    string_replace_between(msvcInclude "${msvcEnv}" "INCLUDE_START" "INCLUDE_STOP" "")
+    set(msvcInclude "${msvcInclude_BETWEEN}")
     string(STRIP "${msvcInclude}" msvcInclude)
     string(REGEX REPLACE "[\r]" "" msvcInclude "${msvcInclude}")
     string(REGEX REPLACE "[\n]" "" msvcInclude "${msvcInclude}")
 
-    substring_between(msvcLibPath "${msvcEnv}" "LIBPATH_START" "LIBPATH_STOP")
+    string_replace_between(msvcLibPath "${msvcEnv}" "LIBPATH_START" "LIBPATH_STOP" "")
+    set(msvcLibPath "${msvcLibPath_BETWEEN}")
     string(STRIP "${msvcLibPath}" msvcLibPath)
     string(REGEX REPLACE "[\r]" "" msvcLibPath "${msvcLibPath}")
     string(REGEX REPLACE "[\n]" "" msvcLibPath "${msvcLibPath}")
 
-    substring_between(msvcLib "${msvcEnv}" "LIB_START" "LIB_STOP")
+    string_replace_between(msvcLib "${msvcEnv}" "LIB_START" "LIB_STOP" "")
+    set(msvcLib "${msvcLib_BETWEEN}")
     string(STRIP "${msvcLib}" msvcLib)
     string(REGEX REPLACE "[\r]" "" msvcLib "${msvcLib}")
     string(REGEX REPLACE "[\n]" "" msvcLib "${msvcLib}")
 
-    substring_between(msvcClPath "${msvcEnv}" "CLPATH_START" "CLPATH_STOP")
+    string_replace_between(msvcClPath "${msvcEnv}" "CLPATH_START" "CLPATH_STOP" "")
+    set(msvcClPath "${msvcClPath_BETWEEN}")
     string(STRIP "${msvcClPath}" msvcClPath)
     string(REGEX REPLACE "[\r]" "" msvcClPath "${msvcClPath}")
     string(REGEX REPLACE "[\n]" ";" msvcClPath "${msvcClPath}")
@@ -334,7 +372,8 @@ function(set_msvc_env prefix vswhereCommand compilerPath compilerVersion compile
     get_filename_component(msvcClPath "${msvcClPath}" DIRECTORY)
     cmake_path(CONVERT "${msvcClPath}" TO_NATIVE_PATH_LIST msvcClPath NORMALIZE)
 
-    substring_between(msvcRcPath "${msvcEnv}" "RCPATH_START" "RCPATH_STOP")
+    string_replace_between(msvcRcPath "${msvcEnv}" "RCPATH_START" "RCPATH_STOP" "")
+    set(msvcRcPath "${msvcRcPath_BETWEEN}")
     string(STRIP "${msvcRcPath}" msvcRcPath)
     string(REGEX REPLACE "[\r]" "" msvcRcPath "${msvcRcPath}")
     string(REGEX REPLACE "[\n]" ";" msvcRcPath "${msvcRcPath}")
@@ -349,14 +388,48 @@ function(set_msvc_env prefix vswhereCommand compilerPath compilerVersion compile
     set("${prefix}_MSVC_RC_PATH" "${msvcRcPath}" PARENT_SCOPE)
 endfunction()
 
-function(set_msvc_toolchain_content var processor os vswhereCommand compilerPath compilerVersion compilerArch targetArch)
-    foreach(i var processor os)
+function(set_msvc_toolchain_content var)
+    foreach(i var)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
         endif()
     endforeach()
 
-    set_msvc_env("func" "${vswhereCommand}" "${compilerPath}" "${compilerVersion}" "${compilerArch}" "${targetArch}")
+    set(options)
+    set(oneValueKeywords
+        "COMMAND"
+        "VERSION"
+        "PROPERTY"
+        "HOST"
+        "TARGET"
+        "PATH"
+        "PROCESSOR"
+        "OS"
+    )
+    set(multiValueKeywords
+        "PRODUCTS"
+    )
+    cmake_parse_arguments("set_msvc_toolchain_content" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+
+    set(command "${set_msvc_toolchain_content_COMMAND}")
+    set(version "${set_msvc_toolchain_content_VERSION}")
+    set(property "${set_msvc_toolchain_content_PROPERTY}")
+    set(host "${set_msvc_toolchain_content_HOST}")
+    set(target "${set_msvc_toolchain_content_TARGET}")
+    set(path "${set_msvc_toolchain_content_PATH}")
+    set(processor "${set_msvc_toolchain_content_PROCESSOR}")
+    set(os "${set_msvc_toolchain_content_OS}")
+    set(products "${set_msvc_toolchain_content_PRODUCTS}")
+
+    set_msvc_env("func"
+        COMMAND "${command}"
+        VERSION "${version}"
+        PROPERTY "${property}"
+        HOST "${host}"
+        TARGET "${target}"
+        PATH "${path}"
+        PRODUCTS "${products}"
+    )
 
     cmake_path(CONVERT "${func_MSVC_INCLUDE}" TO_CMAKE_PATH_LIST func_include NORMALIZE)
     list(FILTER func_include EXCLUDE REGEX "^$")
@@ -823,75 +896,75 @@ function(execute_script args)
         "path"
         "file"
     )
-    cmake_parse_arguments("func" "${options}" "${oneValueKeywords}" "" "${args}")
+    cmake_parse_arguments("execute_script" "${options}" "${oneValueKeywords}" "" "${args}")
 
-    if("TRUE" STREQUAL "${func_toolchain}" OR "ON" STREQUAL "${func_toolchain}")
-        if(EXISTS "${func_file}")
+    if("TRUE" STREQUAL "${execute_script_toolchain}" OR "ON" STREQUAL "${execute_script_toolchain}")
+        if(EXISTS "${execute_script_file}")
             return()
         endif()
 
         set_msvc_toolchain_content_delegate(toolchain_content
-            processor "${func_processor}"
-            os "${func_os}"
-            compiler "${func_compiler}"
-            version "${func_version}"
-            host "${func_host}"
-            target "${func_target}"
-            path "${func_path}"
+            processor "${execute_script_processor}"
+            os "${execute_script_os}"
+            compiler "${execute_script_compiler}"
+            version "${execute_script_version}"
+            host "${execute_script_host}"
+            target "${execute_script_target}"
+            path "${execute_script_path}"
         )
 
         if(NOT "NOT_SUPPORTED" STREQUAL "${toolchain_content}")
-            file(WRITE "${func_file}" "${toolchain_content}")
+            file(WRITE "${execute_script_file}" "${toolchain_content}")
             return()
         endif()
 
         set_gnu_toolchain_content_delegate(toolchain_content
-            processor "${func_processor}"
-            os "${func_os}"
-            compiler "${func_compiler}"
-            version "${func_version}"
-            host "${func_host}"
-            target "${func_target}"
-            path "${func_path}"
+            processor "${execute_script_processor}"
+            os "${execute_script_os}"
+            compiler "${execute_script_compiler}"
+            version "${execute_script_version}"
+            host "${execute_script_host}"
+            target "${execute_script_target}"
+            path "${execute_script_path}"
         )
 
         if(NOT "NOT_SUPPORTED" STREQUAL "${toolchain_content}")
-            file(WRITE "${func_file}" "${toolchain_content}")
+            file(WRITE "${execute_script_file}" "${toolchain_content}")
             return()
         endif()
 
         set_clang_toolchain_content_delegate(toolchain_content
-            processor "${func_processor}"
-            os "${func_os}"
-            compiler "${func_compiler}"
-            version "${func_version}"
-            host "${func_host}"
-            target "${func_target}"
-            path "${func_path}"
+            processor "${execute_script_processor}"
+            os "${execute_script_os}"
+            compiler "${execute_script_compiler}"
+            version "${execute_script_version}"
+            host "${execute_script_host}"
+            target "${execute_script_target}"
+            path "${execute_script_path}"
         )
 
         if(NOT "NOT_SUPPORTED" STREQUAL "${toolchain_content}")
-            file(WRITE "${func_file}" "${toolchain_content}")
+            file(WRITE "${execute_script_file}" "${toolchain_content}")
             return()
         endif()
 
         string(JOIN "\n" error_message
             "Unsupported 'toolchain' set of arguments:"
-            "  processor: '${func_processor}'"
-            "  os: '${func_os}'"
-            "  compiler: '${func_compiler}'"
-            "  version: '${func_version}'"
-            "  host: '${func_host}'"
-            "  target: '${func_target}'"
-            "  path: '${func_path}'"
-            "  file: '${func_file}'"
+            "  processor: '${execute_script_processor}'"
+            "  os: '${execute_script_os}'"
+            "  compiler: '${execute_script_compiler}'"
+            "  version: '${execute_script_version}'"
+            "  host: '${execute_script_host}'"
+            "  target: '${execute_script_target}'"
+            "  path: '${execute_script_path}'"
+            "  file: '${execute_script_file}'"
         )
         message(FATAL_ERROR "${error_message}")
-    elseif("TRUE" STREQUAL "${func_help}" OR "ON" STREQUAL "${func_help}")
-        get_filename_component(func_current_file_name "${CMAKE_CURRENT_LIST_FILE}" NAME)
+    elseif("TRUE" STREQUAL "${execute_script_help}" OR "ON" STREQUAL "${execute_script_help}")
+        get_filename_component(execute_script_current_file_name "${CMAKE_CURRENT_LIST_FILE}" NAME)
 
-        string(JOIN " " func_usage_1 "cmake" "-P" "${func_current_file_name}" "help")
-        string(JOIN " " func_usage_2 "cmake" "-P" "${func_current_file_name}" "toolchain"
+        string(JOIN " " execute_script_usage_1 "cmake" "-P" "${execute_script_current_file_name}" "help")
+        string(JOIN " " execute_script_usage_2 "cmake" "-P" "${execute_script_current_file_name}" "toolchain"
             "processor" "'<value>'"
             "os" "'Windows'"
             "compiler" "'msvc'"
@@ -900,14 +973,14 @@ function(execute_script args)
             "target" "'x86|x64'"
             "file" "'toolchain.cmake|build/toolchain.cmake'"
         )
-        string(JOIN " " func_usage_3 "cmake" "-P" "${func_current_file_name}" "toolchain"
+        string(JOIN " " execute_script_usage_3 "cmake" "-P" "${execute_script_current_file_name}" "toolchain"
             "processor" "'<value>'"
             "os" "'Windows'"
             "compiler" "'msvc|gnu'"
             "path" "'path/to/cl.exe'"
             "file" "'toolchain.cmake|build/toolchain.cmake'"
         )
-        string(JOIN " " func_usage_4 "cmake" "-P" "${func_current_file_name}" "toolchain"
+        string(JOIN " " execute_script_usage_4 "cmake" "-P" "${execute_script_current_file_name}" "toolchain"
             "processor" "'<value>'"
             "os" "'Windows'"
             "compiler" "'clang'"
@@ -916,14 +989,14 @@ function(execute_script args)
             "file" "'toolchain.cmake|build/toolchain.cmake'"
         )
 
-        string(JOIN "\n" func_content
+        string(JOIN "\n" execute_script_content
             "Usage:"
-            "  ${func_usage_1}"
-            "  ${func_usage_2}"
-            "  ${func_usage_3}"
-            "  ${func_usage_4}"
+            "  ${execute_script_usage_1}"
+            "  ${execute_script_usage_2}"
+            "  ${execute_script_usage_3}"
+            "  ${execute_script_usage_4}"
         )
-        message("${func_content}")
+        message("${execute_script_content}")
     endif()
 endfunction()
 

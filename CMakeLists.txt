@@ -31,14 +31,8 @@ add_test(
 )
 
 add_test(
-    NAME "test_substring_between"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_substring_between.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_substring_between_replace"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_substring_between_replace.cmake"
+    NAME "test_string_replace_between"
+    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_string_replace_between.cmake"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
 )
 
@@ -63,6 +57,12 @@ add_test(
 add_test(
     NAME "test_set_msvc_env"
     COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_msvc_env.cmake"
+    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+)
+
+add_test(
+    NAME "test_set_msvc_toolchain_content"
+    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_msvc_toolchain_content.cmake"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
 )
 

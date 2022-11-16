@@ -27,9 +27,9 @@ function(test_2)
     message("... PASS")
 endfunction()
 
-function(execute_script)
+function(execute_test_script)
     test_1()
     test_2()
 endfunction()
 
-execute_script()
+execute_test_script()
