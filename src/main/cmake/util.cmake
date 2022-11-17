@@ -2,6 +2,8 @@ cmake_policy(PUSH)
 cmake_policy(SET CMP0054 NEW)
 cmake_policy(PUSH)
 cmake_policy(SET CMP0007 NEW)
+cmake_policy(PUSH)
+cmake_policy(SET CMP0012 NEW)
 
 function(set_if_not_defined var)
     foreach(i var)
@@ -47,31 +49,64 @@ function(substring_to var input toExclusive)
     set("${var}" "${result}" PARENT_SCOPE)
 endfunction()
 
-function(string_replace_between prefix input fromExclusive toExclusive value)
+function(string_replace_between prefix input fromExclusive toExclusive)
     foreach(i prefix input fromExclusive toExclusive)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
         endif()
     endforeach()
 
-    string(FIND "${input}" ${fromExclusive} fromExclusiveIndex)
-    string(FIND "${input}" ${toExclusive} toExclusiveIndex)
-    if("${fromExclusiveIndex}" GREATER_EQUAL "${toExclusiveIndex}")
-        message(FATAL_ERROR "fromExclusiveIndex: '${fromExclusiveIndex}' greater or equal than toExclusiveIndex: '${toExclusiveIndex}'.")
+    set(options
+        "RESULT_ONLY"
+        "REPLACED_ONLY"
+        "BETWEEN_ONLY"
+    )
+    set(oneValueKeywords
+        "WITH"
+    )
+    set(multiValueKeywords)
+    cmake_parse_arguments("string_replace_between" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+
+    if("" STREQUAL "${string_replace_between_WITH}")
+        set(value "")
+    else()
+        set(value "${string_replace_between_WITH}")
     endif()
 
-    substring_to(part1 "${input}" "${fromExclusive}")
-    substring_from(part2 "${input}" "${toExclusive}")
-    string(CONCAT result "${part1}" "${value}" "${part2}")
+    if("${string_replace_between_REPLACED_ONLY}")
+        substring_from(between "${input}" "${fromExclusive}")
+        substring_to(between "${between}" "${toExclusive}")
 
-    substring_from(between "${input}" "${fromExclusive}")
-    substring_to(between "${between}" "${toExclusive}")
+        string(CONCAT replaced "${fromExclusive}" "${between}" "${toExclusive}")
 
-    string(CONCAT replaced "${fromExclusive}" "${between}" "${toExclusive}")
+        set("${prefix}" "${replaced}" PARENT_SCOPE)
+    elseif("${string_replace_between_BETWEEN_ONLY}")
+        substring_from(between "${input}" "${fromExclusive}")
+        substring_to(between "${between}" "${toExclusive}")
 
-    set("${prefix}" "${result}" PARENT_SCOPE)
-    set("${prefix}_BETWEEN" "${between}" PARENT_SCOPE)
-    set("${prefix}_REPLACED" "${replaced}" PARENT_SCOPE)
+        set("${prefix}" "${between}" PARENT_SCOPE)
+    else()
+        if("${string_replace_between_RESULT_ONLY}")
+            substring_to(part1 "${input}" "${fromExclusive}")
+            substring_from(part2 "${input}" "${toExclusive}")
+            string(CONCAT result "${part1}" "${value}" "${part2}")
+
+            set("${prefix}" "${result}" PARENT_SCOPE)
+        else()
+            substring_to(part1 "${input}" "${fromExclusive}")
+            substring_from(part2 "${input}" "${toExclusive}")
+            string(CONCAT result "${part1}" "${value}" "${part2}")
+
+            substring_from(between "${input}" "${fromExclusive}")
+            substring_to(between "${between}" "${toExclusive}")
+
+            string(CONCAT replaced "${fromExclusive}" "${between}" "${toExclusive}")
+
+            set("${prefix}" "${result}" PARENT_SCOPE)
+            set("${prefix}_BETWEEN" "${between}" PARENT_SCOPE)
+            set("${prefix}_REPLACED" "${replaced}" PARENT_SCOPE)
+        endif()
+    endif()
 endfunction()
 
 function(find_file_in_parent prefix name path maxParentLevel)
@@ -1006,5 +1041,6 @@ foreach(i RANGE "${MAX}")
 endforeach()
 execute_script("${ARGS}")
 
+cmake_policy(POP)
 cmake_policy(POP)
 cmake_policy(POP)
