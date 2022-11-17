@@ -539,7 +539,7 @@ function(set_msvc_toolchain_content var)
     set("${var}" "${content}" PARENT_SCOPE)
 endfunction()
 
-function(set_gnu_toolchain_content var #[[processor os path]])
+function(set_gnu_toolchain_content var)
     foreach(i var)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -596,12 +596,27 @@ function(set_gnu_toolchain_content var #[[processor os path]])
     set("${var}" "${content}" PARENT_SCOPE)
 endfunction()
 
-function(set_clang_toolchain_content var processor os path target)
-    foreach(i var processor os path)
+function(set_clang_toolchain_content var)
+    foreach(i var)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
         endif()
     endforeach()
+
+    set(options)
+    set(oneValueKeywords
+        "PATH"
+        "PROCESSOR"
+        "OS"
+        "TARGET"
+    )
+    set(multiValueKeywords)
+    cmake_parse_arguments("set_clang_toolchain_content" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+
+    set(path "${set_clang_toolchain_content_PATH}")
+    set(processor "${set_clang_toolchain_content_PROCESSOR}")
+    set(os "${set_clang_toolchain_content_OS}")
+    set(target "${set_clang_toolchain_content_TARGET}")
 
     cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
 

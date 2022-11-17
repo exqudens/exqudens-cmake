@@ -72,6 +72,12 @@ add_test(
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
 )
 
+add_test(
+    NAME "test_set_clang_toolchain_content"
+    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_clang_toolchain_content.cmake"
+    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+)
+
 add_custom_target("cmake-test"
     COMMAND "${CMAKE_CTEST_COMMAND}" --preset "${PRESET_NAME}"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
