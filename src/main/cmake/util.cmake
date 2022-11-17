@@ -539,19 +539,32 @@ function(set_msvc_toolchain_content var)
     set("${var}" "${content}" PARENT_SCOPE)
 endfunction()
 
-function(set_gnu_toolchain_content var processor os path)
-    foreach(i var processor os path)
+function(set_gnu_toolchain_content var #[[processor os path]])
+    foreach(i var)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
         endif()
     endforeach()
 
+    set(options)
+    set(oneValueKeywords
+        "PATH"
+        "PROCESSOR"
+        "OS"
+    )
+    set(multiValueKeywords)
+    cmake_parse_arguments("set_gnu_toolchain_content" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+
+    set(path "${set_gnu_toolchain_content_PATH}")
+    set(processor "${set_gnu_toolchain_content_PROCESSOR}")
+    set(os "${set_gnu_toolchain_content_OS}")
+
     cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
 
     get_filename_component(compilerDir "${path}" DIRECTORY)
 
-    cmake_path(CONVERT "$ENV{PATH}" TO_CMAKE_PATH_LIST envPath NORMALIZE)
-    list(PREPEND envPath "${compilerDir}")
+    set(envPath "${compilerDir}")
+    list(APPEND envPath "\$ENV{PATH}")
     list(FILTER envPath EXCLUDE REGEX "^$")
     list(REMOVE_DUPLICATES envPath)
     cmake_path(CONVERT "${envPath}" TO_NATIVE_PATH_LIST envPathNative NORMALIZE)
@@ -564,11 +577,13 @@ function(set_gnu_toolchain_content var processor os path)
         "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
         "set(CMAKE_SYSTEM_NAME \"${os}\")"
         ""
-        "set(CMAKE_C_COMPILER   \"${compilerDir}/gcc.exe\")"
-        "set(CMAKE_CXX_COMPILER \"${compilerDir}/g++.exe\")"
-        "set(CMAKE_AR           \"${compilerDir}/ar.exe\")"
-        "set(CMAKE_LINKER       \"${compilerDir}/ld.exe\")"
-        "set(CMAKE_RC_COMPILER  \"${compilerDir}/windres.exe\")"
+        "set(COMPILER_PATH \"${compilerDir}\")"
+        ""
+        "set(CMAKE_C_COMPILER   \"\${COMPILER_PATH}/gcc.exe\")"
+        "set(CMAKE_CXX_COMPILER \"\${COMPILER_PATH}/g++.exe\")"
+        "set(CMAKE_AR           \"\${COMPILER_PATH}/ar.exe\")"
+        "set(CMAKE_LINKER       \"\${COMPILER_PATH}/ld.exe\")"
+        "set(CMAKE_RC_COMPILER  \"\${COMPILER_PATH}/windres.exe\")"
         ""
         "set(ENV{PATH} \"${envPathNative}\")"
         ""
@@ -592,8 +607,8 @@ function(set_clang_toolchain_content var processor os path target)
 
     get_filename_component(compilerDir "${path}" DIRECTORY)
 
-    cmake_path(CONVERT "$ENV{PATH}" TO_CMAKE_PATH_LIST envPath NORMALIZE)
-    list(PREPEND envPath "${compilerDir}")
+    set(envPath "${compilerDir}")
+    list(APPEND envPath "\$ENV{PATH}")
     list(FILTER envPath EXCLUDE REGEX "^$")
     list(REMOVE_DUPLICATES envPath)
     cmake_path(CONVERT "${envPath}" TO_NATIVE_PATH_LIST envPathNative NORMALIZE)
@@ -606,9 +621,11 @@ function(set_clang_toolchain_content var processor os path target)
         "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
         "set(CMAKE_SYSTEM_NAME \"${os}\")"
         ""
-        "set(CMAKE_C_COMPILER          \"${compilerDir}/clang.exe\")"
+        "set(COMPILER_PATH \"${compilerDir}\")"
+        ""
+        "set(CMAKE_C_COMPILER          \"\${COMPILER_PATH}/clang.exe\")"
         "set(CMAKE_C_COMPILER_TARGET   \"${target}\")"
-        "set(CMAKE_CXX_COMPILER        \"${compilerDir}/clang++.exe\")"
+        "set(CMAKE_CXX_COMPILER        \"\${COMPILER_PATH}/clang++.exe\")"
         "set(CMAKE_CXX_COMPILER_TARGET \"${target}\")"
         ""
         "set(ENV{PATH} \"${envPathNative}\")"
