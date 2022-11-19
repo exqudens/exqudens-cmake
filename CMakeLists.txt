@@ -84,6 +84,42 @@ add_test(
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
 )
 
+add_test(
+    NAME "test_set_conan_architecture"
+    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_conan_architecture.cmake"
+    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+)
+
+add_test(
+    NAME "test_set_conan_compiler"
+    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_conan_compiler.cmake"
+    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+)
+
+add_test(
+    NAME "test_set_conan_compiler_version"
+    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_conan_compiler_version.cmake"
+    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+)
+
+add_test(
+    NAME "test_set_python_boolean"
+    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_python_boolean.cmake"
+    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+)
+
+add_test(
+    NAME "test_set_conan_settings"
+    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_conan_settings.cmake"
+    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+)
+
+add_test(
+    NAME "test_set_conan_options"
+    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_conan_options.cmake"
+    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+)
+
 add_custom_target("cmake-test"
     COMMAND "${CMAKE_CTEST_COMMAND}" --preset "${PRESET_NAME}"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"

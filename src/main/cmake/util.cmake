@@ -4,6 +4,8 @@ cmake_policy(PUSH)
 cmake_policy(SET CMP0007 NEW)
 cmake_policy(PUSH)
 cmake_policy(SET CMP0012 NEW)
+cmake_policy(PUSH)
+cmake_policy(SET CMP0057 NEW)
 
 function(set_if_not_defined var)
     foreach(i var)
@@ -655,9 +657,11 @@ function(set_clang_toolchain_content var)
 endfunction()
 
 function(set_conan_msvc_compiler_runtime var cmakeMsvcRuntimeLibrary)
-    if("" STREQUAL "${var}")
-        message(FATAL_ERROR "Empty value not supported for 'var'.")
-    endif()
+    foreach(i var cmakeMsvcRuntimeLibrary)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
 
     if("${cmakeMsvcRuntimeLibrary}" STREQUAL "MultiThreaded")
         set(value "MT")
@@ -674,118 +678,80 @@ function(set_conan_msvc_compiler_runtime var cmakeMsvcRuntimeLibrary)
     set("${var}" "${value}" PARENT_SCOPE)
 endfunction()
 
-function(
-    set_conan_settings
-    var
-    cmakeSystemName
-    cxxTargetArch
-    cmakeCxxCompilerId
-    cmakeCxxCompilerVersion
-    cmakeMsvcRuntimeLibrary
-    cmakeCxxStandard
-    cmakeBuildType
-)
-    if("" STREQUAL "${var}")
-        message(FATAL_ERROR "Empty value not supported for 'var'.")
-    endif()
-
-    # os
-    if("Windows" STREQUAL "${cmakeSystemName}")
-        set(value "--settings" "os=${cmakeSystemName}")
-
-        # arch
-        if("x64" STREQUAL "${cxxTargetArch}" OR "AMD64" STREQUAL "${cxxTargetArch}" OR "IA64" STREQUAL "${cxxTargetArch}")
-            set(value "${value}" "--settings" "arch=x86_64")
-        elseif("x86" STREQUAL "${cxxTargetArch}")
-            set(value "${value}" "--settings" "arch=x86")
-        else()
-            message(FATAL_ERROR "Unsupported 'cxxTargetArch': '${cxxTargetArch}'")
+function(set_conan_architecture var cmakeSystemProcessor)
+    foreach(i var cmakeSystemProcessor)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
         endif()
+    endforeach()
+
+    if("x64" STREQUAL "${cmakeSystemProcessor}" OR "AMD64" STREQUAL "${cmakeSystemProcessor}" OR "IA64" STREQUAL "${cmakeSystemProcessor}")
+        set(value "x86_64")
+    elseif("x86" STREQUAL "${cmakeSystemProcessor}")
+        set(value "x86")
     else()
-        message(FATAL_ERROR "Unsupported 'cmakeSystemName': '${cmakeSystemName}'")
+        message(FATAL_ERROR "Unsupported 'cmakeSystemProcessor': '${cmakeSystemProcessor}'")
     endif()
 
-    # compiler
+    set("${var}" "${value}" PARENT_SCOPE)
+endfunction()
+
+function(set_conan_compiler var cmakeCxxCompilerId)
+    foreach(i var cmakeCxxCompilerId)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
+
     if("MSVC" STREQUAL "${cmakeCxxCompilerId}")
-        set(value "${value}" "--settings" "compiler=Visual Studio")
-
-        # compiler.version
-        if("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "19.30" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "19.40")
-            set(value "${value}" "--settings" "compiler.version=17")
-        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "19.20" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "19.30")
-            set(value "${value}" "--settings" "compiler.version=16")
-        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "19.10" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "19.20")
-            set(value "${value}" "--settings" "compiler.version=15")
-        else()
-            message(FATAL_ERROR "Unsupported 'cmakeCxxCompilerVersion': '${cmakeCxxCompilerVersion}'")
-        endif()
-
-        # compiler.runtime
-        set_conan_msvc_compiler_runtime(conanCompilerRuntime "${cmakeMsvcRuntimeLibrary}")
-        set(value "${value}" "--settings" "compiler.runtime=${conanCompilerRuntime}")
+        set(value "Visual Studio")
     elseif("GNU" STREQUAL "${cmakeCxxCompilerId}")
-        set(value "${value}" "--settings" "compiler=gcc")
-
-        # compiler.version
-        if("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "13" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "14")
-            set(value "${value}" "--settings" "compiler.version=13")
-        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "12" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "13")
-            set(value "${value}" "--settings" "compiler.version=12")
-        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "11" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "12")
-            set(value "${value}" "--settings" "compiler.version=11")
-        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "10" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "11")
-            set(value "${value}" "--settings" "compiler.version=10")
-        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "9" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "10")
-            set(value "${value}" "--settings" "compiler.version=9")
-        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "8" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "9")
-            set(value "${value}" "--settings" "compiler.version=8")
-        else()
-            message(FATAL_ERROR "Unsupported 'cmakeCxxCompilerVersion': '${cmakeCxxCompilerVersion}'")
-        endif()
-
-        # compiler.libcxx
-        if("${cmakeCxxStandard}" VERSION_GREATER_EQUAL "11")
-            set(value "${value}" "--settings" "compiler.libcxx=libstdc++11")
-        else()
-            set(value "${value}" "--settings" "compiler.libcxx=libstdc++")
-        endif()
+        set(value "gcc")
     elseif("Clang" STREQUAL "${cmakeCxxCompilerId}")
-        set(value "${value}" "--settings" "compiler=clang")
-
-        # compiler.version
-        if("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "13" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "14")
-            set(value "${value}" "--settings" "compiler.version=13")
-        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "12" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "13")
-            set(value "${value}" "--settings" "compiler.version=12")
-        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "11" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "12")
-            set(value "${value}" "--settings" "compiler.version=11")
-        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "10" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "11")
-            set(value "${value}" "--settings" "compiler.version=10")
-        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "9" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "10")
-            set(value "${value}" "--settings" "compiler.version=9")
-        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "8" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "9")
-            set(value "${value}" "--settings" "compiler.version=8")
-        else()
-            message(FATAL_ERROR "Unsupported 'cmakeCxxCompilerVersion': '${cmakeCxxCompilerVersion}'")
-        endif()
+        set(value "clang")
     else()
         message(FATAL_ERROR "Unsupported 'cmakeCxxCompilerId': '${cmakeCxxCompilerId}'")
     endif()
 
-    # build_type
-    if("MinSizeRel" STREQUAL "${cmakeBuildType}")
-        set(value "${value}" "--settings" "build_type=${cmakeBuildType}")
-    elseif("Release" STREQUAL "${cmakeBuildType}")
-        set(value "${value}" "--settings" "build_type=${cmakeBuildType}")
-    elseif("RelWithDebInfo" STREQUAL "${cmakeBuildType}")
-        set(value "${value}" "--settings" "build_type=${cmakeBuildType}")
-    elseif("Debug" STREQUAL "${cmakeBuildType}")
-        set(value "${value}" "--settings" "build_type=${cmakeBuildType}")
+    set("${var}" "${value}" PARENT_SCOPE)
+endfunction()
+
+function(set_conan_compiler_version var cmakeCxxCompilerId cmakeCxxCompilerVersion)
+    foreach(i var cmakeCxxCompilerId cmakeCxxCompilerVersion)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
+
+    if("MSVC" STREQUAL "${cmakeCxxCompilerId}")
+        if("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "19.30" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "19.40")
+            set(value "17")
+        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "19.20" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "19.30")
+            set(value "16")
+        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "19.10" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "19.20")
+            set(value "15")
+        else()
+            message(FATAL_ERROR "Unsupported 'cmakeCxxCompilerVersion': '${cmakeCxxCompilerVersion}'")
+        endif()
+    elseif("GNU" STREQUAL "${cmakeCxxCompilerId}")
+        set(value "${cmakeCxxCompilerVersion}")
+    elseif("Clang" STREQUAL "${cmakeCxxCompilerId}")
+        set(value "${cmakeCxxCompilerVersion}")
     else()
-        message(FATAL_ERROR "Unsupported 'cmakeBuildType': '${cmakeBuildType}'")
+        message(FATAL_ERROR "Unsupported 'cmakeCxxCompilerId': '${cmakeCxxCompilerId}'")
     endif()
 
-    # additional
+    set("${var}" "${value}" PARENT_SCOPE)
+endfunction()
+
+function(set_conan_settings var)
+    foreach(i var)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
+
+    # all settings
     if(NOT "" STREQUAL "${ARGN}")
         foreach(arg ${ARGN})
             list(APPEND value "--settings" "${arg}")
@@ -795,10 +761,28 @@ function(
     set("${var}" "${value}" PARENT_SCOPE)
 endfunction()
 
-function(set_conan_options var)
-    if("" STREQUAL "${var}")
-        message(FATAL_ERROR "Empty value not supported for 'var'.")
+function(set_python_boolean var cmakeBoolean)
+    foreach(i var)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
+
+    if("${cmakeBoolean}")
+        set(value "True")
+    else()
+        set(value "False")
     endif()
+
+    set("${var}" "${value}" PARENT_SCOPE)
+endfunction()
+
+function(set_conan_options var)
+    foreach(i var)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
 
     # all options
     if(NOT "" STREQUAL "${ARGN}")
@@ -812,24 +796,12 @@ function(set_conan_options var)
     set("${var}" "${value}" PARENT_SCOPE)
 endfunction()
 
-function(set_python_boolean var cmakeBoolean)
-    if("" STREQUAL "${var}")
-        message(FATAL_ERROR "Empty value not supported for 'var'.")
-    endif()
-
-    if("${cmakeBoolean}")
-        set(value "True")
-    else()
-        set(value "False")
-    endif()
-
-    set("${var}" "${value}" PARENT_SCOPE)
-endfunction()
-
 function(set_not_found_package_names var)
-    if("" STREQUAL "${var}")
-        message(FATAL_ERROR "Empty value not supported for 'var'.")
-    endif()
+    foreach(i var)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
 
     if(NOT "" STREQUAL "${ARGN}")
         foreach(arg ${ARGN})
@@ -842,11 +814,13 @@ function(set_not_found_package_names var)
     set("${var}" "${value}" PARENT_SCOPE)
 endfunction()
 
-function(
-    set_target_names
-    var
-    dir
-)
+function(set_target_names var dir)
+    foreach(i var dir)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
+
     get_property(subdirectories DIRECTORY "${dir}" PROPERTY SUBDIRECTORIES)
     foreach(subdir ${subdirectories})
         set_target_names(subTargets "${subdir}")
@@ -1068,6 +1042,7 @@ foreach(i RANGE "${MAX}")
 endforeach()
 execute_script("${ARGS}")
 
+cmake_policy(POP)
 cmake_policy(POP)
 cmake_policy(POP)
 cmake_policy(POP)
