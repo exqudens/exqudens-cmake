@@ -1030,7 +1030,7 @@ function(execute_script args)
             "processor" "'<value>'"
             "os" "'Windows'"
             "compiler" "'msvc'"
-            "version" "'16(i.e. Visual Studio 2019)|17(i.e. Visual Studio 2022)'"
+            "version" "'16 (i.e. Visual Studio 2019)|17 (i.e. Visual Studio 2022)'"
             "host" "'x86|x64'"
             "target" "'x86|x64'"
             "file" "'toolchain.cmake|build/toolchain.cmake'"
@@ -1039,7 +1039,7 @@ function(execute_script args)
             "processor" "'<value>'"
             "os" "'Windows'"
             "compiler" "'msvc|gnu'"
-            "path" "'path/to/cl.exe'"
+            "path" "'path/to/cl.exe|path/to/gcc.exe'"
             "file" "'toolchain.cmake|build/toolchain.cmake'"
         )
         string(JOIN " " execute_script_usage_4 "cmake" "-P" "${execute_script_current_file_name}" "toolchain"
