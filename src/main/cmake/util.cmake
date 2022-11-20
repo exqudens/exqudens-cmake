@@ -844,80 +844,7 @@ function(set_target_names var dir)
     set(${var} "${targets}" PARENT_SCOPE)
 endfunction()
 
-function(set_msvc_toolchain_content_delegate var)
-    set(oneValueKeywords
-        "processor"
-        "os"
-        "compiler"
-        "version"
-        "host"
-        "target"
-        "path"
-    )
-    cmake_parse_arguments(PARSE_ARGV 1 "func" "${options}" "${oneValueKeywords}" "")
-    if(
-        "Windows" STREQUAL "${func_os}"
-        AND "msvc" STREQUAL "${func_compiler}"
-        AND (NOT "" STREQUAL "${func_path}" AND EXISTS "${func_path}")
-    )
-        set_msvc_toolchain_content(toolchain_content "${func_processor}" "${func_os}" "" "${func_path}" "" "" "")
-        set("${var}" "${toolchain_content}" PARENT_SCOPE)
-    elseif(
-        "Windows" STREQUAL "${func_os}"
-        AND "msvc" STREQUAL "${func_compiler}"
-        AND ("x86" STREQUAL "${func_host}" OR "x64" STREQUAL "${func_host}")
-        AND ("x86" STREQUAL "${func_target}" OR "x64" STREQUAL "${func_target}")
-    )
-        set_msvc_toolchain_content(toolchain_content "${func_processor}" "${func_os}" "" "" "${func_version}" "${func_host}" "${func_target}")
-        set("${var}" "${toolchain_content}" PARENT_SCOPE)
-    else()
-        set("${var}" "NOT_SUPPORTED" PARENT_SCOPE)
-    endif()
-endfunction()
-
-function(set_gnu_toolchain_content_delegate var)
-    set(oneValueKeywords
-        "processor"
-        "os"
-        "compiler"
-        "path"
-    )
-    cmake_parse_arguments(PARSE_ARGV 1 "func" "${options}" "${oneValueKeywords}" "")
-    if(
-        "Windows" STREQUAL "${func_os}"
-        AND "gnu" STREQUAL "${func_compiler}"
-        AND (NOT "" STREQUAL "${func_path}" AND EXISTS "${func_path}")
-    )
-        set_gnu_toolchain_content(toolchain_content "${func_processor}" "${func_os}" "${func_path}")
-        set("${var}" "${toolchain_content}" PARENT_SCOPE)
-    else()
-        set("${var}" "NOT_SUPPORTED" PARENT_SCOPE)
-    endif()
-endfunction()
-
-function(set_clang_toolchain_content_delegate var)
-    set(oneValueKeywords
-        "processor"
-        "os"
-        "compiler"
-        "path"
-        "target"
-    )
-    cmake_parse_arguments(PARSE_ARGV 1 "func" "${options}" "${oneValueKeywords}" "")
-    if(
-        "Windows" STREQUAL "${func_os}"
-        AND "clang" STREQUAL "${func_compiler}"
-        AND (NOT "" STREQUAL "${func_path}" AND EXISTS "${func_path}")
-        AND NOT "" STREQUAL "${target}"
-    )
-        set_clang_toolchain_content(toolchain_content "${func_processor}" "${func_os}" "${func_path}" ${func_target})
-        set("${var}" "${toolchain_content}" PARENT_SCOPE)
-    else()
-        set("${var}" "NOT_SUPPORTED" PARENT_SCOPE)
-    endif()
-endfunction()
-
-function(execute_script args)
+function(execute_script)
     set(options
         "help"
         "toolchain"
@@ -932,71 +859,68 @@ function(execute_script args)
         "path"
         "file"
     )
-    cmake_parse_arguments("execute_script" "${options}" "${oneValueKeywords}" "" "${args}")
+    set(multiValueKeywords
+        "products"
+    )
+    cmake_parse_arguments("execute_script" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
 
-    if("TRUE" STREQUAL "${execute_script_toolchain}" OR "ON" STREQUAL "${execute_script_toolchain}")
-        if(EXISTS "${execute_script_file}")
-            return()
-        endif()
-
-        set_msvc_toolchain_content_delegate(toolchain_content
-            processor "${execute_script_processor}"
-            os "${execute_script_os}"
-            compiler "${execute_script_compiler}"
-            version "${execute_script_version}"
-            host "${execute_script_host}"
-            target "${execute_script_target}"
-            path "${execute_script_path}"
+    if(
+        "${execute_script_toolchain}"
+        AND "${execute_script_compiler}" STREQUAL "msvc"
+        AND (NOT "${execute_script_path}" STREQUAL "" AND EXISTS "${execute_script_path}" AND NOT IS_DIRECTORY "${execute_script_path}")
+    )
+        set_msvc_toolchain_content(toolchain_content
+            PROCESSOR "${execute_script_processor}"
+            OS "${execute_script_os}"
+            PATH "${execute_script_path}"
         )
-
-        if(NOT "NOT_SUPPORTED" STREQUAL "${toolchain_content}")
-            file(WRITE "${execute_script_file}" "${toolchain_content}")
-            return()
-        endif()
-
-        set_gnu_toolchain_content_delegate(toolchain_content
-            processor "${execute_script_processor}"
-            os "${execute_script_os}"
-            compiler "${execute_script_compiler}"
-            version "${execute_script_version}"
-            host "${execute_script_host}"
-            target "${execute_script_target}"
-            path "${execute_script_path}"
+        file(WRITE "${execute_script_file}" "${toolchain_content}")
+        return()
+    elseif(
+        "${execute_script_toolchain}"
+        AND "${execute_script_compiler}" STREQUAL "msvc"
+        AND "${execute_script_path}" STREQUAL ""
+        AND NOT "${execute_script_version}" STREQUAL ""
+        AND NOT "${execute_script_host}" STREQUAL ""
+        AND NOT "${execute_script_target}" STREQUAL ""
+    )
+        set_msvc_toolchain_content(toolchain_content
+            PROCESSOR "${execute_script_processor}"
+            OS "${execute_script_os}"
+            VERSION "${execute_script_version}"
+            HOST "${execute_script_host}"
+            TARGET "${execute_script_target}"
+            PRODUCTS "${execute_script_products}"
         )
-
-        if(NOT "NOT_SUPPORTED" STREQUAL "${toolchain_content}")
-            file(WRITE "${execute_script_file}" "${toolchain_content}")
-            return()
-        endif()
-
-        set_clang_toolchain_content_delegate(toolchain_content
-            processor "${execute_script_processor}"
-            os "${execute_script_os}"
-            compiler "${execute_script_compiler}"
-            version "${execute_script_version}"
-            host "${execute_script_host}"
-            target "${execute_script_target}"
-            path "${execute_script_path}"
+        file(WRITE "${execute_script_file}" "${toolchain_content}")
+        return()
+    elseif(
+        "${execute_script_toolchain}"
+        AND "${execute_script_compiler}" STREQUAL "gnu"
+        AND (NOT "${execute_script_path}" STREQUAL "" AND EXISTS "${execute_script_path}" AND NOT IS_DIRECTORY "${execute_script_path}")
+    )
+        set_gnu_toolchain_content(toolchain_content
+            PROCESSOR "${execute_script_processor}"
+            OS "${execute_script_os}"
+            PATH "${execute_script_path}"
         )
-
-        if(NOT "NOT_SUPPORTED" STREQUAL "${toolchain_content}")
-            file(WRITE "${execute_script_file}" "${toolchain_content}")
-            return()
-        endif()
-
-        string(JOIN "\n" error_message
-            "Unsupported 'toolchain' set of arguments:"
-            "  processor: '${execute_script_processor}'"
-            "  os: '${execute_script_os}'"
-            "  compiler: '${execute_script_compiler}'"
-            "  version: '${execute_script_version}'"
-            "  host: '${execute_script_host}'"
-            "  target: '${execute_script_target}'"
-            "  path: '${execute_script_path}'"
-            "  file: '${execute_script_file}'"
+        file(WRITE "${execute_script_file}" "${toolchain_content}")
+        return()
+    elseif(
+        "${execute_script_toolchain}"
+        AND "${execute_script_compiler}" STREQUAL "clang"
+        AND (NOT "${execute_script_path}" STREQUAL "" AND EXISTS "${execute_script_path}" AND NOT IS_DIRECTORY "${execute_script_path}")
+        AND NOT "${execute_script_target}" STREQUAL ""
+    )
+        set_clang_toolchain_content(toolchain_content
+            PROCESSOR "${execute_script_processor}"
+            OS "${execute_script_os}"
+            PATH "${execute_script_path}"
+            TARGET "${execute_script_target}"
         )
-        message(FATAL_ERROR "${error_message}")
-    elseif("TRUE" STREQUAL "${execute_script_help}" OR "ON" STREQUAL "${execute_script_help}")
+        file(WRITE "${execute_script_file}" "${toolchain_content}")
+        return()
+    elseif("${execute_script_help}")
         get_filename_component(execute_script_current_file_name "${CMAKE_CURRENT_LIST_FILE}" NAME)
 
         string(JOIN " " execute_script_usage_1 "cmake" "-P" "${execute_script_current_file_name}" "help")
@@ -1007,6 +931,16 @@ function(execute_script args)
             "version" "'16 (i.e. Visual Studio 2019)|17 (i.e. Visual Studio 2022)'"
             "host" "'x86|x64'"
             "target" "'x86|x64'"
+            "["
+                "products"
+                    "Microsoft.VisualStudio.Product.Enterprise"
+                    "|"
+                    "Microsoft.VisualStudio.Product.Professional"
+                    "|"
+                    "Microsoft.VisualStudio.Product.Community"
+                    "|"
+                    "Microsoft.VisualStudio.Product.BuildTools"
+            "]"
             "file" "'toolchain.cmake|build/toolchain.cmake'"
         )
         string(JOIN " " execute_script_usage_3 "cmake" "-P" "${execute_script_current_file_name}" "toolchain"
