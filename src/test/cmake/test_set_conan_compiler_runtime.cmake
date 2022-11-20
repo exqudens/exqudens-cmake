@@ -4,28 +4,28 @@ function(test_1)
     message("${CMAKE_CURRENT_FUNCTION} ...")
 
     set(expected "MT")
-    set_conan_msvc_compiler_runtime(actual "MultiThreaded")
+    set_conan_compiler_runtime(actual "MultiThreaded")
 
     if(NOT "${expected}" STREQUAL "${actual}")
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
     endif()
 
     set(expected "MD")
-    set_conan_msvc_compiler_runtime(actual "MultiThreadedDLL")
+    set_conan_compiler_runtime(actual "MultiThreadedDLL")
 
     if(NOT "${expected}" STREQUAL "${actual}")
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
     endif()
 
     set(expected "MTd")
-    set_conan_msvc_compiler_runtime(actual "MultiThreadedDebug")
+    set_conan_compiler_runtime(actual "MultiThreadedDebug")
 
     if(NOT "${expected}" STREQUAL "${actual}")
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
     endif()
 
     set(expected "MDd")
-    set_conan_msvc_compiler_runtime(actual "MultiThreadedDebugDLL")
+    set_conan_compiler_runtime(actual "MultiThreadedDebugDLL")
 
     if(NOT "${expected}" STREQUAL "${actual}")
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")

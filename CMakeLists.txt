@@ -79,12 +79,6 @@ add_test(
 )
 
 add_test(
-    NAME "test_set_conan_msvc_compiler_runtime"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_conan_msvc_compiler_runtime.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
     NAME "test_set_conan_architecture"
     COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_conan_architecture.cmake"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
@@ -99,6 +93,12 @@ add_test(
 add_test(
     NAME "test_set_conan_compiler_version"
     COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_conan_compiler_version.cmake"
+    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+)
+
+add_test(
+    NAME "test_set_conan_compiler_runtime"
+    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_conan_compiler_runtime.cmake"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
 )
 
