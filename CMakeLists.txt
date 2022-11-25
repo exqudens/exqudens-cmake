@@ -127,6 +127,12 @@ add_test(
 )
 
 add_test(
+    NAME "test_generate_interface_only_files"
+    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_generate_interface_only_files.cmake"
+    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+)
+
+add_test(
     NAME "test_execute_script"
     COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_execute_script.cmake"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
