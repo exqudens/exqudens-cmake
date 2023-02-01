@@ -69,6 +69,10 @@ function(string_replace_between prefix input fromExclusive toExclusive)
     set(multiValueKeywords)
     cmake_parse_arguments("string_replace_between" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
 
+    if(NOT "${string_replace_between_UNPARSED_ARGUMENTS}" STREQUAL "")
+        message(FATAL_ERROR "Unparsed arguments: '${string_replace_between_UNPARSED_ARGUMENTS}'")
+    endif()
+
     if("" STREQUAL "${string_replace_between_WITH}")
         set(value "")
     else()
@@ -111,55 +115,130 @@ function(string_replace_between prefix input fromExclusive toExclusive)
     endif()
 endfunction()
 
-function(find_file_in_parent prefix name path maxParentLevel)
-    foreach(i prefix name path)
+function(find_file_in_parent prefix)
+    foreach(i prefix)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
         endif()
     endforeach()
+
+    set(options
+        "REQUIRED"
+    )
+    set(oneValueKeywords
+        "MAX_PARENT_LEVEL"
+    )
+    set(multiValueKeywords
+        "NAMES"
+        "PATHS"
+    )
+    cmake_parse_arguments("find_file_in_parent" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+
+    if(NOT "${find_file_in_parent_UNPARSED_ARGUMENTS}" STREQUAL "")
+        message(FATAL_ERROR "Unparsed arguments: '${find_file_in_parent_UNPARSED_ARGUMENTS}'")
+    endif()
+
+    set(required "${find_file_in_parent_REQUIRED}")
+    set(maxParentLevel "${find_file_in_parent_MAX_PARENT_LEVEL}")
+    set(paths "${find_file_in_parent_PATHS}")
+    set(names "${find_file_in_parent_NAMES}")
+
     set(func_max "${maxParentLevel}")
     if("" STREQUAL "${func_max}")
         set(func_max "1")
     endif()
-    set(func_path "${path}")
-    cmake_path(GET func_path ROOT_NAME func_path_root_name)
-    cmake_path(GET func_path ROOT_DIRECTORY func_path_root_dir)
-    set(func_path_root "${func_path_root_name}${func_path_root_dir}")
-    foreach(i RANGE "1" "${func_max}")
-        if("${func_path_root}" STREQUAL "${func_path}")
+    foreach(path ${paths})
+        if(NOT "${func_result}" STREQUAL "" AND NOT "${func_result_dir}" STREQUAL "")
             break()
         endif()
-        cmake_path(GET func_path PARENT_PATH func_path)
-        file(GLOB_RECURSE func_files LIST_DIRECTORIES "TRUE" "${func_path}/*")
-        foreach(func_file IN LISTS func_files)
-            get_filename_component(func_file_name "${func_file}" NAME)
-            if("${func_file_name}" STREQUAL "${name}")
-                set(func_result "${func_file}")
-                get_filename_component(func_result_dir "${func_result}" DIRECTORY)
-                set(func_path "${func_path_root}")
+        set(func_path "${path}")
+        foreach(name ${names})
+            if(NOT "${func_result}" STREQUAL "" AND NOT "${func_result_dir}" STREQUAL "")
                 break()
             endif()
+            set(func_name "${name}")
+            cmake_path(GET func_path ROOT_NAME func_path_root_name)
+            cmake_path(GET func_path ROOT_DIRECTORY func_path_root_dir)
+            set(func_path_root "${func_path_root_name}${func_path_root_dir}")
+            foreach(i RANGE "1" "${func_max}")
+                if(
+                    "${func_path_root}" STREQUAL "${func_path}"
+                    OR (NOT "${func_result}" STREQUAL "" AND NOT "${func_result_dir}" STREQUAL "")
+                )
+                    break()
+                endif()
+                cmake_path(GET func_path PARENT_PATH func_path)
+                file(GLOB_RECURSE func_files LIST_DIRECTORIES "TRUE" "${func_path}/*")
+                foreach(func_file IN LISTS func_files)
+                    get_filename_component(func_file_name "${func_file}" NAME)
+                    if("${func_file_name}" STREQUAL "${func_name}")
+                        set(func_result "${func_file}")
+                        get_filename_component(func_result_dir "${func_result}" DIRECTORY)
+                        set(func_path "${func_path_root}")
+                        break()
+                    endif()
+                endforeach()
+            endforeach()
         endforeach()
     endforeach()
+
+    if("${required}" AND ("${func_result}" STREQUAL "" OR "${func_result_dir}" STREQUAL ""))
+        message(FATAL_ERROR "File not found names: '${names}' paths: '${paths}'")
+    endif()
+
     set("${prefix}_FILE" "${func_result}" PARENT_SCOPE)
     set("${prefix}_DIR" "${func_result_dir}" PARENT_SCOPE)
 endfunction()
 
-function(find_file_in prefix name path)
-    foreach(i prefix name path)
+function(find_file_in prefix)
+    foreach(i prefix)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
         endif()
     endforeach()
-    file(GLOB_RECURSE func_files LIST_DIRECTORIES "TRUE" "${path}/*")
-    foreach(func_file IN LISTS func_files)
-        get_filename_component(func_file_name "${func_file}" NAME)
-        if("${func_file_name}" STREQUAL "${name}")
-            set(func_result "${func_file}")
-            get_filename_component(func_result_dir "${func_result}" DIRECTORY)
+
+    set(options
+        "REQUIRED"
+    )
+    set(oneValueKeywords)
+    set(multiValueKeywords
+        "NAMES"
+        "PATHS"
+    )
+    cmake_parse_arguments("find_file_in" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+
+    if(NOT "${find_file_in_UNPARSED_ARGUMENTS}" STREQUAL "")
+        message(FATAL_ERROR "Unparsed arguments: '${find_file_in_UNPARSED_ARGUMENTS}'")
+    endif()
+
+    set(required "${find_file_in_REQUIRED}")
+    set(paths "${find_file_in_PATHS}")
+    set(names "${find_file_in_NAMES}")
+
+    foreach(path ${paths})
+        if(NOT "${func_result}" STREQUAL "" AND NOT "${func_result_dir}" STREQUAL "")
             break()
         endif()
+        foreach(name ${names})
+            if(NOT "${func_result}" STREQUAL "" AND NOT "${func_result_dir}" STREQUAL "")
+                break()
+            endif()
+            file(GLOB_RECURSE func_files LIST_DIRECTORIES "TRUE" "${path}/*")
+            foreach(func_file IN LISTS func_files)
+                get_filename_component(func_file_name "${func_file}" NAME)
+                if("${func_file_name}" STREQUAL "${name}")
+                    set(func_result "${func_file}")
+                    get_filename_component(func_result_dir "${func_result}" DIRECTORY)
+                    break()
+                endif()
+            endforeach()
+        endforeach()
     endforeach()
+
+    if("${required}" AND ("${func_result}" STREQUAL "" OR "${func_result_dir}" STREQUAL ""))
+        message(FATAL_ERROR "File not found names: '${names}' paths: '${paths}'")
+    endif()
+
     set("${prefix}_FILE" "${func_result}" PARENT_SCOPE)
     set("${prefix}_DIR" "${func_result_dir}" PARENT_SCOPE)
 endfunction()
@@ -181,6 +260,10 @@ function(set_msvc_path var)
         "PRODUCTS"
     )
     cmake_parse_arguments("set_msvc_path" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+
+    if(NOT "${set_msvc_path_UNPARSED_ARGUMENTS}" STREQUAL "")
+        message(FATAL_ERROR "Unparsed arguments: '${set_msvc_path_UNPARSED_ARGUMENTS}'")
+    endif()
 
     set(command "${set_msvc_path_COMMAND}")
     set(version "${set_msvc_path_VERSION}")
@@ -277,6 +360,10 @@ function(set_msvc_env prefix)
     )
     cmake_parse_arguments("set_msvc_env" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
 
+    if(NOT "${set_msvc_env_UNPARSED_ARGUMENTS}" STREQUAL "")
+        message(FATAL_ERROR "Unparsed arguments: '${set_msvc_env_UNPARSED_ARGUMENTS}'")
+    endif()
+
     set(command "${set_msvc_env_COMMAND}")
     set(version "${set_msvc_env_VERSION}")
     set(property "${set_msvc_env_PROPERTY}")
@@ -341,7 +428,7 @@ function(set_msvc_env prefix)
 
     if("" STREQUAL "${path}")
         set_msvc_path(msvcPath COMMAND "${command}" VERSION "${version}" PROPERTY "${property}" PRODUCTS "${products}")
-        find_file_in(vcvarsall "${vcvarsallBatName}" "${msvcPath}")
+        find_file_in(vcvarsall NAMES "${vcvarsallBatName}" PATHS "${msvcPath}" REQUIRED)
         if("" STREQUAL "${vcvarsall_DIR}")
             message(FATAL_ERROR "Not found '${vcvarsallBatName}' in '${msvcPath}'")
         endif()
@@ -349,7 +436,7 @@ function(set_msvc_env prefix)
         if(NOT EXISTS "${path}")
             message(FATAL_ERROR "Not exists 'path': '${path}'")
         endif()
-        find_file_in_parent(vcvarsall "${vcvarsallBatName}" "${path}" "9")
+        find_file_in_parent(vcvarsall MAX_PARENT_LEVEL "9" NAMES "${vcvarsallBatName}" PATHS "${path}" REQUIRED)
         if("" STREQUAL "${vcvarsall_DIR}")
             message(FATAL_ERROR "Not found '${vcvarsallBatName}' in '8' parent dirs of '${path}'")
         endif()
@@ -443,6 +530,10 @@ function(set_msvc_toolchain_content var)
     )
     cmake_parse_arguments("set_msvc_toolchain_content" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
 
+    if(NOT "${set_msvc_toolchain_content_UNPARSED_ARGUMENTS}" STREQUAL "")
+        message(FATAL_ERROR "Unparsed arguments: '${set_msvc_toolchain_content_UNPARSED_ARGUMENTS}'")
+    endif()
+
     set(command "${set_msvc_toolchain_content_COMMAND}")
     set(version "${set_msvc_toolchain_content_VERSION}")
     set(property "${set_msvc_toolchain_content_PROPERTY}")
@@ -490,15 +581,10 @@ function(set_msvc_toolchain_content var)
     list(REMOVE_DUPLICATES func_path)
     cmake_path(CONVERT "${func_path}" TO_NATIVE_PATH_LIST func_path NORMALIZE)
 
-    if("Windows" STREQUAL "${os}")
-        string(REPLACE "\\" "\\\\" func_include "${func_include}")
-
-        string(REPLACE "\\" "\\\\" func_libpath "${func_libpath}")
-
-        string(REPLACE "\\" "\\\\" func_lib "${func_lib}")
-
-        string(REPLACE "\\" "\\\\" func_path "${func_path}")
-    endif()
+    string(REPLACE "\\" "\\\\" func_include "${func_include}")
+    string(REPLACE "\\" "\\\\" func_libpath "${func_libpath}")
+    string(REPLACE "\\" "\\\\" func_lib "${func_lib}")
+    string(REPLACE "\\" "\\\\" func_path "${func_path}")
 
     cmake_path(CONVERT "${func_MSVC_INCLUDE}" TO_CMAKE_PATH_LIST func_cmake_include NORMALIZE)
 
@@ -557,6 +643,10 @@ function(set_gnu_toolchain_content var)
     set(multiValueKeywords)
     cmake_parse_arguments("set_gnu_toolchain_content" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
 
+    if(NOT "${set_gnu_toolchain_content_UNPARSED_ARGUMENTS}" STREQUAL "")
+        message(FATAL_ERROR "Unparsed arguments: '${set_gnu_toolchain_content_UNPARSED_ARGUMENTS}'")
+    endif()
+
     set(path "${set_gnu_toolchain_content_PATH}")
     set(processor "${set_gnu_toolchain_content_PROCESSOR}")
     set(os "${set_gnu_toolchain_content_OS}")
@@ -571,9 +661,7 @@ function(set_gnu_toolchain_content var)
     list(REMOVE_DUPLICATES envPath)
     cmake_path(CONVERT "${envPath}" TO_NATIVE_PATH_LIST envPathNative NORMALIZE)
 
-    if("Windows" STREQUAL "${os}")
-        string(REPLACE "\\" "\\\\" envPathNative "${envPathNative}")
-    endif()
+    string(REPLACE "\\" "\\\\" envPathNative "${envPathNative}")
 
     string(JOIN "\n" content
         "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
@@ -615,6 +703,10 @@ function(set_clang_toolchain_content var)
     set(multiValueKeywords)
     cmake_parse_arguments("set_clang_toolchain_content" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
 
+    if(NOT "${set_clang_toolchain_content_UNPARSED_ARGUMENTS}" STREQUAL "")
+        message(FATAL_ERROR "Unparsed arguments: '${set_clang_toolchain_content_UNPARSED_ARGUMENTS}'")
+    endif()
+
     set(path "${set_clang_toolchain_content_PATH}")
     set(processor "${set_clang_toolchain_content_PROCESSOR}")
     set(os "${set_clang_toolchain_content_OS}")
@@ -630,9 +722,7 @@ function(set_clang_toolchain_content var)
     list(REMOVE_DUPLICATES envPath)
     cmake_path(CONVERT "${envPath}" TO_NATIVE_PATH_LIST envPathNative NORMALIZE)
 
-    if("Windows" STREQUAL "${os}")
-        string(REPLACE "\\" "\\\\" envPathNative "${envPathNative}")
-    endif()
+    string(REPLACE "\\" "\\\\" envPathNative "${envPathNative}")
 
     string(JOIN "\n" content
         "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
@@ -861,6 +951,10 @@ function(generate_interface_only_files var)
     )
     set(multiValueKeywords)
     cmake_parse_arguments("generate_interface_only_files" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+
+    if(NOT "${generate_interface_only_files_UNPARSED_ARGUMENTS}" STREQUAL "")
+        message(FATAL_ERROR "Unparsed arguments: '${generate_interface_only_files_UNPARSED_ARGUMENTS}'")
+    endif()
 
     set(srcDirectory "${generate_interface_only_files_SRC_DIRECTORY}")
     set(srcBaseDirectory "${generate_interface_only_files_SRC_BASE_DIRECTORY}")

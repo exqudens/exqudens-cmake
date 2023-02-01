@@ -68,7 +68,7 @@ function(test_3)
     set(processor "AMD64")
     set(os "Windows")
     set(compiler "gnu")
-    set(path "C:/Program Files/JetBrains/CLion 2022.2.1/bin/mingw/bin/gcc.exe")
+    set(path "C:/Program Files/JetBrains/CLion 2022.3.2/bin/mingw/bin/gcc.exe")
     set(file "${CMAKE_CURRENT_BINARY_DIR}/test_execute_script/${CMAKE_CURRENT_FUNCTION}/toolchain.cmake")
 
     execute_script(toolchain

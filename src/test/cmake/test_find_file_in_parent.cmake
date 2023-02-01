@@ -15,7 +15,7 @@ function(test_1)
     cmake_path(NORMAL_PATH expected_FILE)
     cmake_path(NORMAL_PATH expected_DIR)
 
-    find_file_in_parent("${prefix}" "${name}" "${path}" "${maxParentLevel}")
+    find_file_in_parent("${prefix}" MAX_PARENT_LEVEL "${maxParentLevel}" NAMES "${name}" PATHS "${path}" REQUIRED)
 
     if(NOT "${expected_FILE}" STREQUAL "${actual_FILE}")
         message(FATAL_ERROR "'expected_FILE': '${expected_FILE}' != 'actual_FILE': '${actual_FILE}'")
@@ -43,7 +43,7 @@ function(test_2)
     cmake_path(NORMAL_PATH expected_FILE)
     cmake_path(NORMAL_PATH expected_DIR)
 
-    find_file_in_parent("${prefix}" "${name}" "${path}" "${maxParentLevel}")
+    find_file_in_parent("${prefix}" MAX_PARENT_LEVEL "${maxParentLevel}" NAMES "${name}" PATHS "${path}" REQUIRED)
 
     if(NOT "${expected_FILE}" STREQUAL "${actual_FILE}")
         message(FATAL_ERROR "'expected_FILE': '${expected_FILE}' != 'actual_FILE': '${actual_FILE}'")
@@ -71,7 +71,7 @@ function(test_3)
     cmake_path(NORMAL_PATH expected_FILE)
     cmake_path(NORMAL_PATH expected_DIR)
 
-    find_file_in_parent("${prefix}" "${name}" "${path}" "${maxParentLevel}")
+    find_file_in_parent("${prefix}" MAX_PARENT_LEVEL "${maxParentLevel}" NAMES "${name}" PATHS "${path}" REQUIRED)
 
     if(NOT "${expected_FILE}" STREQUAL "${actual_FILE}")
         message(FATAL_ERROR "'expected_FILE': '${expected_FILE}' != 'actual_FILE': '${actual_FILE}'")
@@ -99,7 +99,7 @@ function(test_4)
     cmake_path(NORMAL_PATH expected_FILE)
     cmake_path(NORMAL_PATH expected_DIR)
 
-    find_file_in_parent("${prefix}" "${name}" "${path}" "${maxParentLevel}")
+    find_file_in_parent("${prefix}" MAX_PARENT_LEVEL "${maxParentLevel}" NAMES "${name}" PATHS "${path}" REQUIRED)
 
     if(NOT "${expected_FILE}" STREQUAL "${actual_FILE}")
         message(FATAL_ERROR "'expected_FILE': '${expected_FILE}' != 'actual_FILE': '${actual_FILE}'")
@@ -127,7 +127,7 @@ function(test_5)
     cmake_path(NORMAL_PATH expected_FILE)
     cmake_path(NORMAL_PATH expected_DIR)
 
-    find_file_in_parent("${prefix}" "${name}" "${path}" "${maxParentLevel}")
+    find_file_in_parent("${prefix}" MAX_PARENT_LEVEL "${maxParentLevel}" NAMES "${name}" PATHS "${path}" REQUIRED)
 
     if(NOT "${expected_FILE}" STREQUAL "${actual_FILE}")
         message(FATAL_ERROR "'expected_FILE': '${expected_FILE}' != 'actual_FILE': '${actual_FILE}'")
@@ -155,7 +155,7 @@ function(test_6)
     cmake_path(NORMAL_PATH expected_FILE)
     cmake_path(NORMAL_PATH expected_DIR)
 
-    find_file_in_parent("${prefix}" "${name}" "${path}" "${maxParentLevel}")
+    find_file_in_parent("${prefix}" MAX_PARENT_LEVEL "${maxParentLevel}" NAMES "${name}" PATHS "${path}" REQUIRED)
 
     if(NOT "${expected_FILE}" STREQUAL "${actual_FILE}")
         message(FATAL_ERROR "'expected_FILE': '${expected_FILE}' != 'actual_FILE': '${actual_FILE}'")

@@ -14,7 +14,7 @@ function(test_1)
     cmake_path(NORMAL_PATH expected_FILE)
     cmake_path(NORMAL_PATH expected_DIR)
 
-    find_file_in("${prefix}" "${name}" "${path}")
+    find_file_in("${prefix}" NAMES "${name}" PATHS "${path}" REQUIRED)
 
     if(NOT "${expected_FILE}" STREQUAL "${actual_FILE}")
         message(FATAL_ERROR "'expected_FILE': '${expected_FILE}' != 'actual_FILE': '${actual_FILE}'")
