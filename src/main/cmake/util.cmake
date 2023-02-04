@@ -1029,24 +1029,14 @@ function(set_not_found_package_names var)
 endfunction()
 
 function(set_target_names var dir)
+    set(result "")
     foreach(i var dir)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
         endif()
     endforeach()
 
-    get_property(subdirectories DIRECTORY "${dir}" PROPERTY SUBDIRECTORIES)
-    foreach(subdir ${subdirectories})
-        set_target_names(subTargets "${subdir}")
-    endforeach()
-    if(NOT "${subTargets}" STREQUAL "")
-        list(APPEND targets "${subTargets}")
-    endif()
-    get_property(currentTargets DIRECTORY "${dir}" PROPERTY BUILDSYSTEM_TARGETS)
-    if(NOT "${currentTargets}" STREQUAL "")
-        list(APPEND targets "${currentTargets}")
-    endif()
-    list(APPEND targets
+    list(APPEND result
         "all"
         "help"
         "clean"
@@ -1055,7 +1045,25 @@ function(set_target_names var dir)
         "package"
         "package_source"
     )
-    set(${var} "${targets}" PARENT_SCOPE)
+
+    set(subDirectories "${dir}")
+
+    while(NOT "${subDirectories}" STREQUAL "")
+        list(POP_BACK subDirectories subDir)
+        get_property(targets DIRECTORY "${subDir}" PROPERTY BUILDSYSTEM_TARGETS)
+
+        if(NOT "${targets}" STREQUAL "")
+            list(APPEND result "${targets}")
+        endif()
+
+        get_property(subSubDirs DIRECTORY "${subDir}" PROPERTY SUBDIRECTORIES)
+
+        if(NOT "${subSubDirs}" STREQUAL "")
+            list(APPEND subDirectories "${subSubDirs}")
+        endif()
+    endwhile()
+
+    set(${var} "${result}" PARENT_SCOPE)
 endfunction()
 
 function(generate_interface_only_files var)
