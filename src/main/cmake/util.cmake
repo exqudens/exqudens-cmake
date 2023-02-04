@@ -8,17 +8,20 @@ cmake_policy(PUSH)
 cmake_policy(SET CMP0057 NEW)
 
 function(set_if_not_defined var)
+    set(result "")
     foreach(i var)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
         endif()
     endforeach()
     if("" STREQUAL "${${var}}" AND NOT "" STREQUAL "${ARGN}")
-        set("${var}" "${ARGN}" PARENT_SCOPE)
+        set(result "${ARGN}")
+        set("${var}" "${result}" PARENT_SCOPE)
     endif()
 endfunction()
 
 function(substring_from var input fromExclusive)
+    set(result "")
     foreach(i var input fromExclusive)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -37,6 +40,7 @@ function(substring_from var input fromExclusive)
 endfunction()
 
 function(substring_to var input toExclusive)
+    set(result "")
     foreach(i var input toExclusive)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -52,6 +56,9 @@ function(substring_to var input toExclusive)
 endfunction()
 
 function(string_replace_between prefix input fromExclusive toExclusive)
+    set(result "")
+    set(resultBetween "")
+    set(resultReplaced "")
     foreach(i prefix input fromExclusive toExclusive)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -80,17 +87,17 @@ function(string_replace_between prefix input fromExclusive toExclusive)
     endif()
 
     if("${string_replace_between_REPLACED_ONLY}")
-        substring_from(between "${input}" "${fromExclusive}")
-        substring_to(between "${between}" "${toExclusive}")
+        substring_from(resultBetween "${input}" "${fromExclusive}")
+        substring_to(resultBetween "${resultBetween}" "${toExclusive}")
 
-        string(CONCAT replaced "${fromExclusive}" "${between}" "${toExclusive}")
+        string(CONCAT resultReplaced "${fromExclusive}" "${resultBetween}" "${toExclusive}")
 
-        set("${prefix}" "${replaced}" PARENT_SCOPE)
+        set("${prefix}" "${resultReplaced}" PARENT_SCOPE)
     elseif("${string_replace_between_BETWEEN_ONLY}")
-        substring_from(between "${input}" "${fromExclusive}")
-        substring_to(between "${between}" "${toExclusive}")
+        substring_from(resultBetween "${input}" "${fromExclusive}")
+        substring_to(resultBetween "${resultBetween}" "${toExclusive}")
 
-        set("${prefix}" "${between}" PARENT_SCOPE)
+        set("${prefix}" "${resultBetween}" PARENT_SCOPE)
     else()
         if("${string_replace_between_RESULT_ONLY}")
             substring_to(part1 "${input}" "${fromExclusive}")
@@ -103,19 +110,21 @@ function(string_replace_between prefix input fromExclusive toExclusive)
             substring_from(part2 "${input}" "${toExclusive}")
             string(CONCAT result "${part1}" "${value}" "${part2}")
 
-            substring_from(between "${input}" "${fromExclusive}")
-            substring_to(between "${between}" "${toExclusive}")
+            substring_from(resultBetween "${input}" "${fromExclusive}")
+            substring_to(resultBetween "${resultBetween}" "${toExclusive}")
 
-            string(CONCAT replaced "${fromExclusive}" "${between}" "${toExclusive}")
+            string(CONCAT resultReplaced "${fromExclusive}" "${resultBetween}" "${toExclusive}")
 
             set("${prefix}" "${result}" PARENT_SCOPE)
-            set("${prefix}_BETWEEN" "${between}" PARENT_SCOPE)
-            set("${prefix}_REPLACED" "${replaced}" PARENT_SCOPE)
+            set("${prefix}_BETWEEN" "${resultBetween}" PARENT_SCOPE)
+            set("${prefix}_REPLACED" "${resultReplaced}" PARENT_SCOPE)
         endif()
     endif()
 endfunction()
 
 function(find_file_in_parent prefix)
+    set(result "")
+    set(resultDir "")
     foreach(i prefix)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -148,12 +157,12 @@ function(find_file_in_parent prefix)
         set(func_max "1")
     endif()
     foreach(path ${paths})
-        if(NOT "${func_result}" STREQUAL "" AND NOT "${func_result_dir}" STREQUAL "")
+        if(NOT "${result}" STREQUAL "" AND NOT "${resultDir}" STREQUAL "")
             break()
         endif()
         set(func_path "${path}")
         foreach(name ${names})
-            if(NOT "${func_result}" STREQUAL "" AND NOT "${func_result_dir}" STREQUAL "")
+            if(NOT "${result}" STREQUAL "" AND NOT "${resultDir}" STREQUAL "")
                 break()
             endif()
             set(func_name "${name}")
@@ -163,7 +172,7 @@ function(find_file_in_parent prefix)
             foreach(i RANGE "1" "${func_max}")
                 if(
                     "${func_path_root}" STREQUAL "${func_path}"
-                    OR (NOT "${func_result}" STREQUAL "" AND NOT "${func_result_dir}" STREQUAL "")
+                    OR (NOT "${result}" STREQUAL "" AND NOT "${resultDir}" STREQUAL "")
                 )
                     break()
                 endif()
@@ -172,8 +181,8 @@ function(find_file_in_parent prefix)
                 foreach(func_file IN LISTS func_files)
                     get_filename_component(func_file_name "${func_file}" NAME)
                     if("${func_file_name}" STREQUAL "${func_name}")
-                        set(func_result "${func_file}")
-                        get_filename_component(func_result_dir "${func_result}" DIRECTORY)
+                        set(result "${func_file}")
+                        get_filename_component(resultDir "${result}" DIRECTORY)
                         set(func_path "${func_path_root}")
                         break()
                     endif()
@@ -182,15 +191,17 @@ function(find_file_in_parent prefix)
         endforeach()
     endforeach()
 
-    if("${required}" AND ("${func_result}" STREQUAL "" OR "${func_result_dir}" STREQUAL ""))
+    if("${required}" AND ("${result}" STREQUAL "" OR "${resultDir}" STREQUAL ""))
         message(FATAL_ERROR "File not found names: '${names}' paths: '${paths}'")
     endif()
 
-    set("${prefix}_FILE" "${func_result}" PARENT_SCOPE)
-    set("${prefix}_DIR" "${func_result_dir}" PARENT_SCOPE)
+    set("${prefix}_FILE" "${result}" PARENT_SCOPE)
+    set("${prefix}_DIR" "${resultDir}" PARENT_SCOPE)
 endfunction()
 
 function(find_file_in prefix)
+    set(result "")
+    set(resultDir "")
     foreach(i prefix)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -216,34 +227,35 @@ function(find_file_in prefix)
     set(names "${find_file_in_NAMES}")
 
     foreach(path ${paths})
-        if(NOT "${func_result}" STREQUAL "" AND NOT "${func_result_dir}" STREQUAL "")
+        if(NOT "${result}" STREQUAL "" AND NOT "${resultDir}" STREQUAL "")
             break()
         endif()
         foreach(name ${names})
-            if(NOT "${func_result}" STREQUAL "" AND NOT "${func_result_dir}" STREQUAL "")
+            if(NOT "${result}" STREQUAL "" AND NOT "${resultDir}" STREQUAL "")
                 break()
             endif()
             file(GLOB_RECURSE func_files LIST_DIRECTORIES "TRUE" "${path}/*")
             foreach(func_file IN LISTS func_files)
                 get_filename_component(func_file_name "${func_file}" NAME)
                 if("${func_file_name}" STREQUAL "${name}")
-                    set(func_result "${func_file}")
-                    get_filename_component(func_result_dir "${func_result}" DIRECTORY)
+                    set(result "${func_file}")
+                    get_filename_component(resultDir "${result}" DIRECTORY)
                     break()
                 endif()
             endforeach()
         endforeach()
     endforeach()
 
-    if("${required}" AND ("${func_result}" STREQUAL "" OR "${func_result_dir}" STREQUAL ""))
+    if("${required}" AND ("${result}" STREQUAL "" OR "${resultDir}" STREQUAL ""))
         message(FATAL_ERROR "File not found names: '${names}' paths: '${paths}'")
     endif()
 
-    set("${prefix}_FILE" "${func_result}" PARENT_SCOPE)
-    set("${prefix}_DIR" "${func_result_dir}" PARENT_SCOPE)
+    set("${prefix}_FILE" "${result}" PARENT_SCOPE)
+    set("${prefix}_DIR" "${resultDir}" PARENT_SCOPE)
 endfunction()
 
 function(set_msvc_path var)
+    set(result "")
     foreach(i var)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -340,6 +352,11 @@ function(set_msvc_path var)
 endfunction()
 
 function(set_msvc_env prefix)
+    set(resultMsvcInclude "")
+    set(resultMsvcLibPath "")
+    set(resultMsvcLib "")
+    set(resultMsvcClPath "")
+    set(resultMsvcRcPath "")
     foreach(i prefix)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -469,45 +486,46 @@ function(set_msvc_env prefix)
         COMMAND_ERROR_IS_FATAL ANY
     )
 
-    string_replace_between(msvcInclude "${msvcEnv}" "INCLUDE_START" "INCLUDE_STOP" BETWEEN_ONLY)
-    string(STRIP "${msvcInclude}" msvcInclude)
-    string(REGEX REPLACE "[\r]" "" msvcInclude "${msvcInclude}")
-    string(REGEX REPLACE "[\n]" "" msvcInclude "${msvcInclude}")
+    string_replace_between(resultMsvcInclude "${msvcEnv}" "INCLUDE_START" "INCLUDE_STOP" BETWEEN_ONLY)
+    string(STRIP "${resultMsvcInclude}" resultMsvcInclude)
+    string(REGEX REPLACE "[\r]" "" resultMsvcInclude "${resultMsvcInclude}")
+    string(REGEX REPLACE "[\n]" "" resultMsvcInclude "${resultMsvcInclude}")
 
-    string_replace_between(msvcLibPath "${msvcEnv}" "LIBPATH_START" "LIBPATH_STOP" BETWEEN_ONLY)
-    string(STRIP "${msvcLibPath}" msvcLibPath)
-    string(REGEX REPLACE "[\r]" "" msvcLibPath "${msvcLibPath}")
-    string(REGEX REPLACE "[\n]" "" msvcLibPath "${msvcLibPath}")
+    string_replace_between(resultMsvcLibPath "${msvcEnv}" "LIBPATH_START" "LIBPATH_STOP" BETWEEN_ONLY)
+    string(STRIP "${resultMsvcLibPath}" resultMsvcLibPath)
+    string(REGEX REPLACE "[\r]" "" resultMsvcLibPath "${resultMsvcLibPath}")
+    string(REGEX REPLACE "[\n]" "" resultMsvcLibPath "${resultMsvcLibPath}")
 
-    string_replace_between(msvcLib "${msvcEnv}" "LIB_START" "LIB_STOP" BETWEEN_ONLY)
-    string(STRIP "${msvcLib}" msvcLib)
-    string(REGEX REPLACE "[\r]" "" msvcLib "${msvcLib}")
-    string(REGEX REPLACE "[\n]" "" msvcLib "${msvcLib}")
+    string_replace_between(resultMsvcLib "${msvcEnv}" "LIB_START" "LIB_STOP" BETWEEN_ONLY)
+    string(STRIP "${resultMsvcLib}" resultMsvcLib)
+    string(REGEX REPLACE "[\r]" "" resultMsvcLib "${resultMsvcLib}")
+    string(REGEX REPLACE "[\n]" "" resultMsvcLib "${resultMsvcLib}")
 
-    string_replace_between(msvcClPath "${msvcEnv}" "CLPATH_START" "CLPATH_STOP" BETWEEN_ONLY)
-    string(STRIP "${msvcClPath}" msvcClPath)
-    string(REGEX REPLACE "[\r]" "" msvcClPath "${msvcClPath}")
-    string(REGEX REPLACE "[\n]" ";" msvcClPath "${msvcClPath}")
-    list(GET msvcClPath 0 msvcClPath)
-    get_filename_component(msvcClPath "${msvcClPath}" DIRECTORY)
-    cmake_path(CONVERT "${msvcClPath}" TO_NATIVE_PATH_LIST msvcClPath NORMALIZE)
+    string_replace_between(resultMsvcClPath "${msvcEnv}" "CLPATH_START" "CLPATH_STOP" BETWEEN_ONLY)
+    string(STRIP "${resultMsvcClPath}" resultMsvcClPath)
+    string(REGEX REPLACE "[\r]" "" resultMsvcClPath "${resultMsvcClPath}")
+    string(REGEX REPLACE "[\n]" ";" resultMsvcClPath "${resultMsvcClPath}")
+    list(GET resultMsvcClPath 0 resultMsvcClPath)
+    get_filename_component(resultMsvcClPath "${resultMsvcClPath}" DIRECTORY)
+    cmake_path(CONVERT "${resultMsvcClPath}" TO_NATIVE_PATH_LIST resultMsvcClPath NORMALIZE)
 
-    string_replace_between(msvcRcPath "${msvcEnv}" "RCPATH_START" "RCPATH_STOP" BETWEEN_ONLY)
-    string(STRIP "${msvcRcPath}" msvcRcPath)
-    string(REGEX REPLACE "[\r]" "" msvcRcPath "${msvcRcPath}")
-    string(REGEX REPLACE "[\n]" ";" msvcRcPath "${msvcRcPath}")
-    list(GET msvcRcPath 0 msvcRcPath)
-    get_filename_component(msvcRcPath "${msvcRcPath}" DIRECTORY)
-    cmake_path(CONVERT "${msvcRcPath}" TO_NATIVE_PATH_LIST msvcRcPath NORMALIZE)
+    string_replace_between(resultMsvcRcPath "${msvcEnv}" "RCPATH_START" "RCPATH_STOP" BETWEEN_ONLY)
+    string(STRIP "${resultMsvcRcPath}" resultMsvcRcPath)
+    string(REGEX REPLACE "[\r]" "" resultMsvcRcPath "${resultMsvcRcPath}")
+    string(REGEX REPLACE "[\n]" ";" resultMsvcRcPath "${resultMsvcRcPath}")
+    list(GET resultMsvcRcPath 0 resultMsvcRcPath)
+    get_filename_component(resultMsvcRcPath "${resultMsvcRcPath}" DIRECTORY)
+    cmake_path(CONVERT "${resultMsvcRcPath}" TO_NATIVE_PATH_LIST resultMsvcRcPath NORMALIZE)
 
-    set("${prefix}_MSVC_INCLUDE" "${msvcInclude}" PARENT_SCOPE)
-    set("${prefix}_MSVC_LIBPATH" "${msvcLibPath}" PARENT_SCOPE)
-    set("${prefix}_MSVC_LIB" "${msvcLib}" PARENT_SCOPE)
-    set("${prefix}_MSVC_CL_PATH" "${msvcClPath}" PARENT_SCOPE)
-    set("${prefix}_MSVC_RC_PATH" "${msvcRcPath}" PARENT_SCOPE)
+    set("${prefix}_MSVC_INCLUDE" "${resultMsvcInclude}" PARENT_SCOPE)
+    set("${prefix}_MSVC_LIBPATH" "${resultMsvcLibPath}" PARENT_SCOPE)
+    set("${prefix}_MSVC_LIB" "${resultMsvcLib}" PARENT_SCOPE)
+    set("${prefix}_MSVC_CL_PATH" "${resultMsvcClPath}" PARENT_SCOPE)
+    set("${prefix}_MSVC_RC_PATH" "${resultMsvcRcPath}" PARENT_SCOPE)
 endfunction()
 
 function(set_msvc_toolchain_content var)
+    set(result "")
     foreach(i var)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -591,7 +609,7 @@ function(set_msvc_toolchain_content var)
     set(func_cmake_libpath "${func_MSVC_LIBPATH}" "${func_MSVC_LIB}")
     cmake_path(CONVERT "${func_cmake_libpath}" TO_CMAKE_PATH_LIST func_cmake_libpath NORMALIZE)
 
-    string(JOIN "\n" content
+    string(JOIN "\n" result
         "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
         "set(CMAKE_SYSTEM_NAME \"${os}\")"
         ""
@@ -624,10 +642,11 @@ function(set_msvc_toolchain_content var)
         "link_directories(\"\${CMAKE_CXX_STANDARD_LINK_DIRECTORIES}\") # remove when CMAKE_CXX_STANDARD_LINK_DIRECTORIES is supported"
         ""
     )
-    set("${var}" "${content}" PARENT_SCOPE)
+    set("${var}" "${result}" PARENT_SCOPE)
 endfunction()
 
 function(set_gnu_toolchain_content var)
+    set(result "")
     foreach(i var)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -652,7 +671,7 @@ function(set_gnu_toolchain_content var)
     set(os "${set_gnu_toolchain_content_OS}")
 
     cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
-
+    get_filename_component(compilerFileNameNoExt "${path}" NAME_WE)
     get_filename_component(compilerDir "${path}" DIRECTORY)
 
     set(envPath "${compilerDir}")
@@ -663,30 +682,73 @@ function(set_gnu_toolchain_content var)
 
     string(REPLACE "\\" "\\\\" envPathNative "${envPathNative}")
 
-    string(JOIN "\n" content
-        "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
-        "set(CMAKE_SYSTEM_NAME \"${os}\")"
-        ""
-        "set(COMPILER_PATH \"${compilerDir}\")"
-        ""
-        "set(CMAKE_C_COMPILER   \"\${COMPILER_PATH}/gcc.exe\")"
-        "set(CMAKE_CXX_COMPILER \"\${COMPILER_PATH}/g++.exe\")"
-        "set(CMAKE_AR           \"\${COMPILER_PATH}/ar.exe\")"
-        "set(CMAKE_LINKER       \"\${COMPILER_PATH}/ld.exe\")"
-        "set(CMAKE_RC_COMPILER  \"\${COMPILER_PATH}/windres.exe\")"
-        ""
-        "set(ENV{PATH} \"${envPathNative}\")"
-        ""
-        "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
-        "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)"
-        "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)"
-        "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
-        ""
-    )
-    set("${var}" "${content}" PARENT_SCOPE)
+    if("${os}" STREQUAL "Windows" AND ("${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-gcc" OR "${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-g++"))
+        string(JOIN "\n" result
+            "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
+            "set(CMAKE_SYSTEM_NAME \"${os}\")"
+            ""
+            "set(COMPILER_PATH \"${compilerDir}\")"
+            ""
+            "set(CMAKE_C_COMPILER   \"\${COMPILER_PATH}/arm-none-eabi-gcc.exe\")"
+            "set(CMAKE_CXX_COMPILER \"\${COMPILER_PATH}/arm-none-eabi-g++.exe\")"
+            "set(CMAKE_ASM_COMPILER \"\${COMPILER_PATH}/arm-none-eabi-gcc.exe\")"
+            "set(CMAKE_SIZE         \"\${COMPILER_PATH}/arm-none-eabi-size.exe\")"
+            ""
+            "set(ENV{PATH} \"${envPathNative}\")"
+            ""
+            "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
+            ""
+            "set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)"
+            ""
+        )
+    elseif("${os}" STREQUAL "Windows" AND NOT "${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-gcc" AND NOT "${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-g++")
+        string(JOIN "\n" result
+            "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
+            "set(CMAKE_SYSTEM_NAME \"${os}\")"
+            ""
+            "set(COMPILER_PATH \"${compilerDir}\")"
+            ""
+            "set(CMAKE_C_COMPILER   \"\${COMPILER_PATH}/gcc.exe\")"
+            "set(CMAKE_CXX_COMPILER \"\${COMPILER_PATH}/g++.exe\")"
+            "set(CMAKE_AR           \"\${COMPILER_PATH}/ar.exe\")"
+            "set(CMAKE_LINKER       \"\${COMPILER_PATH}/ld.exe\")"
+            "set(CMAKE_RC_COMPILER  \"\${COMPILER_PATH}/windres.exe\")"
+            ""
+            "set(ENV{PATH} \"${envPathNative}\")"
+            ""
+            "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
+            ""
+        )
+    elseif("${os}" STREQUAL "Linux" AND NOT "${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-gcc" AND NOT "${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-g++")
+        string(JOIN "\n" result
+            "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
+            "set(CMAKE_SYSTEM_NAME \"${os}\")"
+            ""
+            "set(COMPILER_PATH \"${compilerDir}\")"
+            ""
+            "set(CMAKE_C_COMPILER   \"\${COMPILER_PATH}/gcc\")"
+            "set(CMAKE_CXX_COMPILER \"\${COMPILER_PATH}/g++\")"
+            ""
+            "set(ENV{PATH} \"${envPathNative}\")"
+            ""
+            "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
+            ""
+        )
+    endif()
+    set("${var}" "${result}" PARENT_SCOPE)
 endfunction()
 
 function(set_clang_toolchain_content var)
+    set(result "")
     foreach(i var)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -724,7 +786,7 @@ function(set_clang_toolchain_content var)
 
     string(REPLACE "\\" "\\\\" envPathNative "${envPathNative}")
 
-    string(JOIN "\n" content
+    string(JOIN "\n" result
         "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
         "set(CMAKE_SYSTEM_NAME \"${os}\")"
         ""
@@ -743,10 +805,11 @@ function(set_clang_toolchain_content var)
         "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
         ""
     )
-    set("${var}" "${content}" PARENT_SCOPE)
+    set("${var}" "${result}" PARENT_SCOPE)
 endfunction()
 
 function(set_conan_architecture var cmakeSystemProcessor)
+    set(result "")
     foreach(i var cmakeSystemProcessor)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -754,17 +817,18 @@ function(set_conan_architecture var cmakeSystemProcessor)
     endforeach()
 
     if("x64" STREQUAL "${cmakeSystemProcessor}" OR "AMD64" STREQUAL "${cmakeSystemProcessor}" OR "IA64" STREQUAL "${cmakeSystemProcessor}")
-        set(value "x86_64")
+        set(result "x86_64")
     elseif("x86" STREQUAL "${cmakeSystemProcessor}")
-        set(value "x86")
+        set(result "x86")
     else()
-        message(FATAL_ERROR "Unsupported 'cmakeSystemProcessor': '${cmakeSystemProcessor}'")
+        set(result "${cmakeSystemProcessor}")
     endif()
 
-    set("${var}" "${value}" PARENT_SCOPE)
+    set("${var}" "${result}" PARENT_SCOPE)
 endfunction()
 
 function(set_conan_compiler var cmakeCxxCompilerId)
+    set(result "")
     foreach(i var cmakeCxxCompilerId)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -772,19 +836,20 @@ function(set_conan_compiler var cmakeCxxCompilerId)
     endforeach()
 
     if("MSVC" STREQUAL "${cmakeCxxCompilerId}")
-        set(value "Visual Studio")
+        set(result "Visual Studio")
     elseif("GNU" STREQUAL "${cmakeCxxCompilerId}")
-        set(value "gcc")
+        set(result "gcc")
     elseif("Clang" STREQUAL "${cmakeCxxCompilerId}")
-        set(value "clang")
+        set(result "clang")
     else()
-        message(FATAL_ERROR "Unsupported 'cmakeCxxCompilerId': '${cmakeCxxCompilerId}'")
+        set(result "${cmakeCxxCompilerId}")
     endif()
 
-    set("${var}" "${value}" PARENT_SCOPE)
+    set("${var}" "${result}" PARENT_SCOPE)
 endfunction()
 
 function(set_conan_compiler_version var cmakeCxxCompilerId cmakeCxxCompilerVersion)
+    set(result "")
     foreach(i var cmakeCxxCompilerId cmakeCxxCompilerVersion)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -793,26 +858,69 @@ function(set_conan_compiler_version var cmakeCxxCompilerId cmakeCxxCompilerVersi
 
     if("MSVC" STREQUAL "${cmakeCxxCompilerId}")
         if("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "19.30" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "19.40")
-            set(value "17")
+            set(result "17")
         elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "19.20" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "19.30")
-            set(value "16")
+            set(result "16")
         elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "19.10" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "19.20")
-            set(value "15")
+            set(result "15")
         else()
-            message(FATAL_ERROR "Unsupported 'cmakeCxxCompilerVersion': '${cmakeCxxCompilerVersion}'")
+            set(result "${cmakeCxxCompilerVersion}")
         endif()
     elseif("GNU" STREQUAL "${cmakeCxxCompilerId}")
-        set(value "${cmakeCxxCompilerVersion}")
+        string(REPLACE "." ";" cmakeCxxCompilerVersionElements "${cmakeCxxCompilerVersion}")
+        list(LENGTH cmakeCxxCompilerVersionElements cmakeCxxCompilerVersionElementsLength)
+        set(majorVersion "0")
+        set(minorVersion "0")
+        set(patchVersion "0")
+        if("${cmakeCxxCompilerVersionElementsLength}" GREATER_EQUAL "3")
+            list(GET cmakeCxxCompilerVersionElements 0 majorVersion)
+            list(GET cmakeCxxCompilerVersionElements 1 minorVersion)
+            list(GET cmakeCxxCompilerVersionElements 2 patchVersion)
+        elseif("${cmakeCxxCompilerVersionElementsLength}" EQUAL "2")
+            list(GET cmakeCxxCompilerVersionElements 0 majorVersion)
+            list(GET cmakeCxxCompilerVersionElements 1 minorVersion)
+        elseif("${cmakeCxxCompilerVersionElementsLength}" EQUAL "1")
+            list(GET cmakeCxxCompilerVersionElements 0 majorVersion)
+        endif()
+        if("${minorVersion}" EQUAL "0" AND "${patchVersion}" EQUAL "0")
+            set(result "${majorVersion}")
+        elseif(NOT "${minorVersion}" EQUAL "0" AND "${patchVersion}" EQUAL "0")
+            set(result "${majorVersion}.${minorVersion}")
+        else()
+            set(result "${cmakeCxxCompilerVersion}")
+        endif()
     elseif("Clang" STREQUAL "${cmakeCxxCompilerId}")
-        set(value "${cmakeCxxCompilerVersion}")
+        string(REPLACE "." ";" cmakeCxxCompilerVersionElements "${cmakeCxxCompilerVersion}")
+        list(LENGTH cmakeCxxCompilerVersionElements cmakeCxxCompilerVersionElementsLength)
+        set(majorVersion "0")
+        set(minorVersion "0")
+        set(patchVersion "0")
+        if("${cmakeCxxCompilerVersionElementsLength}" GREATER_EQUAL "3")
+            list(GET cmakeCxxCompilerVersionElements 0 majorVersion)
+            list(GET cmakeCxxCompilerVersionElements 1 minorVersion)
+            list(GET cmakeCxxCompilerVersionElements 2 patchVersion)
+        elseif("${cmakeCxxCompilerVersionElementsLength}" EQUAL "2")
+            list(GET cmakeCxxCompilerVersionElements 0 majorVersion)
+            list(GET cmakeCxxCompilerVersionElements 1 minorVersion)
+        elseif("${cmakeCxxCompilerVersionElementsLength}" EQUAL "1")
+            list(GET cmakeCxxCompilerVersionElements 0 majorVersion)
+        endif()
+        if("${minorVersion}" EQUAL "0" AND "${patchVersion}" EQUAL "0")
+            set(result "${majorVersion}")
+        elseif(NOT "${minorVersion}" EQUAL "0" AND "${patchVersion}" EQUAL "0")
+            set(result "${majorVersion}.${minorVersion}")
+        else()
+            set(result "${cmakeCxxCompilerVersion}")
+        endif()
     else()
-        message(FATAL_ERROR "Unsupported 'cmakeCxxCompilerId': '${cmakeCxxCompilerId}'")
+        set(result "${cmakeCxxCompilerVersion}")
     endif()
 
-    set("${var}" "${value}" PARENT_SCOPE)
+    set("${var}" "${result}" PARENT_SCOPE)
 endfunction()
 
 function(set_conan_compiler_runtime var cmakeMsvcRuntimeLibrary)
+    set(result "")
     foreach(i var cmakeMsvcRuntimeLibrary)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -820,21 +928,22 @@ function(set_conan_compiler_runtime var cmakeMsvcRuntimeLibrary)
     endforeach()
 
     if("${cmakeMsvcRuntimeLibrary}" STREQUAL "MultiThreaded")
-        set(value "MT")
+        set(result "MT")
     elseif("${cmakeMsvcRuntimeLibrary}" STREQUAL "MultiThreadedDLL")
-        set(value "MD")
+        set(result "MD")
     elseif("${cmakeMsvcRuntimeLibrary}" STREQUAL "MultiThreadedDebug")
-        set(value "MTd")
+        set(result "MTd")
     elseif("${cmakeMsvcRuntimeLibrary}" STREQUAL "MultiThreadedDebugDLL")
-        set(value "MDd")
+        set(result "MDd")
     else()
-        message(FATAL_ERROR "Unsupported 'cmakeMsvcRuntimeLibrary': '${cmakeMsvcRuntimeLibrary}'")
+        set(result "${cmakeMsvcRuntimeLibrary}")
     endif()
 
-    set("${var}" "${value}" PARENT_SCOPE)
+    set("${var}" "${result}" PARENT_SCOPE)
 endfunction()
 
 function(set_conan_settings var)
+    set(result "")
     foreach(i var)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -844,14 +953,22 @@ function(set_conan_settings var)
     # all settings
     if(NOT "" STREQUAL "${ARGN}")
         foreach(arg ${ARGN})
-            list(APPEND value "--settings" "${arg}")
+            if(NOT "${arg}" STREQUAL "" AND NOT "${arg}" IN_LIST result)
+                string(REPLACE "=" ";" argElements "${arg}")
+                set(argValue "")
+                list(GET argElements 1 argValue)
+                if(NOT "${argValue}" STREQUAL "" AND NOT "${argValue}" STREQUAL "\"\"" AND NOT "${argValue}" STREQUAL "''")
+                    list(APPEND result "--settings" "${arg}")
+                endif()
+            endif()
         endforeach()
     endif()
 
-    set("${var}" "${value}" PARENT_SCOPE)
+    set("${var}" "${result}" PARENT_SCOPE)
 endfunction()
 
 function(set_python_boolean var cmakeBoolean)
+    set(result "")
     foreach(i var)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -859,15 +976,16 @@ function(set_python_boolean var cmakeBoolean)
     endforeach()
 
     if("${cmakeBoolean}")
-        set(value "True")
+        set(result "True")
     else()
-        set(value "False")
+        set(result "False")
     endif()
 
-    set("${var}" "${value}" PARENT_SCOPE)
+    set("${var}" "${result}" PARENT_SCOPE)
 endfunction()
 
 function(set_conan_options var)
+    set(result "")
     foreach(i var)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -877,16 +995,22 @@ function(set_conan_options var)
     # all options
     if(NOT "" STREQUAL "${ARGN}")
         foreach(arg ${ARGN})
-            if(NOT "" STREQUAL "${arg}" AND NOT "${arg}" IN_LIST "value")
-                list(APPEND value "--options" "${arg}")
+            if(NOT "${arg}" STREQUAL "" AND NOT "${arg}" IN_LIST result)
+                string(REPLACE "=" ";" argElements "${arg}")
+                set(argValue "")
+                list(GET argElements 1 argValue)
+                if(NOT "${argValue}" STREQUAL "" AND NOT "${argValue}" STREQUAL "\"\"" AND NOT "${argValue}" STREQUAL "''")
+                    list(APPEND result "--options" "${arg}")
+                endif()
             endif()
         endforeach()
     endif()
 
-    set("${var}" "${value}" PARENT_SCOPE)
+    set("${var}" "${result}" PARENT_SCOPE)
 endfunction()
 
 function(set_not_found_package_names var)
+    set(result "")
     foreach(i var)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -896,12 +1020,12 @@ function(set_not_found_package_names var)
     if(NOT "" STREQUAL "${ARGN}")
         foreach(arg ${ARGN})
             if(NOT "${${arg}_FOUND}")
-                list(APPEND value "${arg}")
+                list(APPEND result "${arg}")
             endif()
         endforeach()
     endif()
 
-    set("${var}" "${value}" PARENT_SCOPE)
+    set("${var}" "${result}" PARENT_SCOPE)
 endfunction()
 
 function(set_target_names var dir)
@@ -935,6 +1059,7 @@ function(set_target_names var dir)
 endfunction()
 
 function(generate_interface_only_files var)
+    set(result "")
     foreach(i var)
         if("" STREQUAL "${${i}}")
             message(FATAL_ERROR "Empty value not supported for '${i}'.")
@@ -1052,6 +1177,7 @@ function(generate_interface_only_files var)
 endfunction()
 
 function(execute_script)
+    set(result "")
     set(options
         "help"
         "toolchain"
@@ -1076,12 +1202,12 @@ function(execute_script)
         AND "${execute_script_compiler}" STREQUAL "msvc"
         AND (NOT "${execute_script_path}" STREQUAL "" AND EXISTS "${execute_script_path}" AND NOT IS_DIRECTORY "${execute_script_path}")
     )
-        set_msvc_toolchain_content(toolchain_content
+        set_msvc_toolchain_content(result
             PROCESSOR "${execute_script_processor}"
             OS "${execute_script_os}"
             PATH "${execute_script_path}"
         )
-        file(WRITE "${execute_script_file}" "${toolchain_content}")
+        file(WRITE "${execute_script_file}" "${result}")
         return()
     elseif(
         "${execute_script_toolchain}"
@@ -1091,7 +1217,7 @@ function(execute_script)
         AND NOT "${execute_script_host}" STREQUAL ""
         AND NOT "${execute_script_target}" STREQUAL ""
     )
-        set_msvc_toolchain_content(toolchain_content
+        set_msvc_toolchain_content(result
             PROCESSOR "${execute_script_processor}"
             OS "${execute_script_os}"
             VERSION "${execute_script_version}"
@@ -1099,19 +1225,19 @@ function(execute_script)
             TARGET "${execute_script_target}"
             PRODUCTS "${execute_script_products}"
         )
-        file(WRITE "${execute_script_file}" "${toolchain_content}")
+        file(WRITE "${execute_script_file}" "${result}")
         return()
     elseif(
         "${execute_script_toolchain}"
         AND "${execute_script_compiler}" STREQUAL "gnu"
         AND (NOT "${execute_script_path}" STREQUAL "" AND EXISTS "${execute_script_path}" AND NOT IS_DIRECTORY "${execute_script_path}")
     )
-        set_gnu_toolchain_content(toolchain_content
+        set_gnu_toolchain_content(result
             PROCESSOR "${execute_script_processor}"
             OS "${execute_script_os}"
             PATH "${execute_script_path}"
         )
-        file(WRITE "${execute_script_file}" "${toolchain_content}")
+        file(WRITE "${execute_script_file}" "${result}")
         return()
     elseif(
         "${execute_script_toolchain}"
@@ -1119,13 +1245,13 @@ function(execute_script)
         AND (NOT "${execute_script_path}" STREQUAL "" AND EXISTS "${execute_script_path}" AND NOT IS_DIRECTORY "${execute_script_path}")
         AND NOT "${execute_script_target}" STREQUAL ""
     )
-        set_clang_toolchain_content(toolchain_content
+        set_clang_toolchain_content(result
             PROCESSOR "${execute_script_processor}"
             OS "${execute_script_os}"
             PATH "${execute_script_path}"
             TARGET "${execute_script_target}"
         )
-        file(WRITE "${execute_script_file}" "${toolchain_content}")
+        file(WRITE "${execute_script_file}" "${result}")
         return()
     elseif("${execute_script_help}")
         get_filename_component(execute_script_current_file_name "${CMAKE_CURRENT_LIST_FILE}" NAME)

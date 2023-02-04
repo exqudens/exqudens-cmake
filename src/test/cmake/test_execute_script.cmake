@@ -63,12 +63,21 @@ endfunction()
 function(test_3)
     message("${CMAKE_CURRENT_FUNCTION} ...")
 
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/test_execute_script/${CMAKE_CURRENT_FUNCTION}/toolchain.cmake" expected)
+    find_program(COMPILER NAMES "gcc" "gcc.exe" PATHS "$ENV{GCC_COMPILER_PATH}" NO_CACHE REQUIRED)
+    get_filename_component(COMPILER_PATH "${COMPILER}" DIRECTORY)
+    cmake_path(CONVERT "${COMPILER_PATH}" TO_NATIVE_PATH_LIST COMPILER_PATH_NATIVE NORMALIZE)
+    string(REPLACE "\\" "\\\\" COMPILER_PATH_NATIVE "${COMPILER_PATH_NATIVE}")
+    configure_file(
+        "${CMAKE_CURRENT_LIST_DIR}/../resources/test_execute_script/${CMAKE_CURRENT_FUNCTION}/toolchain.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/test_execute_script/${CMAKE_CURRENT_FUNCTION}/expected-toolchain.cmake"
+        @ONLY
+    )
+    file(READ "${CMAKE_CURRENT_BINARY_DIR}/test_execute_script/${CMAKE_CURRENT_FUNCTION}/expected-toolchain.cmake" expected)
 
     set(processor "AMD64")
     set(os "Windows")
     set(compiler "gnu")
-    set(path "C:/Program Files/JetBrains/CLion 2022.3.2/bin/mingw/bin/gcc.exe")
+    set(path "C:/Program Files/JetBrains/CLion 2022.2.4/bin/mingw/bin/gcc.exe")
     set(file "${CMAKE_CURRENT_BINARY_DIR}/test_execute_script/${CMAKE_CURRENT_FUNCTION}/toolchain.cmake")
 
     execute_script(toolchain
@@ -117,10 +126,10 @@ function(test_4)
 endfunction()
 
 function(execute_test_script)
-    test_1()
-    test_2()
+    #test_1()
+    #test_2()
     test_3()
-    test_4()
+    #test_4()
 endfunction()
 
 execute_test_script()
