@@ -8,12 +8,13 @@ function(test_1)
     file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/expected/testnamespace/testsubnamespace/TestClass3.hpp" expected3)
 
     set(srcDirectory "${CMAKE_CURRENT_BINARY_DIR}/..")
+    get_filename_component(buildDirName "${CMAKE_CURRENT_BINARY_DIR}" NAME)
 
     cmake_path(NORMAL_PATH srcDirectory)
     cmake_path(APPEND srcDirectory DIR)
     cmake_path(GET srcDirectory PARENT_PATH srcDirectory)
 
-    generate_interface_only_files(generated_files
+    generate_interface_only_files(actual4
         SRC_DIRECTORY "${srcDirectory}"
         SRC_BASE_DIRECTORY "${srcDirectory}/src/test/resources/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/input"
         DST_BASE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}"
@@ -24,6 +25,11 @@ function(test_1)
     file(READ "${CMAKE_CURRENT_BINARY_DIR}/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass1.hpp" actual1)
     file(READ "${CMAKE_CURRENT_BINARY_DIR}/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass2.hpp" actual2)
     file(READ "${CMAKE_CURRENT_BINARY_DIR}/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass3.hpp" actual3)
+    set(expected4
+        "${buildDirName}/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass1.hpp"
+        "${buildDirName}/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass2.hpp"
+        "${buildDirName}/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass3.hpp"
+    )
 
     if(NOT "${expected1}" STREQUAL "${actual1}")
         message(FATAL_ERROR "'expected1': '${expected1}' != 'actual1': '${actual1}'")
@@ -35,6 +41,10 @@ function(test_1)
 
     if(NOT "${expected3}" STREQUAL "${actual3}")
         message(FATAL_ERROR "'expected3': '${expected3}' != 'actual3': '${actual3}'")
+    endif()
+
+    if(NOT "${expected4}" STREQUAL "${actual4}")
+        message(FATAL_ERROR "'expected4': '${expected4}' != 'actual4': '${actual4}'")
     endif()
 
     message("... PASS")

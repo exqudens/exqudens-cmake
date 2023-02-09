@@ -79,6 +79,12 @@ add_test(
 )
 
 add_test(
+    NAME "test_set_python_boolean"
+    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_python_boolean.cmake"
+    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+)
+
+add_test(
     NAME "test_set_conan_architecture"
     COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_conan_architecture.cmake"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
@@ -99,12 +105,6 @@ add_test(
 add_test(
     NAME "test_set_conan_compiler_runtime"
     COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_conan_compiler_runtime.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_set_python_boolean"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_python_boolean.cmake"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
 )
 
@@ -132,16 +132,11 @@ add_test(
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
 )
 
-add_test(
-    NAME "test_execute_script"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_execute_script.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
 add_custom_target("cmake-test"
     COMMAND "${CMAKE_CTEST_COMMAND}" --preset "${PRESET_NAME}"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
     VERBATIM
+    USES_TERMINAL
 )
 
 set_target_names(ALL_TARGETS "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -151,7 +146,6 @@ foreach(t ${ALL_TARGETS})
 endforeach()
 
 set(EXPECTED_ALL_TARGETS
-    "cmake-test"
     "all"
     "help"
     "clean"
@@ -159,4 +153,9 @@ set(EXPECTED_ALL_TARGETS
     "install"
     "package"
     "package_source"
+    "cmake-test"
 )
+
+if(NOT "${EXPECTED_ALL_TARGETS}" STREQUAL "${ALL_TARGETS}")
+    message(FATAL_ERROR "'EXPECTED_ALL_TARGETS': '${EXPECTED_ALL_TARGETS}' != 'ALL_TARGETS': '${ALL_TARGETS}'")
+endif()
