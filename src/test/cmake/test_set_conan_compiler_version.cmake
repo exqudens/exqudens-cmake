@@ -38,6 +38,34 @@ function(test_1)
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
     endif()
 
+    set(expected "7.0")
+    set_conan_compiler_version(actual "Clang" "7.0" MAX_ELEMENTS 2)
+
+    if(NOT "${expected}" STREQUAL "${actual}")
+        message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
+    endif()
+
+    set(expected "7")
+    set_conan_compiler_version(actual "Clang" "7.0" MAX_ELEMENTS 1)
+
+    if(NOT "${expected}" STREQUAL "${actual}")
+        message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
+    endif()
+
+    set(expected "7.0")
+    set_conan_compiler_version(actual "Clang" "7.0.1" MAX_ELEMENTS 2)
+
+    if(NOT "${expected}" STREQUAL "${actual}")
+        message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
+    endif()
+
+    set(expected "7")
+    set_conan_compiler_version(actual "Clang" "7.0.1" MAX_ELEMENTS 1)
+
+    if(NOT "${expected}" STREQUAL "${actual}")
+        message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
+    endif()
+
     message("... PASS")
 endfunction()
 

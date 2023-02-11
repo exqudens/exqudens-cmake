@@ -133,7 +133,9 @@ add_test(
 )
 
 add_custom_target("cmake-test"
-    COMMAND "${CMAKE_CTEST_COMMAND}" --preset "${PRESET_NAME}"
+    COMMAND "${CMAKE_CTEST_COMMAND}"
+            --preset "${PRESET_NAME}"
+            #-R "test_set_conan_compiler_version"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
     VERBATIM
     USES_TERMINAL
