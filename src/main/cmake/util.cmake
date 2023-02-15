@@ -689,6 +689,7 @@ function(set_gnu_toolchain_content var)
         set(os "${set_gnu_toolchain_content_OS}")
 
         cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
+        get_filename_component(compilerFileNameExt "${path}" EXT)
         get_filename_component(compilerFileNameNoExt "${path}" NAME_WE)
         get_filename_component(compilerDir "${path}" DIRECTORY)
 
@@ -700,7 +701,7 @@ function(set_gnu_toolchain_content var)
 
         string(REPLACE "\\" "\\\\" envPathNative "${envPathNative}")
 
-        if("${os}" STREQUAL "Windows" AND ("${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-gcc" OR "${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-g++"))
+        if("${compilerFileNameExt}" STREQUAL ".exe" AND ("${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-gcc" OR "${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-g++"))
             string(JOIN "\n" result
                 "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
                 "set(CMAKE_SYSTEM_NAME \"${os}\")"
@@ -743,7 +744,7 @@ function(set_gnu_toolchain_content var)
                 "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
                 ""
             )
-        elseif("${os}" STREQUAL "Linux" AND NOT "${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-gcc" AND NOT "${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-g++")
+        elseif(("${os}" STREQUAL "Linux" OR "${os}" STREQUAL "Darwin") AND NOT "${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-gcc" AND NOT "${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-g++")
             string(JOIN "\n" result
                 "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
                 "set(CMAKE_SYSTEM_NAME \"${os}\")"
