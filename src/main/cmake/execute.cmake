@@ -11,11 +11,11 @@ function(execute)
     block()
         set(options)
         set(oneValueKeywords
-            "FUNCTION"
             "MESSAGE_MODE"
         )
         set(multiValueKeywords
             "INCLUDES"
+            "FUNCTION"
             "ARGS"
             "OUTPUTS"
         )
@@ -39,7 +39,7 @@ function(execute)
             )
             message(FATAL_ERROR "${usageMessage}")
         else()
-            set(function "${execute_FUNCTION}")
+            set(functions "${execute_FUNCTION}")
         endif()
 
         if("${execute_MESSAGE_MODE}" STREQUAL "")
@@ -49,14 +49,16 @@ function(execute)
         endif()
 
         set(includes "${execute_INCLUDES}")
-        set(args "${execute_ARGS}")
+        set(arguments "${execute_ARGS}")
         set(outputs "${execute_OUTPUTS}")
 
         foreach(include ${includes})
             include("${include}")
         endforeach()
 
-        cmake_language(CALL "${function}" ${args})
+        foreach(func args IN ZIP_LISTS functions arguments)
+            cmake_language(EVAL CODE "${func}(${args})")
+        endforeach()
 
         foreach(output ${outputs})
             message("${messageMode}" "${output}: '${${output}}'")
