@@ -137,8 +137,8 @@ add_custom_target("cmake-test"
             --preset "${PRESET_NAME}"
             #-R "test_set_gnu_toolchain_content"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    VERBATIM
     USES_TERMINAL
+    VERBATIM
 )
 
 set_target_names(ALL_TARGETS "${CMAKE_CURRENT_SOURCE_DIR}")
