@@ -557,6 +557,7 @@ function(set_msvc_toolchain_content var)
             "PATH"
             "PROCESSOR"
             "OS"
+            "NO_CACHE"
         )
         set(multiValueKeywords
             "PRODUCTS"
@@ -576,6 +577,13 @@ function(set_msvc_toolchain_content var)
         set(processor "${set_msvc_toolchain_content_PROCESSOR}")
         set(os "${set_msvc_toolchain_content_OS}")
         set(products "${set_msvc_toolchain_content_PRODUCTS}")
+        set(noCache "${set_msvc_toolchain_content_NO_CACHE}")
+
+        if("${noCache}" STREQUAL "" OR "${noCache}")
+            set(cacheInstructions "")
+        else()
+            set(cacheInstructions " CACHE INTERNAL \"...\" FORCE")
+        endif()
 
         set_msvc_env("func"
             COMMAND "${command}"
@@ -625,34 +633,34 @@ function(set_msvc_toolchain_content var)
         cmake_path(CONVERT "${func_cmake_libpath}" TO_CMAKE_PATH_LIST func_cmake_libpath NORMALIZE)
 
         string(JOIN "\n" result
-            "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
-            "set(CMAKE_SYSTEM_NAME \"${os}\")"
+            "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\"${cacheInstructions})"
+            "set(CMAKE_SYSTEM_NAME \"${os}\"${cacheInstructions})"
             ""
-            "set(MSVC_CL_PATH \"${func_cl_cmake}\")"
-            "set(MSVC_RC_PATH \"${func_rc_cmake}\")"
+            "set(MSVC_CL_PATH \"${func_cl_cmake}\"${cacheInstructions})"
+            "set(MSVC_RC_PATH \"${func_rc_cmake}\"${cacheInstructions})"
             ""
-            "set(CMAKE_C_COMPILER   \"\${MSVC_CL_PATH}/cl.exe\")"
-            "set(CMAKE_CXX_COMPILER \"\${MSVC_CL_PATH}/cl.exe\")"
-            "set(CMAKE_AR           \"\${MSVC_CL_PATH}/lib.exe\")"
-            "set(CMAKE_LINKER       \"\${MSVC_CL_PATH}/link.exe\")"
-            "set(CMAKE_RC_COMPILER  \"\${MSVC_RC_PATH}/rc.exe\")"
-            "set(CMAKE_MT           \"\${MSVC_RC_PATH}/mt.exe\")"
+            "set(CMAKE_C_COMPILER   \"\${MSVC_CL_PATH}/cl.exe\"${cacheInstructions})"
+            "set(CMAKE_CXX_COMPILER \"\${MSVC_CL_PATH}/cl.exe\"${cacheInstructions})"
+            "set(CMAKE_AR           \"\${MSVC_CL_PATH}/lib.exe\"${cacheInstructions})"
+            "set(CMAKE_LINKER       \"\${MSVC_CL_PATH}/link.exe\"${cacheInstructions})"
+            "set(CMAKE_RC_COMPILER  \"\${MSVC_RC_PATH}/rc.exe\"${cacheInstructions})"
+            "set(CMAKE_MT           \"\${MSVC_RC_PATH}/mt.exe\"${cacheInstructions})"
             ""
             "set(ENV{INCLUDE} \"${func_include}\")"
             "set(ENV{LIBPATH} \"${func_libpath}\")"
             "set(ENV{LIB} \"${func_lib}\")"
             "set(ENV{PATH} \"${func_path}\")"
             ""
-            "set(CMAKE_C_STANDARD_INCLUDE_DIRECTORIES \"${func_include_cmake}\")"
-            "set(CMAKE_C_STANDARD_LINK_DIRECTORIES \"${func_libpath_cmake}\")"
+            "set(CMAKE_C_STANDARD_INCLUDE_DIRECTORIES \"${func_include_cmake}\"${cacheInstructions})"
+            "set(CMAKE_C_STANDARD_LINK_DIRECTORIES \"${func_libpath_cmake}\"${cacheInstructions})"
             ""
-            "set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES \"${func_cmake_include}\")"
-            "set(CMAKE_CXX_STANDARD_LINK_DIRECTORIES \"${func_cmake_libpath}\")"
+            "set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES \"${func_cmake_include}\"${cacheInstructions})"
+            "set(CMAKE_CXX_STANDARD_LINK_DIRECTORIES \"${func_cmake_libpath}\"${cacheInstructions})"
             ""
-            "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
-            "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)"
-            "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)"
-            "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER${cacheInstructions})"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY${cacheInstructions})"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY${cacheInstructions})"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY${cacheInstructions})"
             ""
             "link_directories(\"\${CMAKE_CXX_STANDARD_LINK_DIRECTORIES}\") # remove when CMAKE_CXX_STANDARD_LINK_DIRECTORIES is supported"
             ""
@@ -676,6 +684,7 @@ function(set_gnu_toolchain_content var)
             "PATH"
             "PROCESSOR"
             "OS"
+            "NO_CACHE"
         )
         set(multiValueKeywords)
         cmake_parse_arguments("set_gnu_toolchain_content" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
@@ -687,6 +696,13 @@ function(set_gnu_toolchain_content var)
         set(path "${set_gnu_toolchain_content_PATH}")
         set(processor "${set_gnu_toolchain_content_PROCESSOR}")
         set(os "${set_gnu_toolchain_content_OS}")
+        set(noCache "${set_msvc_toolchain_content_NO_CACHE}")
+
+        if("${noCache}" STREQUAL "" OR "${noCache}")
+            set(cacheInstructions "")
+        else()
+            set(cacheInstructions " CACHE INTERNAL \"...\" FORCE")
+        endif()
 
         cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
         get_filename_component(compilerFileNameExt "${path}" EXT)
@@ -703,63 +719,63 @@ function(set_gnu_toolchain_content var)
 
         if("${compilerFileNameExt}" STREQUAL ".exe" AND ("${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-gcc" OR "${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-g++"))
             string(JOIN "\n" result
-                "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
-                "set(CMAKE_SYSTEM_NAME \"${os}\")"
+                "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\"${cacheInstructions})"
+                "set(CMAKE_SYSTEM_NAME \"${os}\"${cacheInstructions})"
                 ""
-                "set(COMPILER_PATH \"${compilerDir}\")"
+                "set(COMPILER_PATH \"${compilerDir}\"${cacheInstructions})"
                 ""
-                "set(CMAKE_C_COMPILER   \"\${COMPILER_PATH}/arm-none-eabi-gcc.exe\")"
-                "set(CMAKE_CXX_COMPILER \"\${COMPILER_PATH}/arm-none-eabi-g++.exe\")"
-                "set(CMAKE_ASM_COMPILER \"\${COMPILER_PATH}/arm-none-eabi-gcc.exe\")"
-                "set(CMAKE_SIZE         \"\${COMPILER_PATH}/arm-none-eabi-size.exe\")"
+                "set(CMAKE_C_COMPILER   \"\${COMPILER_PATH}/arm-none-eabi-gcc.exe\"${cacheInstructions})"
+                "set(CMAKE_CXX_COMPILER \"\${COMPILER_PATH}/arm-none-eabi-g++.exe\"${cacheInstructions})"
+                "set(CMAKE_ASM_COMPILER \"\${COMPILER_PATH}/arm-none-eabi-gcc.exe\"${cacheInstructions})"
+                "set(CMAKE_SIZE         \"\${COMPILER_PATH}/arm-none-eabi-size.exe\"${cacheInstructions})"
                 ""
                 "set(ENV{PATH} \"${envPathNative}\")"
                 ""
-                "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
-                "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)"
-                "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)"
-                "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
+                "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER${cacheInstructions})"
+                "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY${cacheInstructions})"
+                "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY${cacheInstructions})"
+                "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY${cacheInstructions})"
                 ""
-                "set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)"
+                "set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY${cacheInstructions})"
                 ""
             )
         elseif("${os}" STREQUAL "Windows" AND NOT "${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-gcc" AND NOT "${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-g++")
             string(JOIN "\n" result
-                "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
-                "set(CMAKE_SYSTEM_NAME \"${os}\")"
+                "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\"${cacheInstructions})"
+                "set(CMAKE_SYSTEM_NAME \"${os}\"${cacheInstructions})"
                 ""
-                "set(COMPILER_PATH \"${compilerDir}\")"
+                "set(COMPILER_PATH \"${compilerDir}\"${cacheInstructions})"
                 ""
-                "set(CMAKE_C_COMPILER   \"\${COMPILER_PATH}/gcc.exe\")"
-                "set(CMAKE_CXX_COMPILER \"\${COMPILER_PATH}/g++.exe\")"
-                "set(CMAKE_AR           \"\${COMPILER_PATH}/ar.exe\")"
-                "set(CMAKE_LINKER       \"\${COMPILER_PATH}/ld.exe\")"
-                "set(CMAKE_RC_COMPILER  \"\${COMPILER_PATH}/windres.exe\")"
+                "set(CMAKE_C_COMPILER   \"\${COMPILER_PATH}/gcc.exe\"${cacheInstructions})"
+                "set(CMAKE_CXX_COMPILER \"\${COMPILER_PATH}/g++.exe\"${cacheInstructions})"
+                "set(CMAKE_AR           \"\${COMPILER_PATH}/ar.exe\"${cacheInstructions})"
+                "set(CMAKE_LINKER       \"\${COMPILER_PATH}/ld.exe\"${cacheInstructions})"
+                "set(CMAKE_RC_COMPILER  \"\${COMPILER_PATH}/windres.exe\"${cacheInstructions})"
                 ""
                 "set(ENV{PATH} \"${envPathNative}\")"
                 ""
-                "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
-                "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)"
-                "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)"
-                "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
+                "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER${cacheInstructions})"
+                "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY${cacheInstructions})"
+                "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY${cacheInstructions})"
+                "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY${cacheInstructions})"
                 ""
             )
         elseif(("${os}" STREQUAL "Linux" OR "${os}" STREQUAL "Darwin") AND NOT "${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-gcc" AND NOT "${compilerFileNameNoExt}" STREQUAL "arm-none-eabi-g++")
             string(JOIN "\n" result
-                "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
-                "set(CMAKE_SYSTEM_NAME \"${os}\")"
+                "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\"${cacheInstructions})"
+                "set(CMAKE_SYSTEM_NAME \"${os}\"${cacheInstructions})"
                 ""
-                "set(COMPILER_PATH \"${compilerDir}\")"
+                "set(COMPILER_PATH \"${compilerDir}\"${cacheInstructions})"
                 ""
-                "set(CMAKE_C_COMPILER   \"\${COMPILER_PATH}/gcc\")"
-                "set(CMAKE_CXX_COMPILER \"\${COMPILER_PATH}/g++\")"
+                "set(CMAKE_C_COMPILER   \"\${COMPILER_PATH}/gcc\"${cacheInstructions})"
+                "set(CMAKE_CXX_COMPILER \"\${COMPILER_PATH}/g++\"${cacheInstructions})"
                 ""
                 "set(ENV{PATH} \"${envPathNative}\")"
                 ""
-                "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
-                "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)"
-                "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)"
-                "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
+                "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER${cacheInstructions})"
+                "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY${cacheInstructions})"
+                "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY${cacheInstructions})"
+                "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY${cacheInstructions})"
                 ""
             )
         endif()
@@ -783,6 +799,7 @@ function(set_clang_toolchain_content var)
             "PROCESSOR"
             "OS"
             "TARGET"
+            "NO_CACHE"
         )
         set(multiValueKeywords)
         cmake_parse_arguments("set_clang_toolchain_content" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
@@ -795,6 +812,13 @@ function(set_clang_toolchain_content var)
         set(processor "${set_clang_toolchain_content_PROCESSOR}")
         set(os "${set_clang_toolchain_content_OS}")
         set(target "${set_clang_toolchain_content_TARGET}")
+        set(noCache "${set_msvc_toolchain_content_NO_CACHE}")
+
+        if("${noCache}" STREQUAL "" OR "${noCache}")
+            set(cacheInstructions "")
+        else()
+            set(cacheInstructions " CACHE INTERNAL \"...\" FORCE")
+        endif()
 
         cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
 
@@ -809,22 +833,22 @@ function(set_clang_toolchain_content var)
         string(REPLACE "\\" "\\\\" envPathNative "${envPathNative}")
 
         string(JOIN "\n" result
-            "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\")"
-            "set(CMAKE_SYSTEM_NAME \"${os}\")"
+            "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\"${cacheInstructions})"
+            "set(CMAKE_SYSTEM_NAME \"${os}\"${cacheInstructions})"
             ""
-            "set(COMPILER_PATH \"${compilerDir}\")"
+            "set(COMPILER_PATH \"${compilerDir}\"${cacheInstructions})"
             ""
-            "set(CMAKE_C_COMPILER          \"\${COMPILER_PATH}/clang.exe\")"
-            "set(CMAKE_C_COMPILER_TARGET   \"${target}\")"
-            "set(CMAKE_CXX_COMPILER        \"\${COMPILER_PATH}/clang++.exe\")"
-            "set(CMAKE_CXX_COMPILER_TARGET \"${target}\")"
+            "set(CMAKE_C_COMPILER          \"\${COMPILER_PATH}/clang.exe\"${cacheInstructions})"
+            "set(CMAKE_C_COMPILER_TARGET   \"${target}\"${cacheInstructions})"
+            "set(CMAKE_CXX_COMPILER        \"\${COMPILER_PATH}/clang++.exe\"${cacheInstructions})"
+            "set(CMAKE_CXX_COMPILER_TARGET \"${target}\"${cacheInstructions})"
             ""
             "set(ENV{PATH} \"${envPathNative}\")"
             ""
-            "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)"
-            "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)"
-            "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)"
-            "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER${cacheInstructions})"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY${cacheInstructions})"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY${cacheInstructions})"
+            "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY${cacheInstructions})"
             ""
         )
     endblock()
