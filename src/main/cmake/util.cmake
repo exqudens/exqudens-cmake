@@ -62,6 +62,8 @@ function(string_replace_between prefix input fromExclusive toExclusive)
         endif()
     endforeach()
 
+    set(currentFunctionName "${CMAKE_CURRENT_FUNCTION}")
+
     set(options
         "RESULT_ONLY"
         "REPLACED_ONLY"
@@ -71,32 +73,32 @@ function(string_replace_between prefix input fromExclusive toExclusive)
         "WITH"
     )
     set(multiValueKeywords)
-    cmake_parse_arguments("string_replace_between" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+    cmake_parse_arguments("${currentFunctionName}" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
 
-    if(NOT "${string_replace_between_UNPARSED_ARGUMENTS}" STREQUAL "")
-        message(FATAL_ERROR "Unparsed arguments: '${string_replace_between_UNPARSED_ARGUMENTS}'")
+    if(NOT "${${currentFunctionName}_UNPARSED_ARGUMENTS}" STREQUAL "")
+        message(FATAL_ERROR "Unparsed arguments: '${${currentFunctionName}_UNPARSED_ARGUMENTS}'")
     endif()
 
-    if("" STREQUAL "${string_replace_between_WITH}")
+    if("" STREQUAL "${${currentFunctionName}_WITH}")
         set(value "")
     else()
-        set(value "${string_replace_between_WITH}")
+        set(value "${${currentFunctionName}_WITH}")
     endif()
 
-    if("${string_replace_between_REPLACED_ONLY}")
+    if("${${currentFunctionName}_REPLACED_ONLY}")
         substring_from(resultBetween "${input}" "${fromExclusive}")
         substring_to(resultBetween "${resultBetween}" "${toExclusive}")
 
         string(CONCAT resultReplaced "${fromExclusive}" "${resultBetween}" "${toExclusive}")
 
         set("${prefix}" "${resultReplaced}" PARENT_SCOPE)
-    elseif("${string_replace_between_BETWEEN_ONLY}")
+    elseif("${${currentFunctionName}_BETWEEN_ONLY}")
         substring_from(resultBetween "${input}" "${fromExclusive}")
         substring_to(resultBetween "${resultBetween}" "${toExclusive}")
 
         set("${prefix}" "${resultBetween}" PARENT_SCOPE)
     else()
-        if("${string_replace_between_RESULT_ONLY}")
+        if("${${currentFunctionName}_RESULT_ONLY}")
             substring_to(part1 "${input}" "${fromExclusive}")
             substring_from(part2 "${input}" "${toExclusive}")
             string(CONCAT result "${part1}" "${value}" "${part2}")
@@ -132,6 +134,8 @@ function(find_file_in_parent prefix)
             endif()
         endforeach()
 
+        set(currentFunctionName "${CMAKE_CURRENT_FUNCTION}")
+
         set(options
             "REQUIRED"
         )
@@ -142,16 +146,16 @@ function(find_file_in_parent prefix)
             "NAMES"
             "PATHS"
         )
-        cmake_parse_arguments("find_file_in_parent" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+        cmake_parse_arguments("${currentFunctionName}" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
 
-        if(NOT "${find_file_in_parent_UNPARSED_ARGUMENTS}" STREQUAL "")
-            message(FATAL_ERROR "Unparsed arguments: '${find_file_in_parent_UNPARSED_ARGUMENTS}'")
+        if(NOT "${${currentFunctionName}_UNPARSED_ARGUMENTS}" STREQUAL "")
+            message(FATAL_ERROR "Unparsed arguments: '${${currentFunctionName}_UNPARSED_ARGUMENTS}'")
         endif()
 
-        set(required "${find_file_in_parent_REQUIRED}")
-        set(maxParentLevel "${find_file_in_parent_MAX_PARENT_LEVEL}")
-        set(paths "${find_file_in_parent_PATHS}")
-        set(names "${find_file_in_parent_NAMES}")
+        set(required "${${currentFunctionName}_REQUIRED}")
+        set(maxParentLevel "${${currentFunctionName}_MAX_PARENT_LEVEL}")
+        set(paths "${${currentFunctionName}_PATHS}")
+        set(names "${${currentFunctionName}_NAMES}")
 
         set(func_max "${maxParentLevel}")
         if("" STREQUAL "${func_max}")
@@ -212,6 +216,8 @@ function(find_file_in prefix)
             endif()
         endforeach()
 
+        set(currentFunctionName "${CMAKE_CURRENT_FUNCTION}")
+
         set(options
             "REQUIRED"
         )
@@ -220,15 +226,15 @@ function(find_file_in prefix)
             "NAMES"
             "PATHS"
         )
-        cmake_parse_arguments("find_file_in" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+        cmake_parse_arguments("${currentFunctionName}" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
 
-        if(NOT "${find_file_in_UNPARSED_ARGUMENTS}" STREQUAL "")
-            message(FATAL_ERROR "Unparsed arguments: '${find_file_in_UNPARSED_ARGUMENTS}'")
+        if(NOT "${${currentFunctionName}_UNPARSED_ARGUMENTS}" STREQUAL "")
+            message(FATAL_ERROR "Unparsed arguments: '${${currentFunctionName}_UNPARSED_ARGUMENTS}'")
         endif()
 
-        set(required "${find_file_in_REQUIRED}")
-        set(paths "${find_file_in_PATHS}")
-        set(names "${find_file_in_NAMES}")
+        set(required "${${currentFunctionName}_REQUIRED}")
+        set(paths "${${currentFunctionName}_PATHS}")
+        set(names "${${currentFunctionName}_NAMES}")
 
         foreach(path ${paths})
             if(NOT "${result}" STREQUAL "" AND NOT "${resultDir}" STREQUAL "")
@@ -269,6 +275,8 @@ function(set_msvc_path var)
             endif()
         endforeach()
 
+        set(currentFunctionName "${CMAKE_CURRENT_FUNCTION}")
+
         set(options)
         set(oneValueKeywords
             "COMMAND"
@@ -278,16 +286,16 @@ function(set_msvc_path var)
         set(multiValueKeywords
             "PRODUCTS"
         )
-        cmake_parse_arguments("set_msvc_path" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+        cmake_parse_arguments("${currentFunctionName}" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
 
-        if(NOT "${set_msvc_path_UNPARSED_ARGUMENTS}" STREQUAL "")
-            message(FATAL_ERROR "Unparsed arguments: '${set_msvc_path_UNPARSED_ARGUMENTS}'")
+        if(NOT "${${currentFunctionName}_UNPARSED_ARGUMENTS}" STREQUAL "")
+            message(FATAL_ERROR "Unparsed arguments: '${${currentFunctionName}_UNPARSED_ARGUMENTS}'")
         endif()
 
-        set(command "${set_msvc_path_COMMAND}")
-        set(version "${set_msvc_path_VERSION}")
-        set(property "${set_msvc_path_PROPERTY}")
-        set(products "${set_msvc_path_PRODUCTS}")
+        set(command "${${currentFunctionName}_COMMAND}")
+        set(version "${${currentFunctionName}_VERSION}")
+        set(property "${${currentFunctionName}_PROPERTY}")
+        set(products "${${currentFunctionName}_PRODUCTS}")
 
         if("" STREQUAL "${command}")
             set(command "C:/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe")
@@ -372,6 +380,8 @@ function(set_msvc_env prefix)
             endif()
         endforeach()
 
+        set(currentFunctionName "${CMAKE_CURRENT_FUNCTION}")
+
         set(options)
         set(oneValueKeywords
             "COMMAND"
@@ -384,19 +394,19 @@ function(set_msvc_env prefix)
         set(multiValueKeywords
             "PRODUCTS"
         )
-        cmake_parse_arguments("set_msvc_env" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+        cmake_parse_arguments("${currentFunctionName}" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
 
-        if(NOT "${set_msvc_env_UNPARSED_ARGUMENTS}" STREQUAL "")
-            message(FATAL_ERROR "Unparsed arguments: '${set_msvc_env_UNPARSED_ARGUMENTS}'")
+        if(NOT "${${currentFunctionName}_UNPARSED_ARGUMENTS}" STREQUAL "")
+            message(FATAL_ERROR "Unparsed arguments: '${${currentFunctionName}_UNPARSED_ARGUMENTS}'")
         endif()
 
-        set(command "${set_msvc_env_COMMAND}")
-        set(version "${set_msvc_env_VERSION}")
-        set(property "${set_msvc_env_PROPERTY}")
-        set(host "${set_msvc_env_HOST}")
-        set(target "${set_msvc_env_TARGET}")
-        set(path "${set_msvc_env_PATH}")
-        set(products "${set_msvc_env_PRODUCTS}")
+        set(command "${${currentFunctionName}_COMMAND}")
+        set(version "${${currentFunctionName}_VERSION}")
+        set(property "${${currentFunctionName}_PROPERTY}")
+        set(host "${${currentFunctionName}_HOST}")
+        set(target "${${currentFunctionName}_TARGET}")
+        set(path "${${currentFunctionName}_PATH}")
+        set(products "${${currentFunctionName}_PRODUCTS}")
 
         if(NOT "" STREQUAL "${path}")
             if(NOT EXISTS "${path}")
@@ -547,6 +557,8 @@ function(set_msvc_toolchain_content var)
             endif()
         endforeach()
 
+        set(currentFunctionName "${CMAKE_CURRENT_FUNCTION}")
+
         set(options)
         set(oneValueKeywords
             "COMMAND"
@@ -562,22 +574,22 @@ function(set_msvc_toolchain_content var)
         set(multiValueKeywords
             "PRODUCTS"
         )
-        cmake_parse_arguments("set_msvc_toolchain_content" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+        cmake_parse_arguments("${currentFunctionName}" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
 
-        if(NOT "${set_msvc_toolchain_content_UNPARSED_ARGUMENTS}" STREQUAL "")
-            message(FATAL_ERROR "Unparsed arguments: '${set_msvc_toolchain_content_UNPARSED_ARGUMENTS}'")
+        if(NOT "${${currentFunctionName}_UNPARSED_ARGUMENTS}" STREQUAL "")
+            message(FATAL_ERROR "Unparsed arguments: '${${currentFunctionName}_UNPARSED_ARGUMENTS}'")
         endif()
 
-        set(command "${set_msvc_toolchain_content_COMMAND}")
-        set(version "${set_msvc_toolchain_content_VERSION}")
-        set(property "${set_msvc_toolchain_content_PROPERTY}")
-        set(host "${set_msvc_toolchain_content_HOST}")
-        set(target "${set_msvc_toolchain_content_TARGET}")
-        set(path "${set_msvc_toolchain_content_PATH}")
-        set(processor "${set_msvc_toolchain_content_PROCESSOR}")
-        set(os "${set_msvc_toolchain_content_OS}")
-        set(products "${set_msvc_toolchain_content_PRODUCTS}")
-        set(noCache "${set_msvc_toolchain_content_NO_CACHE}")
+        set(command "${${currentFunctionName}_COMMAND}")
+        set(version "${${currentFunctionName}_VERSION}")
+        set(property "${${currentFunctionName}_PROPERTY}")
+        set(host "${${currentFunctionName}_HOST}")
+        set(target "${${currentFunctionName}_TARGET}")
+        set(path "${${currentFunctionName}_PATH}")
+        set(processor "${${currentFunctionName}_PROCESSOR}")
+        set(os "${${currentFunctionName}_OS}")
+        set(products "${${currentFunctionName}_PRODUCTS}")
+        set(noCache "${${currentFunctionName}_NO_CACHE}")
 
         if("${noCache}" STREQUAL "" OR "${noCache}")
             set(cacheInstructions "")
@@ -679,6 +691,8 @@ function(set_gnu_toolchain_content var)
             endif()
         endforeach()
 
+        set(currentFunctionName "${CMAKE_CURRENT_FUNCTION}")
+
         set(options)
         set(oneValueKeywords
             "PATH"
@@ -687,16 +701,16 @@ function(set_gnu_toolchain_content var)
             "NO_CACHE"
         )
         set(multiValueKeywords)
-        cmake_parse_arguments("set_gnu_toolchain_content" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+        cmake_parse_arguments("${currentFunctionName}" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
 
-        if(NOT "${set_gnu_toolchain_content_UNPARSED_ARGUMENTS}" STREQUAL "")
-            message(FATAL_ERROR "Unparsed arguments: '${set_gnu_toolchain_content_UNPARSED_ARGUMENTS}'")
+        if(NOT "${${currentFunctionName}_UNPARSED_ARGUMENTS}" STREQUAL "")
+            message(FATAL_ERROR "Unparsed arguments: '${${currentFunctionName}_UNPARSED_ARGUMENTS}'")
         endif()
 
-        set(path "${set_gnu_toolchain_content_PATH}")
-        set(processor "${set_gnu_toolchain_content_PROCESSOR}")
-        set(os "${set_gnu_toolchain_content_OS}")
-        set(noCache "${set_msvc_toolchain_content_NO_CACHE}")
+        set(path "${${currentFunctionName}_PATH}")
+        set(processor "${${currentFunctionName}_PROCESSOR}")
+        set(os "${${currentFunctionName}_OS}")
+        set(noCache "${${currentFunctionName}_NO_CACHE}")
 
         if("${noCache}" STREQUAL "" OR "${noCache}")
             set(cacheInstructions "")
@@ -793,6 +807,8 @@ function(set_clang_toolchain_content var)
             endif()
         endforeach()
 
+        set(currentFunctionName "${CMAKE_CURRENT_FUNCTION}")
+
         set(options)
         set(oneValueKeywords
             "PATH"
@@ -802,17 +818,17 @@ function(set_clang_toolchain_content var)
             "NO_CACHE"
         )
         set(multiValueKeywords)
-        cmake_parse_arguments("set_clang_toolchain_content" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+        cmake_parse_arguments("${currentFunctionName}" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
 
-        if(NOT "${set_clang_toolchain_content_UNPARSED_ARGUMENTS}" STREQUAL "")
-            message(FATAL_ERROR "Unparsed arguments: '${set_clang_toolchain_content_UNPARSED_ARGUMENTS}'")
+        if(NOT "${${currentFunctionName}_UNPARSED_ARGUMENTS}" STREQUAL "")
+            message(FATAL_ERROR "Unparsed arguments: '${${currentFunctionName}_UNPARSED_ARGUMENTS}'")
         endif()
 
-        set(path "${set_clang_toolchain_content_PATH}")
-        set(processor "${set_clang_toolchain_content_PROCESSOR}")
-        set(os "${set_clang_toolchain_content_OS}")
-        set(target "${set_clang_toolchain_content_TARGET}")
-        set(noCache "${set_msvc_toolchain_content_NO_CACHE}")
+        set(path "${${currentFunctionName}_PATH}")
+        set(processor "${${currentFunctionName}_PROCESSOR}")
+        set(os "${${currentFunctionName}_OS}")
+        set(target "${${currentFunctionName}_TARGET}")
+        set(noCache "${${currentFunctionName}_NO_CACHE}")
 
         if("${noCache}" STREQUAL "" OR "${noCache}")
             set(cacheInstructions "")
@@ -928,28 +944,30 @@ function(set_conan_compiler_version var cmakeCxxCompilerId cmakeCxxCompilerVersi
             endif()
         endforeach()
 
+        set(currentFunctionName "${CMAKE_CURRENT_FUNCTION}")
+
         set(options)
         set(oneValueKeywords
             "DELIMITER"
             "MAX_ELEMENTS"
         )
         set(multiValueKeywords)
-        cmake_parse_arguments("set_conan_compiler_version" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+        cmake_parse_arguments("${currentFunctionName}" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
 
-        if(NOT "${set_conan_compiler_version_UNPARSED_ARGUMENTS}" STREQUAL "")
-            message(FATAL_ERROR "Unparsed arguments: '${set_conan_compiler_version_UNPARSED_ARGUMENTS}'")
+        if(NOT "${${currentFunctionName}_UNPARSED_ARGUMENTS}" STREQUAL "")
+            message(FATAL_ERROR "Unparsed arguments: '${${currentFunctionName}_UNPARSED_ARGUMENTS}'")
         endif()
 
-        if("${set_conan_compiler_version_DELIMITER}" STREQUAL "")
+        if("${${currentFunctionName}_DELIMITER}" STREQUAL "")
             set(delimiter ".")
         else()
-            set(delimiter "${set_conan_compiler_version_DELIMITER}")
+            set(delimiter "${${currentFunctionName}_DELIMITER}")
         endif()
 
-        if("${set_conan_compiler_version_MAX_ELEMENTS}" STREQUAL "")
+        if("${${currentFunctionName}_MAX_ELEMENTS}" STREQUAL "")
             set(maxElements "-1")
         else()
-            set(maxElements "${set_conan_compiler_version_MAX_ELEMENTS}")
+            set(maxElements "${${currentFunctionName}_MAX_ELEMENTS}")
         endif()
 
         if("MSVC" STREQUAL "${cmakeCxxCompilerId}")
@@ -1133,61 +1151,103 @@ function(generate_interface_only_files var)
             endif()
         endforeach()
 
+        set(currentFunctionName "${CMAKE_CURRENT_FUNCTION}")
+
         set(options)
         set(oneValueKeywords
             "SRC_DIRECTORY"
             "SRC_BASE_DIRECTORY"
             "DST_BASE_DIRECTORY"
-            "HEADER_FILES_EXPRESSION"
-            "SOURCE_FILES_EXPRESSION"
         )
-        set(multiValueKeywords)
-        cmake_parse_arguments("generate_interface_only_files" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+        set(multiValueKeywords
+            "HEADER_FILES"
+            "HEADER_FILES_EXPRESSIONS"
+            "SOURCE_FILES"
+            "SOURCE_FILES_EXPRESSIONS"
+        )
+        cmake_parse_arguments("${currentFunctionName}" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
 
-        if(NOT "${generate_interface_only_files_UNPARSED_ARGUMENTS}" STREQUAL "")
-            message(FATAL_ERROR "Unparsed arguments: '${generate_interface_only_files_UNPARSED_ARGUMENTS}'")
+        if(NOT "${${currentFunctionName}_UNPARSED_ARGUMENTS}" STREQUAL "")
+            message(FATAL_ERROR "Unparsed arguments: '${${currentFunctionName}_UNPARSED_ARGUMENTS}'")
         endif()
 
-        set(srcDirectory "${generate_interface_only_files_SRC_DIRECTORY}")
-        set(srcBaseDirectory "${generate_interface_only_files_SRC_BASE_DIRECTORY}")
-        set(dstBaseDirectory "${generate_interface_only_files_DST_BASE_DIRECTORY}")
-        set(headerFilesExpression "${generate_interface_only_files_HEADER_FILES_EXPRESSION}")
-        set(sourceFilesExpression "${generate_interface_only_files_SOURCE_FILES_EXPRESSION}")
+        set(srcDirectory "${${currentFunctionName}_SRC_DIRECTORY}")
+        set(srcBaseDirectory "${${currentFunctionName}_SRC_BASE_DIRECTORY}")
+        set(dstBaseDirectory "${${currentFunctionName}_DST_BASE_DIRECTORY}")
+        set(headerFiles "${${currentFunctionName}_HEADER_FILES}")
+        set(headerFilesExpressions "${${currentFunctionName}_HEADER_FILES_EXPRESSIONS}")
+        set(sourceFiles "${${currentFunctionName}_SOURCE_FILES}")
+        set(sourceFilesExpressions "${${currentFunctionName}_SOURCE_FILES_EXPRESSIONS}")
 
         if(
             "${srcDirectory}" STREQUAL ""
             OR "${srcBaseDirectory}" STREQUAL ""
             OR "${dstBaseDirectory}" STREQUAL ""
-            OR "${headerFilesExpression}" STREQUAL ""
-            OR "${sourceFilesExpression}" STREQUAL ""
+            OR ("${headerFiles}" STREQUAL "" AND "${headerFilesExpressions}" STREQUAL "")
+            OR ("${sourceFiles}" STREQUAL "" AND "${sourceFilesExpressions}" STREQUAL "")
         )
             string(JOIN " " message
                 "Invalid set of arguments:"
                 "srcDirectory: '${srcDirectory}'"
                 "srcBaseDirectory: '${srcBaseDirectory}'"
                 "dstBaseDirectory: '${dstBaseDirectory}'"
-                "headerFilesExpression: '${headerFilesExpression}'"
-                "sourceFilesExpression: '${sourceFilesExpression}'"
+                "headerFiles: '${headerFiles}'"
+                "headerFilesExpressions: '${headerFilesExpressions}'"
+                "sourceFiles: '${sourceFiles}'"
+                "sourceFilesExpressions: '${sourceFilesExpressions}'"
+            )
+            message(FATAL_ERROR "${message}")
+        endif()
+
+        if(
+            (NOT "${headerFiles}" STREQUAL "" AND NOT "${headerFilesExpressions}" STREQUAL "")
+            OR (NOT "${sourceFiles}" STREQUAL "" AND NOT "${sourceFilesExpressions}" STREQUAL "")
+        )
+            string(JOIN " " message
+                "Invalid set of arguments:"
+                "headerFiles: '${headerFiles}'"
+                "headerFilesExpressions: '${headerFilesExpressions}'"
+                "sourceFiles: '${sourceFiles}'"
+                "sourceFilesExpressions: '${sourceFilesExpressions}'"
             )
             message(FATAL_ERROR "${message}")
         endif()
 
         cmake_path(RELATIVE_PATH dstBaseDirectory BASE_DIRECTORY "${srcDirectory}" OUTPUT_VARIABLE dstRelativePath)
 
-        file(GLOB_RECURSE headerFiles "${srcBaseDirectory}/${headerFilesExpression}")
-        file(GLOB_RECURSE sourceFiles "${srcBaseDirectory}/${sourceFilesExpression}")
+        foreach(expression IN LISTS headerFilesExpressions)
+            file(GLOB_RECURSE files "${srcBaseDirectory}/${expression}")
+            foreach(file IN LISTS files)
+                list(APPEND headerFilesFound "${file}")
+            endforeach()
+        endforeach()
 
-        list(SORT headerFiles)
-        list(SORT sourceFiles)
+        foreach(expression IN LISTS sourceFilesExpressions)
+            file(GLOB_RECURSE files "${srcBaseDirectory}/${expression}")
+            foreach(file IN LISTS files)
+                list(APPEND sourceFilesFound "${file}")
+            endforeach()
+        endforeach()
+
+        foreach(file IN LISTS headerFiles)
+            list(APPEND headerFilesFound "${srcDirectory}/${file}")
+        endforeach()
+
+        foreach(file IN LISTS sourceFiles)
+            list(APPEND sourceFilesFound "${srcDirectory}/${file}")
+        endforeach()
+
+        list(SORT headerFilesFound)
+        list(SORT sourceFilesFound)
         set(singleHeaderFiles "")
         set(pairedHeaderFiles "")
         set(pairedSourceFiles "")
         set(result "")
-        foreach(header ${headerFiles})
+        foreach(header ${headerFilesFound})
             set(singleHeader "TRUE")
             get_filename_component(headerFileDir "${header}" DIRECTORY)
             get_filename_component(headerFileName "${header}" NAME_WE)
-            foreach(source ${sourceFiles})
+            foreach(source ${sourceFilesFound})
                 get_filename_component(sourceFileDir "${source}" DIRECTORY)
                 get_filename_component(sourceFileName "${source}" NAME_WE)
                 if("${headerFileDir}" STREQUAL "${sourceFileDir}" AND "${headerFileName}" STREQUAL "${sourceFileName}")
