@@ -132,10 +132,16 @@ add_test(
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
 )
 
+add_test(
+    NAME "test_doxygen"
+    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_doxygen.cmake"
+    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+)
+
 add_custom_target("cmake-test"
     COMMAND "${CMAKE_CTEST_COMMAND}"
             --preset "${PRESET_NAME}"
-            #-R "test_generate_interface_only_files"
+            #-R "test_doxygen"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
     USES_TERMINAL
     VERBATIM

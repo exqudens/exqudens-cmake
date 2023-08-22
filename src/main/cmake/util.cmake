@@ -1,5 +1,18 @@
 cmake_minimum_required(VERSION 3.25 FATAL_ERROR)
 
+if(NOT "${CMAKE_SCRIPT_MODE_FILE}" STREQUAL "" AND "${CMAKE_SCRIPT_MODE_FILE}" STREQUAL "${CMAKE_CURRENT_LIST_FILE}")
+    cmake_policy(PUSH)
+    cmake_policy(SET CMP0007 NEW)
+    cmake_policy(PUSH)
+    cmake_policy(SET CMP0010 NEW)
+    cmake_policy(PUSH)
+    cmake_policy(SET CMP0012 NEW)
+    cmake_policy(PUSH)
+    cmake_policy(SET CMP0054 NEW)
+    cmake_policy(PUSH)
+    cmake_policy(SET CMP0057 NEW)
+endif()
+
 function(set_if_not_defined var)
     foreach(i var)
         if("" STREQUAL "${${i}}")
@@ -1336,3 +1349,175 @@ function(generate_interface_only_files var)
     set("${var}" "${result}" PARENT_SCOPE)
     unset(result)
 endfunction()
+
+function(doxygen)
+    block()
+        set(currentFunctionName "${CMAKE_CURRENT_FUNCTION}")
+        cmake_path(GET "CMAKE_CURRENT_LIST_FILE" STEM currentFileNameNoExt)
+
+        set(options)
+        set(oneValueKeywords
+            "VERBOSE"
+            "SOURCE_BASE_DIR"
+            "SOURCE_DIR"
+            "OUTPUT_DIR"
+            "DOXYFILE"
+        )
+        set(multiValueKeywords
+            "FILE_PATTERNS"
+            "EXCLUDES"
+            "CLEAN"
+        )
+
+        cmake_parse_arguments("${currentFunctionName}" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+
+        if(NOT "${${currentFunctionName}_UNPARSED_ARGUMENTS}" STREQUAL "")
+            message(FATAL_ERROR "Unparsed arguments: '${${currentFunctionName}_UNPARSED_ARGUMENTS}'")
+        endif()
+
+        if("${${currentFunctionName}_VERBOSE}")
+            set(verbose "TRUE")
+        else()
+            set(verbose "FALSE")
+        endif()
+
+        if("${${currentFunctionName}_SOURCE_BASE_DIR}" STREQUAL "")
+            message(FATAL_ERROR "Not set SOURCE_BASE_DIR: '${${currentFunctionName}_SOURCE_BASE_DIR}'")
+        elseif(NOT EXISTS "${${currentFunctionName}_SOURCE_BASE_DIR}")
+            message(FATAL_ERROR "Not exists SOURCE_BASE_DIR: '${${currentFunctionName}_SOURCE_BASE_DIR}'")
+        elseif(NOT IS_DIRECTORY "${${currentFunctionName}_SOURCE_BASE_DIR}")
+            message(FATAL_ERROR "Not directory SOURCE_BASE_DIR: '${${currentFunctionName}_SOURCE_BASE_DIR}'")
+        else()
+            set(sourceBaseDir "${${currentFunctionName}_SOURCE_BASE_DIR}")
+        endif()
+
+        if("${${currentFunctionName}_SOURCE_DIR}" STREQUAL "")
+            set(sourceDirRelative "src/main/cpp")
+        else()
+            set(sourceDirRelative "${${currentFunctionName}_SOURCE_DIR}")
+            cmake_path(APPEND sourceDirRelative "DIR")
+            cmake_path(GET "sourceDirRelative" PARENT_PATH sourceDirRelative)
+        endif()
+
+        if("${${currentFunctionName}_OUTPUT_DIR}" STREQUAL "")
+            set(outputDirRelative "build/doxygen/main")
+        else()
+            set(outputDirRelative "${${currentFunctionName}_OUTPUT_DIR}")
+            cmake_path(APPEND outputDirRelative "DIR")
+            cmake_path(GET "outputDirRelative" PARENT_PATH outputDirRelative)
+        endif()
+
+        if("${${currentFunctionName}_DOXYFILE}" STREQUAL "")
+            set(doxyFileRelative "${outputDirRelative}/Doxyfile")
+        else()
+            set(doxyFileRelative "${${currentFunctionName}_DOXYFILE}")
+            cmake_path(APPEND doxyFileRelative "DIR")
+            cmake_path(GET "doxyFileRelative" PARENT_PATH doxyFileRelative)
+        endif()
+
+        if("${${currentFunctionName}_FILE_PATTERNS}" STREQUAL "")
+            set(filePatterns "*.h" "*.c" "*.hpp" "*.cpp")
+        else()
+            set(filePatterns "${${currentFunctionName}_FILE_PATTERNS}")
+        endif()
+
+        if("${${currentFunctionName}_EXCLUDES}" STREQUAL "")
+            set(excludesRaw "")
+        else()
+            set(excludesRaw "")
+            foreach(excludeRaw IN LISTS "${currentFunctionName}_EXCLUDES")
+                cmake_path(APPEND excludeRaw "DIR")
+                cmake_path(GET "excludeRaw" PARENT_PATH excludeRaw)
+                list(APPEND excludesRaw "${excludeRaw}")
+            endforeach()
+        endif()
+
+        if("${${currentFunctionName}_CLEAN}")
+            set(clean "TRUE")
+        else()
+            set(clean "FALSE")
+        endif()
+
+        # clean run doxygen
+        if("${clean}" AND EXISTS "${sourceBaseDir}/${outputDirRelative}")
+            if("${verbose}")
+                string(TIMESTAMP currentDateTime "%Y-%m-%d %H:%M:%S")
+                message(STATUS "timestamp: '${currentDateTime}' file: '${CMAKE_CURRENT_LIST_FILE}' clean run doxygen")
+            endif()
+            file(REMOVE_RECURSE "${sourceBaseDir}/${outputDirRelative}")
+        endif()
+
+        # run doxygen
+        if(NOT EXISTS "${sourceBaseDir}/${outputDirRelative}")
+            if("${verbose}")
+                string(TIMESTAMP currentDateTime "%Y-%m-%d %H:%M:%S")
+                message(STATUS "timestamp: '${currentDateTime}' file: '${CMAKE_CURRENT_LIST_FILE}' run doxygen")
+            endif()
+            if(NOT EXISTS "${doxyFileRelative}")
+                string(JOIN "\n" doxygenFileContent
+                    "PROJECT_NAME = \"${currentFileNameNoExt}\""
+                    "OUTPUT_DIRECTORY = \"${outputDirRelative}\""
+                    "RECURSIVE = YES"
+                    "INPUT = \"${sourceDirRelative}\""
+                    "ENABLE_PREPROCESSING = YES"
+                    "GENERATE_XML = YES"
+                    "GENERATE_HTML = NO"
+                    "GENERATE_LATEX = NO"
+                    ""
+                )
+                if(NOT "${filePatterns}" STREQUAL "")
+                    string(JOIN "\", \"" filePatternsContent ${filePatterns})
+                    set(filePatternsContent "FILE_PATTERNS = \"${filePatternsContent}\"")
+                    string(APPEND doxygenFileContent "${filePatternsContent}\n")
+                endif()
+                if(NOT "${excludesRaw}" STREQUAL "")
+                    string(JOIN "\", \"" excludeContent ${excludesRaw})
+                    set(excludeContent "EXCLUDE = \"${excludeContent}\"")
+                    string(APPEND doxygenFileContent "${excludeContent}\n")
+                endif()
+                if(NOT "${verbose}")
+                    string(APPEND doxygenFileContent "QUIET = YES\n")
+                endif()
+                file(WRITE "${sourceBaseDir}/${doxyFileRelative}" "${doxygenFileContent}")
+            endif()
+
+            find_program(DOXYGEN_COMMAND NAMES "doxygen.exe" "doxygen" PATHS ENV CONAN_PATH ENV PATH REQUIRED NO_CACHE NO_DEFAULT_PATH)
+            file(MAKE_DIRECTORY "${sourceBaseDir}/${outputDirRelative}")
+            execute_process(
+                COMMAND "${DOXYGEN_COMMAND}" "${sourceBaseDir}/${doxyFileRelative}"
+                WORKING_DIRECTORY "${sourceBaseDir}"
+                COMMAND_ECHO "STDOUT"
+                COMMAND_ERROR_IS_FATAL "ANY"
+            )
+            if("${verbose}")
+                string(TIMESTAMP currentDateTime "%Y-%m-%d %H:%M:%S")
+                message(STATUS "currentDateTime: '${currentDateTime}'")
+            endif()
+        endif()
+    endblock()
+endfunction()
+
+block()
+    if(NOT "${CMAKE_SCRIPT_MODE_FILE}" STREQUAL "" AND "${CMAKE_SCRIPT_MODE_FILE}" STREQUAL "${CMAKE_CURRENT_LIST_FILE}")
+        set(args "")
+        set(argsStarted "FALSE")
+        math(EXPR argIndexMax "${CMAKE_ARGC} - 1")
+        foreach(i RANGE "0" "${argIndexMax}")
+            if("${argsStarted}")
+                list(APPEND args "${CMAKE_ARGV${i}}")
+            elseif(NOT "${argsStarted}" AND "${CMAKE_ARGV${i}}" STREQUAL "--")
+                set(argsStarted "TRUE")
+            endif()
+        endforeach()
+        list(POP_FRONT args func)
+        cmake_language(EVAL CODE "${func}(${args})")
+    endif()
+endblock()
+
+if(NOT "${CMAKE_SCRIPT_MODE_FILE}" STREQUAL "" AND "${CMAKE_SCRIPT_MODE_FILE}" STREQUAL "${CMAKE_CURRENT_LIST_FILE}")
+    cmake_policy(POP)
+    cmake_policy(POP)
+    cmake_policy(POP)
+    cmake_policy(POP)
+    cmake_policy(POP)
+endif()
