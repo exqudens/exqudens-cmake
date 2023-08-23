@@ -13,7 +13,7 @@ function(test_1)
 
     cmake_path(CONVERT "${path}" TO_NATIVE_PATH_LIST path NORMALIZE)
 
-    set_gnu_toolchain_content(actual
+    set_gnu_toolchain(actual
         PROCESSOR "${processor}"
         OS "${os}"
         PATH "${path}"
@@ -42,7 +42,7 @@ function(test_2)
 
     cmake_path(CONVERT "${path}" TO_NATIVE_PATH_LIST path NORMALIZE)
 
-    set_gnu_toolchain_content(actual
+    set_gnu_toolchain(actual
         PROCESSOR "${processor}"
         OS "${os}"
         PATH "${path}"
@@ -72,7 +72,7 @@ function(test_3)
 
     cmake_path(CONVERT "${path}" TO_NATIVE_PATH_LIST path NORMALIZE)
 
-    set_gnu_toolchain_content(actual
+    set_gnu_toolchain(actual
         PROCESSOR "${processor}"
         OS "${os}"
         PATH "${path}"

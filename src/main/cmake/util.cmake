@@ -561,7 +561,7 @@ function(set_msvc_env prefix)
     unset(resultMsvcRcPath)
 endfunction()
 
-function(set_msvc_toolchain_content var)
+function(set_msvc_toolchain var)
     set(result "")
     block(PROPAGATE result)
         foreach(i var)
@@ -582,6 +582,7 @@ function(set_msvc_toolchain_content var)
             "PATH"
             "PROCESSOR"
             "OS"
+            "OUTPUT_FILE"
             "NO_CACHE"
         )
         set(multiValueKeywords
@@ -602,6 +603,7 @@ function(set_msvc_toolchain_content var)
         set(processor "${${currentFunctionName}_PROCESSOR}")
         set(os "${${currentFunctionName}_OS}")
         set(products "${${currentFunctionName}_PRODUCTS}")
+        set(outputFile "${${currentFunctionName}_OUTPUT_FILE}")
         set(noCache "${${currentFunctionName}_NO_CACHE}")
 
         if("${noCache}" STREQUAL "" OR "${noCache}")
@@ -690,12 +692,16 @@ function(set_msvc_toolchain_content var)
             "link_directories(\"\${CMAKE_CXX_STANDARD_LINK_DIRECTORIES}\") # remove when CMAKE_CXX_STANDARD_LINK_DIRECTORIES is supported"
             ""
         )
+
+        if(NOT "${outputFile}" STREQUAL "" AND NOT EXISTS "${outputFile}")
+            file(WRITE "${outputFile}" "${result}")
+        endif()
     endblock()
     set("${var}" "${result}" PARENT_SCOPE)
     unset(result)
 endfunction()
 
-function(set_gnu_toolchain_content var)
+function(set_gnu_toolchain var)
     set(result "")
     block(PROPAGATE result)
         foreach(i var)
@@ -711,6 +717,7 @@ function(set_gnu_toolchain_content var)
             "PATH"
             "PROCESSOR"
             "OS"
+            "OUTPUT_FILE"
             "NO_CACHE"
         )
         set(multiValueKeywords)
@@ -723,6 +730,7 @@ function(set_gnu_toolchain_content var)
         set(path "${${currentFunctionName}_PATH}")
         set(processor "${${currentFunctionName}_PROCESSOR}")
         set(os "${${currentFunctionName}_OS}")
+        set(outputFile "${${currentFunctionName}_OUTPUT_FILE}")
         set(noCache "${${currentFunctionName}_NO_CACHE}")
 
         if("${noCache}" STREQUAL "" OR "${noCache}")
@@ -806,12 +814,16 @@ function(set_gnu_toolchain_content var)
                 ""
             )
         endif()
+
+        if(NOT "${outputFile}" STREQUAL "" AND NOT EXISTS "${outputFile}")
+            file(WRITE "${outputFile}" "${result}")
+        endif()
     endblock()
     set("${var}" "${result}" PARENT_SCOPE)
     unset(result)
 endfunction()
 
-function(set_clang_toolchain_content var)
+function(set_clang_toolchain var)
     set(result "")
     block(PROPAGATE result)
         foreach(i var)
@@ -828,6 +840,7 @@ function(set_clang_toolchain_content var)
             "PROCESSOR"
             "OS"
             "TARGET"
+            "OUTPUT_FILE"
             "NO_CACHE"
         )
         set(multiValueKeywords)
@@ -841,6 +854,7 @@ function(set_clang_toolchain_content var)
         set(processor "${${currentFunctionName}_PROCESSOR}")
         set(os "${${currentFunctionName}_OS}")
         set(target "${${currentFunctionName}_TARGET}")
+        set(outputFile "${${currentFunctionName}_OUTPUT_FILE}")
         set(noCache "${${currentFunctionName}_NO_CACHE}")
 
         if("${noCache}" STREQUAL "" OR "${noCache}")
@@ -880,6 +894,10 @@ function(set_clang_toolchain_content var)
             "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY${cacheInstructions})"
             ""
         )
+
+        if(NOT "${outputFile}" STREQUAL "" AND NOT EXISTS "${outputFile}")
+            file(WRITE "${outputFile}" "${result}")
+        endif()
     endblock()
     set("${var}" "${result}" PARENT_SCOPE)
     unset(result)

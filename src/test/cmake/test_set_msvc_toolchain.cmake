@@ -3,7 +3,9 @@ include("${CMAKE_CURRENT_LIST_DIR}/../../main/cmake/util.cmake")
 function(test_1)
     message("${CMAKE_CURRENT_FUNCTION} ...")
 
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/test_set_msvc_toolchain_content/test_1/msvc-16-x64-toolchain.cmake" expected)
+    get_filename_component(currentFileNameNoExt "${CMAKE_CURRENT_LIST_FILE}" NAME_WE)
+
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" expected)
 
     set(processor "AMD64")
     set(os "Windows")
@@ -11,14 +13,14 @@ function(test_1)
 
     cmake_path(CONVERT "${path}" TO_NATIVE_PATH_LIST path NORMALIZE)
 
-    set_msvc_toolchain_content(actual
+    set_msvc_toolchain(actual
         PROCESSOR "${processor}"
         OS "${os}"
         PATH "${path}"
     )
 
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_set_msvc_toolchain_content/test_1/msvc-16-x64-toolchain.cmake" "${actual}")
-    file(READ "${CMAKE_CURRENT_BINARY_DIR}/test_set_msvc_toolchain_content/test_1/msvc-16-x64-toolchain.cmake" actual)
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" "${actual}")
+    file(READ "${CMAKE_CURRENT_BINARY_DIR}/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" actual)
 
     if(NOT "${expected}" STREQUAL "${actual}")
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
@@ -30,7 +32,9 @@ endfunction()
 function(test_2)
     message("${CMAKE_CURRENT_FUNCTION} ...")
 
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/test_set_msvc_toolchain_content/test_2/msvc-16-x64-toolchain.cmake" expected)
+    get_filename_component(currentFileNameNoExt "${CMAKE_CURRENT_LIST_FILE}" NAME_WE)
+
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" expected)
 
     set(processor "AMD64")
     set(os "Windows")
@@ -41,7 +45,7 @@ function(test_2)
 
     cmake_path(CONVERT "${path}" TO_NATIVE_PATH_LIST path NORMALIZE)
 
-    set_msvc_toolchain_content(actual
+    set_msvc_toolchain(actual
         PROCESSOR "${processor}"
         OS "${os}"
         VERSION "${version}"
@@ -50,8 +54,8 @@ function(test_2)
         PRODUCTS "${products}"
     )
 
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_set_msvc_toolchain_content/test_2/msvc-16-x64-toolchain.cmake" "${actual}")
-    file(READ "${CMAKE_CURRENT_BINARY_DIR}/test_set_msvc_toolchain_content/test_2/msvc-16-x64-toolchain.cmake" actual)
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" "${actual}")
+    file(READ "${CMAKE_CURRENT_BINARY_DIR}/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" actual)
 
     if(NOT "${expected}" STREQUAL "${actual}")
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
@@ -63,7 +67,9 @@ endfunction()
 function(test_3)
     message("${CMAKE_CURRENT_FUNCTION} ...")
 
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/test_set_msvc_toolchain_content/test_3/msvc-16-x64-toolchain.cmake" expected)
+    get_filename_component(currentFileNameNoExt "${CMAKE_CURRENT_LIST_FILE}" NAME_WE)
+
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" expected)
 
     set(processor "AMD64")
     set(os "Windows")
@@ -74,7 +80,7 @@ function(test_3)
 
     cmake_path(CONVERT "${path}" TO_NATIVE_PATH_LIST path NORMALIZE)
 
-    set_msvc_toolchain_content(actual
+    set_msvc_toolchain(actual
         PROCESSOR "${processor}"
         OS "${os}"
         VERSION "${version}"
@@ -84,8 +90,8 @@ function(test_3)
         NO_CACHE "FALSE"
     )
 
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_set_msvc_toolchain_content/test_3/msvc-16-x64-toolchain.cmake" "${actual}")
-    file(READ "${CMAKE_CURRENT_BINARY_DIR}/test_set_msvc_toolchain_content/test_3/msvc-16-x64-toolchain.cmake" actual)
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" "${actual}")
+    file(READ "${CMAKE_CURRENT_BINARY_DIR}/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" actual)
 
     if(NOT "${expected}" STREQUAL "${actual}")
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")

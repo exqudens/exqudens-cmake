@@ -61,20 +61,20 @@ add_test(
 )
 
 add_test(
-    NAME "test_set_msvc_toolchain_content"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_msvc_toolchain_content.cmake"
+    NAME "test_set_msvc_toolchain"
+    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_msvc_toolchain.cmake"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
 )
 
 add_test(
-    NAME "test_set_gnu_toolchain_content"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_gnu_toolchain_content.cmake"
+    NAME "test_set_gnu_toolchain"
+    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_gnu_toolchain.cmake"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
 )
 
 add_test(
-    NAME "test_set_clang_toolchain_content"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_clang_toolchain_content.cmake"
+    NAME "test_set_clang_toolchain"
+    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_clang_toolchain.cmake"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
 )
 
