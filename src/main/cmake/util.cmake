@@ -1542,7 +1542,7 @@ function(sphinx)
             "BUILD_DIR"
             "REQUIREMENTS_FILE"
             "ENV_DIR"
-            "TITLE"
+            "TYPE"
             "OUTPUT_DIR"
         )
         set(multiValueKeywords
@@ -1656,16 +1656,15 @@ function(sphinx)
             cmake_path(GET "envDirRelative" PARENT_PATH envDirRelative)
         endif()
 
-        if("${${currentFunctionName}_TITLE}" STREQUAL "")
-            set(title "documentation")
-            set(titleFileName "${title}")
+        if("${${currentFunctionName}_TYPE}" STREQUAL "")
+            set(type "documentation")
         else()
-            set(title "${${currentFunctionName}_TITLE}")
-            string(REPLACE " " "_" titleFileName "${title}")
+            set(type "${${currentFunctionName}_TYPE}")
+            string(REPLACE " " "_" type "${type}")
         endif()
 
         if("${${currentFunctionName}_OUTPUT_DIR}" STREQUAL "")
-            set(outputDirRelative "build/doc/${titleFileName}")
+            set(outputDirRelative "build/doc/${type}")
         else()
             set(outputDirRelative "${${currentFunctionName}_OUTPUT_DIR}")
             cmake_path(APPEND outputDirRelative "DIR")
@@ -1763,8 +1762,8 @@ function(sphinx)
         if("${verbose}")
             message(STATUS "create structure")
         endif()
-        if(EXISTS "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${titleFileName}")
-            file(REMOVE_RECURSE "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${titleFileName}")
+        if(EXISTS "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}")
+            file(REMOVE_RECURSE "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}")
         endif()
         string(JOIN "\n" indexRstContent
             ".. toctree::"
@@ -1779,11 +1778,11 @@ function(sphinx)
             cmake_path(GET "fileName" STEM fileNameNoExt)
             if("${fileDir}" STREQUAL "")
                 string(APPEND indexRstContent "   ${fileNameNoExt}" "\n")
-                file(COPY "${sourceBaseDir}/${sourceDirRelative}/${file}" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${titleFileName}")
+                file(COPY "${sourceBaseDir}/${sourceDirRelative}/${file}" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}")
             else()
                 string(APPEND indexRstContent "   ${fileDir}/${fileNameNoExt}" "\n")
-                file(MAKE_DIRECTORY "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${titleFileName}/${fileDir}")
-                file(COPY "${sourceBaseDir}/${sourceDirRelative}/${file}" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${titleFileName}/${fileDir}")
+                file(MAKE_DIRECTORY "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}/${fileDir}")
+                file(COPY "${sourceBaseDir}/${sourceDirRelative}/${file}" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}/${fileDir}")
             endif()
         endforeach()
         foreach(file IN LISTS "extraFiles")
@@ -1800,15 +1799,15 @@ function(sphinx)
 
             cmake_path(GET "fileDst" PARENT_PATH fileDir)
             if("${fileDir}" STREQUAL "")
-                file(COPY "${fileSrc}" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${titleFileName}")
+                file(COPY "${fileSrc}" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}")
             else()
-                file(MAKE_DIRECTORY "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${titleFileName}/${fileDir}")
-                file(COPY "${fileSrc}" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${titleFileName}/${fileDir}")
+                file(MAKE_DIRECTORY "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}/${fileDir}")
+                file(COPY "${fileSrc}" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}/${fileDir}")
             endif()
 
         endforeach()
-        file(WRITE "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${titleFileName}/index.rst" "${indexRstContent}")
-        file(COPY "${sourceBaseDir}/${sourceDirRelative}/conf.py" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${titleFileName}")
+        file(WRITE "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}/index.rst" "${indexRstContent}")
+        file(COPY "${sourceBaseDir}/${sourceDirRelative}/conf.py" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}")
 
         foreach(builder IN LISTS "builders")
 
@@ -1845,7 +1844,7 @@ function(sphinx)
                         ${flags}
                         "-b"
                         "${builder}"
-                        "${buildDirRelative}/${sourceDirRelative}/${titleFileName}"
+                        "${buildDirRelative}/${sourceDirRelative}/${type}"
                         "${outputDirRelative}/${builder}"
                 WORKING_DIRECTORY "${sourceBaseDir}"
                 COMMAND_ECHO "STDOUT"

@@ -35,6 +35,18 @@ function(test_1)
               "links/links.rst"
         EXTRA_FILES "designs/png/structure.png"
     )
+
+    if(NOT EXISTS "${currentOutputDir}/build/doc/documentation/html/index.html")
+        message(FATAL_ERROR "Not exists '${currentOutputDir}/build/doc/documentation/html/index.html'")
+    endif()
+
+    if(NOT EXISTS "${currentOutputDir}/build/doc/documentation/docx/${CMAKE_CURRENT_FUNCTION}_designs.docx")
+        message(FATAL_ERROR "Not exists '${currentOutputDir}/build/doc/documentation/docx/${CMAKE_CURRENT_FUNCTION}_designs.docx'")
+    endif()
+
+    if(NOT EXISTS "${currentOutputDir}/build/doc/documentation/pdf/${CMAKE_CURRENT_FUNCTION}_designs.pdf")
+        message(FATAL_ERROR "Not exists '${currentOutputDir}/build/doc/documentation/pdf/${CMAKE_CURRENT_FUNCTION}_designs.pdf'")
+    endif()
 endfunction()
 
 function(test_2)
@@ -81,6 +93,18 @@ function(test_2)
         COMMAND_ECHO "STDOUT"
         COMMAND_ERROR_IS_FATAL "ANY"
     )
+
+    if(NOT EXISTS "${currentOutputDir}/build/doc/documentation/html/index.html")
+        message(FATAL_ERROR "Not exists '${currentOutputDir}/build/doc/documentation/html/index.html'")
+    endif()
+
+    if(NOT EXISTS "${currentOutputDir}/build/doc/documentation/docx/${CMAKE_CURRENT_FUNCTION}___SPACE___designs.docx")
+        message(FATAL_ERROR "Not exists '${currentOutputDir}/build/doc/documentation/docx/${CMAKE_CURRENT_FUNCTION}___SPACE___designs.docx'")
+    endif()
+
+    if(NOT EXISTS "${currentOutputDir}/build/doc/documentation/pdf/${CMAKE_CURRENT_FUNCTION}___SPACE___designs.pdf")
+        message(FATAL_ERROR "Not exists '${currentOutputDir}/build/doc/documentation/pdf/${CMAKE_CURRENT_FUNCTION}___SPACE___designs.pdf'")
+    endif()
 endfunction()
 
 function(execute_test_script)
