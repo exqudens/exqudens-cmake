@@ -144,7 +144,7 @@ add_test(
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
 )
 
-add_custom_target("cmake-test"
+add_custom_target("cmake-test" ALL
     COMMAND "${CMAKE_CTEST_COMMAND}"
             --preset "${PRESET_NAME}"
             #-R "test_sphinx"
