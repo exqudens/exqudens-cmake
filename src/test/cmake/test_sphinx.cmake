@@ -29,7 +29,7 @@ function(test_1)
     sphinx(
         SOURCE_BASE_DIR "${currentOutputDir}"
         CONF_JSON_VARS "PROJECT_DIR=${currentOutputDir}"
-                       "PROJECT_TITLE=${CMAKE_CURRENT_FUNCTION}_designs"
+                       "PROJECT_TITLE=${CMAKE_CURRENT_FUNCTION} designs"
         FILES "requirements/requirements.rst"
               "designs/designs.rst"
               "links/links.rst"
@@ -84,7 +84,7 @@ function(test_2)
         COMMAND "${CMAKE_COMMAND}" "-P" "${scriptFile}" "--" "sphinx"
                 SOURCE_BASE_DIR "${currentOutputDir}"
                 CONF_JSON_VARS "PROJECT_DIR=${currentOutputDir}"
-                               "PROJECT_TITLE=${CMAKE_CURRENT_FUNCTION}___SPACE___designs"
+                               "PROJECT_TITLE=${CMAKE_CURRENT_FUNCTION} designs"
                 FILES "requirements/requirements.rst"
                       "designs/designs.rst"
                       "links/links.rst"
@@ -98,12 +98,12 @@ function(test_2)
         message(FATAL_ERROR "Not exists '${currentOutputDir}/build/doc/documentation/html/index.html'")
     endif()
 
-    if(NOT EXISTS "${currentOutputDir}/build/doc/documentation/docx/${CMAKE_CURRENT_FUNCTION}___SPACE___designs.docx")
-        message(FATAL_ERROR "Not exists '${currentOutputDir}/build/doc/documentation/docx/${CMAKE_CURRENT_FUNCTION}___SPACE___designs.docx'")
+    if(NOT EXISTS "${currentOutputDir}/build/doc/documentation/docx/${CMAKE_CURRENT_FUNCTION}_designs.docx")
+        message(FATAL_ERROR "Not exists '${currentOutputDir}/build/doc/documentation/docx/${CMAKE_CURRENT_FUNCTION}_designs.docx'")
     endif()
 
-    if(NOT EXISTS "${currentOutputDir}/build/doc/documentation/pdf/${CMAKE_CURRENT_FUNCTION}___SPACE___designs.pdf")
-        message(FATAL_ERROR "Not exists '${currentOutputDir}/build/doc/documentation/pdf/${CMAKE_CURRENT_FUNCTION}___SPACE___designs.pdf'")
+    if(NOT EXISTS "${currentOutputDir}/build/doc/documentation/pdf/${CMAKE_CURRENT_FUNCTION}_designs.pdf")
+        message(FATAL_ERROR "Not exists '${currentOutputDir}/build/doc/documentation/pdf/${CMAKE_CURRENT_FUNCTION}_designs.pdf'")
     endif()
 endfunction()
 
