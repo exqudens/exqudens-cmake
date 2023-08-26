@@ -4,7 +4,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 import sphinx.util
-import os
+import json
 import mlx.traceability
 from pathlib import Path
 from datetime import datetime
@@ -13,7 +13,9 @@ from datetime import datetime
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 logger = sphinx.util.logging.getLogger(__name__)
-projectDir = str(os.getenv('PROJECT_DIR'))
+confJson = json.loads(Path(__file__).parent.joinpath('conf.json').read_text())
+logger.info(f"confJson: '{confJson}'")
+projectDir = confJson['PROJECT_DIR']
 logger.info(f"projectDir: '{projectDir}'")
 project = Path(projectDir).joinpath('name-version.txt').read_text().split(':')[0].strip()
 logger.info(f"project: '{project}'")
@@ -73,7 +75,7 @@ html_static_path = [str(Path(mlx.traceability.__file__).parent.joinpath('assets'
 docx_documents = [
     (
         'index',
-        str(os.getenv('PROJECT_TITLE')).replace(' ', '_') + '.docx',
+        confJson['PROJECT_TITLE'].replace(' ', '_') + '.docx',
         {
             'title': project + ' documentation',
             'created': datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
@@ -90,7 +92,7 @@ docx_coverpage = False
 # https://rst2pdf.org/static/manual.html#sphinx
 
 pdf_documents = [
-    ('index', str(os.getenv('PROJECT_TITLE')).replace(' ', '_'), release, author)
+    ('index', confJson['PROJECT_TITLE'].replace(' ', '_'), release, author)
 ]
 pdf_use_toc = True
 pdf_use_coverpage = False

@@ -28,8 +28,8 @@ function(test_1)
 
     sphinx(
         SOURCE_BASE_DIR "${currentOutputDir}"
-        ENV_VARS "PROJECT_DIR=${currentOutputDir}"
-                 "PROJECT_TITLE=${CMAKE_CURRENT_FUNCTION}_designs"
+        CONF_JSON_VARS "PROJECT_DIR=${currentOutputDir}"
+                       "PROJECT_TITLE=${CMAKE_CURRENT_FUNCTION}_designs"
         FILES "requirements/requirements.rst"
               "designs/designs.rst"
               "links/links.rst"
@@ -83,8 +83,8 @@ function(test_2)
     execute_process(
         COMMAND "${CMAKE_COMMAND}" "-P" "${scriptFile}" "--" "sphinx"
                 SOURCE_BASE_DIR "${currentOutputDir}"
-                ENV_VARS "PROJECT_DIR=${currentOutputDir}"
-                         "PROJECT_TITLE=${CMAKE_CURRENT_FUNCTION}___SPACE___designs"
+                CONF_JSON_VARS "PROJECT_DIR=${currentOutputDir}"
+                               "PROJECT_TITLE=${CMAKE_CURRENT_FUNCTION}___SPACE___designs"
                 FILES "requirements/requirements.rst"
                       "designs/designs.rst"
                       "links/links.rst"

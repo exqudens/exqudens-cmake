@@ -1543,12 +1543,13 @@ function(sphinx)
             "REQUIREMENTS_FILE"
             "ENV_DIR"
             "TYPE"
+            "CONF_JSON_FILE"
             "OUTPUT_DIR"
         )
         set(multiValueKeywords
             "FILES"
             "EXTRA_FILES"
-            "ENV_VARS"
+            "CONF_JSON_VARS"
             "BUILDERS"
         )
 
@@ -1671,6 +1672,12 @@ function(sphinx)
             cmake_path(GET "outputDirRelative" PARENT_PATH outputDirRelative)
         endif()
 
+        if("${${currentFunctionName}_CONF_JSON_VARS}" STREQUAL "")
+            set(confJsonVars "sourceBaseDir=${sourceBaseDir}")
+        else()
+            set(confJsonVars "${${currentFunctionName}_CONF_JSON_VARS}")
+        endif()
+
         if("${${currentFunctionName}_BUILDERS}" STREQUAL "")
             set(builders "html" "docx" "pdf")
         else()
@@ -1695,10 +1702,12 @@ function(sphinx)
             set(extraFiles "${${currentFunctionName}_EXTRA_FILES}")
         endif()
 
-        if("${${currentFunctionName}_ENV_VARS}" STREQUAL "")
-            set(envVars "")
+        if("${${currentFunctionName}_CONF_JSON_FILE}" STREQUAL "")
+            set(confJsonFileRelative "${sourceDirRelative}/conf.json")
         else()
-            set(envVars "${${currentFunctionName}_ENV_VARS}")
+            set(confJsonFileRelative "${${currentFunctionName}_CONF_JSON_FILE}")
+            cmake_path(APPEND confJsonFileRelative "DIR")
+            cmake_path(GET "confJsonFileRelative" PARENT_PATH confJsonFileRelative)
         endif()
 
         find_program(SPHINX_BUILD_COMMAND
@@ -1772,42 +1781,80 @@ function(sphinx)
             ""
             ""
         )
-        foreach(file IN LISTS "files")
-            cmake_path(GET "file" PARENT_PATH fileDir)
-            cmake_path(GET "file" FILENAME fileName)
-            cmake_path(GET "fileName" STEM fileNameNoExt)
-            if("${fileDir}" STREQUAL "")
-                string(APPEND indexRstContent "   ${fileNameNoExt}" "\n")
-                file(COPY "${sourceBaseDir}/${sourceDirRelative}/${file}" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}")
-            else()
-                string(APPEND indexRstContent "   ${fileDir}/${fileNameNoExt}" "\n")
-                file(MAKE_DIRECTORY "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}/${fileDir}")
-                file(COPY "${sourceBaseDir}/${sourceDirRelative}/${file}" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}/${fileDir}")
-            endif()
-        endforeach()
-        foreach(file IN LISTS "extraFiles")
-            string(FIND "${file}" ">" delimiterIndex)
-            if("${delimiterIndex}" EQUAL "-1")
-                set(fileSrc "${sourceBaseDir}/${sourceDirRelative}/${file}")
-                set(fileDst "${file}")
-            else()
-                string(REPLACE ">" ";" fileParts "${file}")
-                list(GET "fileParts" "0" fileSrc)
-                list(GET "fileParts" "1" fileDst)
-                cmake_path(RELATIVE_PATH "fileSrc" BASE_DIRECTORY "${sourceBaseDir}" OUTPUT_VARIABLE fileSrc)
-            endif()
+        if(NOT "${files}" STREQUAL "")
+            foreach(file IN LISTS "files")
+                cmake_path(GET "file" PARENT_PATH fileDir)
+                cmake_path(GET "file" FILENAME fileName)
+                cmake_path(GET "fileName" STEM fileNameNoExt)
+                if("${fileDir}" STREQUAL "")
+                    string(APPEND indexRstContent "   ${fileNameNoExt}" "\n")
+                    file(COPY "${sourceBaseDir}/${sourceDirRelative}/${file}" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${type}/${sourceDirRelative}")
+                else()
+                    string(APPEND indexRstContent "   ${fileDir}/${fileNameNoExt}" "\n")
+                    file(MAKE_DIRECTORY "${sourceBaseDir}/${buildDirRelative}/${type}/${sourceDirRelative}/${fileDir}")
+                    file(COPY "${sourceBaseDir}/${sourceDirRelative}/${file}" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${type}/${sourceDirRelative}/${fileDir}")
+                endif()
+            endforeach()
+        endif()
+        if(NOT "${extraFiles}" STREQUAL "")
+            foreach(file IN LISTS "extraFiles")
+                string(FIND "${file}" ">" delimiterIndex)
+                if("${delimiterIndex}" EQUAL "-1")
+                    set(fileSrc "${sourceBaseDir}/${sourceDirRelative}/${file}")
+                    set(fileDst "${file}")
+                else()
+                    string(REPLACE ">" ";" fileParts "${file}")
+                    list(GET "fileParts" "0" fileSrc)
+                    list(GET "fileParts" "1" fileDst)
+                    cmake_path(RELATIVE_PATH "fileSrc" BASE_DIRECTORY "${sourceBaseDir}" OUTPUT_VARIABLE fileSrc)
+                endif()
 
-            cmake_path(GET "fileDst" PARENT_PATH fileDir)
-            if("${fileDir}" STREQUAL "")
-                file(COPY "${fileSrc}" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}")
+                cmake_path(GET "fileDst" PARENT_PATH fileDir)
+                if("${fileDir}" STREQUAL "")
+                    file(COPY "${fileSrc}" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${type}/${sourceDirRelative}")
+                else()
+                    file(MAKE_DIRECTORY "${sourceBaseDir}/${buildDirRelative}/${type}/${sourceDirRelative}/${fileDir}")
+                    file(COPY "${fileSrc}" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${type}/${sourceDirRelative}/${fileDir}")
+                endif()
+            endforeach()
+        endif()
+        if(NOT "${confJsonVars}" STREQUAL "")
+            if(NOT EXISTS "${sourceBaseDir}/${confJsonFileRelative}")
+                set(confJsonContent "{}")
             else()
-                file(MAKE_DIRECTORY "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}/${fileDir}")
-                file(COPY "${fileSrc}" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}/${fileDir}")
+                file(READ "${sourceBaseDir}/${confJsonFileRelative}" confJsonContent)
             endif()
+            string(TIMESTAMP timestamp)
+            set(semicolon "<semicolon_${timestamp}>")
+            set(squareBracketOpen "<squareBracketOpen_${timestamp}>")
+            set(squareBracketClose "<squareBracketClose_${timestamp}>")
+            foreach(confJsonVar IN LISTS "confJsonVars")
+                string(REPLACE ";" "${semicolon}" confJsonVar "${confJsonVar}")
+                string(REPLACE "[" "${squareBracketOpen}" confJsonVar "${confJsonVar}")
+                string(REPLACE "]" "${squareBracketClose}" confJsonVar "${confJsonVar}")
 
-        endforeach()
-        file(WRITE "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}/index.rst" "${indexRstContent}")
-        file(COPY "${sourceBaseDir}/${sourceDirRelative}/conf.py" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}")
+                string(REPLACE "=" ";" value "${confJsonVar}")
+                list(POP_FRONT "value" key)
+                string(REPLACE ";" "=" value "${value}")
+
+                string(REPLACE "${semicolon}" ";" key "${key}")
+                string(REPLACE "${squareBracketOpen}" "[" key "${key}")
+                string(REPLACE "${squareBracketClose}" "]" key "${key}")
+
+                string(REPLACE "${semicolon}" ";" value "${value}")
+                string(REPLACE "${squareBracketOpen}" "[" value "${value}")
+                string(REPLACE "${squareBracketClose}" "]" value "${value}")
+
+                string(JSON confJsonContent SET "${confJsonContent}" "${key}" "\"${value}\"")
+            endforeach()
+            cmake_path(GET "confJsonFileRelative" PARENT_PATH confJsonDirRelative)
+            if(NOT "${confJsonDirRelative}" STREQUAL "")
+                file(MAKE_DIRECTORY "${sourceBaseDir}/${buildDirRelative}/${type}/${confJsonDirRelative}")
+            endif()
+            file(WRITE "${sourceBaseDir}/${buildDirRelative}/${type}/${confJsonFileRelative}" "${confJsonContent}")
+        endif()
+        file(WRITE "${sourceBaseDir}/${buildDirRelative}/${type}/${sourceDirRelative}/index.rst" "${indexRstContent}")
+        file(COPY "${sourceBaseDir}/${sourceDirRelative}/conf.py" DESTINATION "${sourceBaseDir}/${buildDirRelative}/${type}/${sourceDirRelative}")
 
         foreach(builder IN LISTS "builders")
 
@@ -1835,16 +1882,11 @@ function(sphinx)
                 "-E"
             )
             execute_process(
-                COMMAND "${CMAKE_COMMAND}"
-                        "-E"
-                        "env"
-                        ${envVars}
-                        "--"
-                        "${SPHINX_BUILD_COMMAND}"
+                COMMAND "${SPHINX_BUILD_COMMAND}"
                         ${flags}
                         "-b"
                         "${builder}"
-                        "${buildDirRelative}/${sourceDirRelative}/${type}"
+                        "${buildDirRelative}/${type}/${sourceDirRelative}"
                         "${outputDirRelative}/${builder}"
                 WORKING_DIRECTORY "${sourceBaseDir}"
                 COMMAND_ECHO "STDOUT"
