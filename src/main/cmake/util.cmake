@@ -1379,6 +1379,7 @@ function(doxygen)
             "SOURCE_BASE_DIR"
             "SOURCE_DIR"
             "OUTPUT_DIR"
+            "DOXYGEN_COMMAND"
             "DOXYFILE"
         )
         set(multiValueKeywords
@@ -1430,6 +1431,14 @@ function(doxygen)
             set(outputDirRelative "${${currentFunctionName}_OUTPUT_DIR}")
             cmake_path(APPEND outputDirRelative "DIR")
             cmake_path(GET "outputDirRelative" PARENT_PATH outputDirRelative)
+        endif()
+
+        if("${${currentFunctionName}_DOXYGEN_COMMAND}" STREQUAL "")
+            set(doxygenCommand "")
+        else()
+            set(doxygenCommand "${${currentFunctionName}_DOXYGEN_COMMAND}")
+            cmake_path(APPEND doxygenCommand "DIR")
+            cmake_path(GET "doxygenCommand" PARENT_PATH doxygenCommand)
         endif()
 
         if("${${currentFunctionName}_DOXYFILE}" STREQUAL "")
@@ -1500,10 +1509,15 @@ function(doxygen)
                 file(WRITE "${sourceBaseDir}/${doxyFileRelative}" "${doxygenFileContent}")
             endif()
 
-            find_program(DOXYGEN_COMMAND NAMES "doxygen.exe" "doxygen" PATHS ENV CONAN_PATH ENV PATH REQUIRED NO_CACHE NO_DEFAULT_PATH)
+            if("${doxygenCommand}" STREQUAL "")
+                find_program(doxygenCommandFound NAMES "doxygen.exe" "doxygen" PATHS ENV CONAN_PATH ENV PATH REQUIRED NO_CACHE NO_DEFAULT_PATH)
+            else()
+                set(doxygenCommandFound "${doxygenCommand}")
+            endif()
+
             file(MAKE_DIRECTORY "${sourceBaseDir}/${outputDirRelative}")
             execute_process(
-                COMMAND "${DOXYGEN_COMMAND}" "${sourceBaseDir}/${doxyFileRelative}"
+                COMMAND "${doxygenCommandFound}" "${sourceBaseDir}/${doxyFileRelative}"
                 WORKING_DIRECTORY "${sourceBaseDir}"
                 COMMAND_ECHO "STDOUT"
                 COMMAND_ERROR_IS_FATAL "ANY"
@@ -1545,6 +1559,7 @@ function(sphinx)
             "TYPE"
             "CONF_JSON_FILE"
             "OUTPUT_DIR"
+            "SPHINX_BUILD_COMMAND"
         )
         set(multiValueKeywords
             "FILES"
@@ -1672,6 +1687,14 @@ function(sphinx)
             cmake_path(GET "outputDirRelative" PARENT_PATH outputDirRelative)
         endif()
 
+        if("${${currentFunctionName}_SPHINX_BUILD_COMMAND}" STREQUAL "")
+            set(sphinxBuildCommand "")
+        else()
+            set(sphinxBuildCommand "${${currentFunctionName}_SPHINX_BUILD_COMMAND}")
+            cmake_path(APPEND sphinxBuildCommand "DIR")
+            cmake_path(GET "sphinxBuildCommand" PARENT_PATH sphinxBuildCommand)
+        endif()
+
         if("${${currentFunctionName}_CONF_JSON_VARS}" STREQUAL "")
             set(confJsonVars "sourceBaseDir=${sourceBaseDir}")
         else()
@@ -1710,61 +1733,65 @@ function(sphinx)
             cmake_path(GET "confJsonFileRelative" PARENT_PATH confJsonFileRelative)
         endif()
 
-        find_program(SPHINX_BUILD_COMMAND
-            NAMES "sphinx-build.exe" "sphinx-build"
-            PATHS "${sourceBaseDir}/${envDirRelative}/Scripts"
-                  "${sourceBaseDir}/${envDirRelative}/bin"
-            NO_CACHE
-            NO_DEFAULT_PATH
-        )
-
-        # create sphinx env
-        if("${SPHINX_BUILD_COMMAND}" STREQUAL "SPHINX_BUILD_COMMAND-NOTFOUND")
-            if("${verbose}")
-                message(STATUS "create sphinx env")
-            endif()
-            if(NOT EXISTS "${sourceBaseDir}/${requirementsFileRelative}")
-                file(WRITE "${sourceBaseDir}/${requirementsFileRelative}" "${requirementsFileContent}")
-            endif()
-            find_program(PYTHON_COMMAND NAMES "py.exe" "py" "python.exe" "python" NO_CACHE REQUIRED)
-            execute_process(
-                COMMAND "${PYTHON_COMMAND}" "-m" "venv" "${envDirRelative}"
-                WORKING_DIRECTORY "${sourceBaseDir}"
-                COMMAND_ECHO "STDOUT"
-                COMMAND_ERROR_IS_FATAL "ANY"
-            )
-            find_program(PIP_COMMAND
-                NAMES "pip.exe" "pip"
-                PATHS "${sourceBaseDir}/${envDirRelative}/Scripts"
-                "${sourceBaseDir}/${envDirRelative}/bin"
-                NO_CACHE
-                REQUIRED
-                NO_DEFAULT_PATH
-            )
-            set(command "${PIP_COMMAND}" "install")
-            if(NOT "${ssl}")
-                list(APPEND command
-                    "--trusted-host" "pypi.org"
-                    "--trusted-host" "pypi.python.org"
-                    "--trusted-host" "files.pythonhosted.org"
-                    "-r" "${requirementsFileRelative}"
-                )
-            endif()
-            list(APPEND command "-r" "${requirementsFileRelative}")
-            execute_process(
-                COMMAND ${command}
-                WORKING_DIRECTORY "${sourceBaseDir}"
-                COMMAND_ECHO "STDOUT"
-                COMMAND_ERROR_IS_FATAL "ANY"
-            )
-            find_program(SPHINX_BUILD_COMMAND
+        if("${sphinxBuildCommand}" STREQUAL "")
+            find_program(sphinxBuildCommandFound
                 NAMES "sphinx-build.exe" "sphinx-build"
                 PATHS "${sourceBaseDir}/${envDirRelative}/Scripts"
                       "${sourceBaseDir}/${envDirRelative}/bin"
                 NO_CACHE
-                REQUIRED
                 NO_DEFAULT_PATH
             )
+
+            # create sphinx env
+            if("${sphinxBuildCommandFound}" STREQUAL "sphinxBuildCommandFound-NOTFOUND")
+                if("${verbose}")
+                    message(STATUS "create sphinx env")
+                endif()
+                if(NOT EXISTS "${sourceBaseDir}/${requirementsFileRelative}")
+                    file(WRITE "${sourceBaseDir}/${requirementsFileRelative}" "${requirementsFileContent}")
+                endif()
+                find_program(PYTHON_COMMAND NAMES "py.exe" "py" "python.exe" "python" NO_CACHE REQUIRED)
+                execute_process(
+                    COMMAND "${PYTHON_COMMAND}" "-m" "venv" "${envDirRelative}"
+                    WORKING_DIRECTORY "${sourceBaseDir}"
+                    COMMAND_ECHO "STDOUT"
+                    COMMAND_ERROR_IS_FATAL "ANY"
+                )
+                find_program(PIP_COMMAND
+                    NAMES "pip.exe" "pip"
+                    PATHS "${sourceBaseDir}/${envDirRelative}/Scripts"
+                    "${sourceBaseDir}/${envDirRelative}/bin"
+                    NO_CACHE
+                    REQUIRED
+                    NO_DEFAULT_PATH
+                )
+                set(command "${PIP_COMMAND}" "install")
+                if(NOT "${ssl}")
+                    list(APPEND command
+                        "--trusted-host" "pypi.org"
+                        "--trusted-host" "pypi.python.org"
+                        "--trusted-host" "files.pythonhosted.org"
+                        "-r" "${requirementsFileRelative}"
+                    )
+                endif()
+                list(APPEND command "-r" "${requirementsFileRelative}")
+                execute_process(
+                    COMMAND ${command}
+                    WORKING_DIRECTORY "${sourceBaseDir}"
+                    COMMAND_ECHO "STDOUT"
+                    COMMAND_ERROR_IS_FATAL "ANY"
+                )
+                find_program(sphinxBuildCommandFound
+                    NAMES "sphinx-build.exe" "sphinx-build"
+                    PATHS "${sourceBaseDir}/${envDirRelative}/Scripts"
+                          "${sourceBaseDir}/${envDirRelative}/bin"
+                    NO_CACHE
+                    REQUIRED
+                    NO_DEFAULT_PATH
+                )
+            endif()
+        else()
+            set(sphinxBuildCommandFound "${sphinxBuildCommand}")
         endif()
 
         # create structure
@@ -1882,7 +1909,7 @@ function(sphinx)
                 "-E"
             )
             execute_process(
-                COMMAND "${SPHINX_BUILD_COMMAND}"
+                COMMAND "${sphinxBuildCommandFound}"
                         ${flags}
                         "-b"
                         "${builder}"
