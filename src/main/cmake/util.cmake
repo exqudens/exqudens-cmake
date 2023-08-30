@@ -1539,6 +1539,7 @@ function(sphinx)
             "breathe==4.35.0"
             "mlx.traceability==10.0.0"
             "docxbuilder==1.2.0"
+            "docxbuilder[math]"
             "rst2pdf==0.100"
             ""
         )
@@ -1546,6 +1547,8 @@ function(sphinx)
         set(options)
         set(oneValueKeywords
             "VERBOSE"
+            "SPHINX_VERBOSE"
+            "SPHINX_QUIET"
             "SSL"
             "WARNINGS_TO_ERRORS"
             "CLEAN"
@@ -1588,6 +1591,27 @@ function(sphinx)
             message(STATUS "execute file: '${CMAKE_CURRENT_LIST_FILE}'")
             string(TIMESTAMP currentDateTime "%Y-%m-%d %H:%M:%S")
             message(STATUS "currentDateTime: '${currentDateTime}'")
+        endif()
+
+        if("${${currentFunctionName}_SPHINX_VERBOSE}" STREQUAL "")
+            set(sphinxVerbose "0")
+        else()
+            set(sphinxVerbose "${${currentFunctionName}_SPHINX_VERBOSE}")
+            if("${sphinxVerbose}" GREATER "0" AND "${sphinxVerbose}" LESS_EQUAL "3")
+                set(sphinxVerbose "${sphinxVerbose}")
+            else()
+                set(sphinxVerbose "0")
+            endif()
+        endif()
+
+        if("${${currentFunctionName}_SPHINX_QUIET}" STREQUAL "")
+            set(sphinxQuiet "FALSE")
+        else()
+            if("${${currentFunctionName}_SPHINX_QUIET}")
+                set(sphinxQuiet "TRUE")
+            else()
+                set(sphinxQuiet "FALSE")
+            endif()
         endif()
 
         if("${${currentFunctionName}_SSL}" STREQUAL "")
@@ -1893,13 +1917,17 @@ function(sphinx)
                 file(REMOVE_RECURSE "${sourceBaseDir}/${outputDirRelative}/${builder}")
             endif()
             set(flags "")
-            if("${verbose}")
-                list(APPEND flags "-v" "-v" "-v")
-            else()
+            if("${sphinxQuiet}")
                 if("${warningsToErrors}")
                     list(APPEND flags "-q")
                 else()
                     list(APPEND flags "-Q")
+                endif()
+            else()
+                if("${sphinxVerbose}" GREATER "0" AND "${sphinxVerbose}" LESS_EQUAL "3")
+                    foreach(i RANGE "1" "${sphinxVerbose}")
+                        list(APPEND flags "-v")
+                    endforeach()
                 endif()
             endif()
             if("${warningsToErrors}")
