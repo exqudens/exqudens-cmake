@@ -1383,8 +1383,7 @@ function(doxygen)
             "DOXYFILE"
         )
         set(multiValueKeywords
-            "FILE_PATTERNS"
-            "EXCLUDES"
+            "DOXYGEN_TAGS"
         )
 
         cmake_parse_arguments("${currentFunctionName}" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
@@ -1449,21 +1448,23 @@ function(doxygen)
             cmake_path(GET "doxyFileRelative" PARENT_PATH doxyFileRelative)
         endif()
 
-        if("${${currentFunctionName}_FILE_PATTERNS}" STREQUAL "")
-            set(filePatterns "*.h" "*.c" "*.hpp" "*.cpp")
+        if("${${currentFunctionName}_DOXYGEN_TAGS}" STREQUAL "")
+            set(doxygenTags
+                "PROJECT_NAME=${currentFunctionName}"
+                "OUTPUT_DIRECTORY=${outputDirRelative}"
+                "RECURSIVE=YES"
+                "INPUT=${sourceDirRelative}"
+                "ENABLE_PREPROCESSING=YES"
+                "GENERATE_XML=YES"
+                "GENERATE_HTML=NO"
+                "GENERATE_LATEX=NO"
+                "FILE_PATTERNS=*.h *.c *.hpp *.cpp"
+            )
+            if(NOT "${verbose}")
+                list(APPEND doxygenTags "QUIET=YES")
+            endif()
         else()
-            set(filePatterns "${${currentFunctionName}_FILE_PATTERNS}")
-        endif()
-
-        if("${${currentFunctionName}_EXCLUDES}" STREQUAL "")
-            set(excludesRaw "")
-        else()
-            set(excludesRaw "")
-            foreach(excludeRaw IN LISTS "${currentFunctionName}_EXCLUDES")
-                cmake_path(APPEND excludeRaw "DIR")
-                cmake_path(GET "excludeRaw" PARENT_PATH excludeRaw)
-                list(APPEND excludesRaw "${excludeRaw}")
-            endforeach()
+            set(doxygenTags "${currentFunctionName}_DOXYGEN_TAGS")
         endif()
 
         # clean run doxygen
@@ -1482,29 +1483,32 @@ function(doxygen)
                 message(STATUS "timestamp: '${currentDateTime}' file: '${CMAKE_CURRENT_LIST_FILE}' run doxygen")
             endif()
             if(NOT EXISTS "${doxyFileRelative}")
-                string(JOIN "\n" doxygenFileContent
-                    "PROJECT_NAME = \"${currentFunctionName}\""
-                    "OUTPUT_DIRECTORY = \"${outputDirRelative}\""
-                    "RECURSIVE = YES"
-                    "INPUT = \"${sourceDirRelative}\""
-                    "ENABLE_PREPROCESSING = YES"
-                    "GENERATE_XML = YES"
-                    "GENERATE_HTML = NO"
-                    "GENERATE_LATEX = NO"
-                    ""
-                )
-                if(NOT "${filePatterns}" STREQUAL "")
-                    string(JOIN "\", \"" filePatternsContent ${filePatterns})
-                    set(filePatternsContent "FILE_PATTERNS = \"${filePatternsContent}\"")
-                    string(APPEND doxygenFileContent "${filePatternsContent}\n")
-                endif()
-                if(NOT "${excludesRaw}" STREQUAL "")
-                    string(JOIN "\", \"" excludeContent ${excludesRaw})
-                    set(excludeContent "EXCLUDE = \"${excludeContent}\"")
-                    string(APPEND doxygenFileContent "${excludeContent}\n")
-                endif()
-                if(NOT "${verbose}")
-                    string(APPEND doxygenFileContent "QUIET = YES\n")
+                set(doxygenFileContent "")
+                if(NOT "${doxygenTags}" STREQUAL "")
+                    string(TIMESTAMP timestamp)
+                    set(semicolon "<semicolon_${timestamp}>")
+                    set(squareBracketOpen "<squareBracketOpen_${timestamp}>")
+                    set(squareBracketClose "<squareBracketClose_${timestamp}>")
+                    foreach(doxygenTag IN LISTS "doxygenTags")
+                        string(REPLACE ";" "${semicolon}" doxygenTag "${doxygenTag}")
+                        string(REPLACE "[" "${squareBracketOpen}" doxygenTag "${doxygenTag}")
+                        string(REPLACE "]" "${squareBracketClose}" doxygenTag "${doxygenTag}")
+
+                        string(REPLACE "=" ";" value "${doxygenTag}")
+                        list(POP_FRONT "value" key)
+                        string(REPLACE ";" "=" value "${value}")
+
+                        string(REPLACE "${semicolon}" ";" key "${key}")
+                        string(REPLACE "${squareBracketOpen}" "[" key "${key}")
+                        string(REPLACE "${squareBracketClose}" "]" key "${key}")
+
+                        string(REPLACE "${semicolon}" ";" value "${value}")
+                        string(REPLACE "${squareBracketOpen}" "[" value "${value}")
+                        string(REPLACE "${squareBracketClose}" "]" value "${value}")
+
+                        string(APPEND doxygenFileContent "${key} = ${value}\n")
+                    endforeach()
+                    string(APPEND doxygenFileContent "\n")
                 endif()
                 file(WRITE "${sourceBaseDir}/${doxyFileRelative}" "${doxygenFileContent}")
             endif()
