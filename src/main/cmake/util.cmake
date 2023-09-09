@@ -1384,6 +1384,7 @@ function(doxygen)
         )
         set(multiValueKeywords
             "DOXYGEN_TAGS"
+            "DOXYGEN_ADD_TAGS"
         )
 
         cmake_parse_arguments("${currentFunctionName}" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
@@ -1465,6 +1466,12 @@ function(doxygen)
             endif()
         else()
             set(doxygenTags "${currentFunctionName}_DOXYGEN_TAGS")
+        endif()
+
+        if(NOT "${${currentFunctionName}_DOXYGEN_ADD_TAGS}" STREQUAL "")
+            foreach(doxygenAddTag IN LISTS "${currentFunctionName}_DOXYGEN_ADD_TAGS")
+                list(APPEND doxygenTags "${doxygenAddTag}")
+            endforeach()
         endif()
 
         # clean run doxygen
