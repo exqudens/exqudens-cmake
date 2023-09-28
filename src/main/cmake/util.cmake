@@ -1833,8 +1833,8 @@ function(sphinx)
         if("${verbose}")
             message(STATUS "create structure")
         endif()
-        if(EXISTS "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}")
-            file(REMOVE_RECURSE "${sourceBaseDir}/${buildDirRelative}/${sourceDirRelative}/${type}")
+        if(EXISTS "${sourceBaseDir}/${buildDirRelative}/${type}")
+            file(REMOVE_RECURSE "${sourceBaseDir}/${buildDirRelative}/${type}")
         endif()
         string(JOIN "\n" indexRstContent
             ".. toctree::"
