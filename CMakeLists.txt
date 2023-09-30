@@ -13,8 +13,8 @@ include("src/main/cmake/util.cmake")
 enable_testing()
 
 add_test(
-    NAME "test_set_if_not_defined"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_if_not_defined.cmake"
+    NAME "test_set_empty"
+    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_if_empty.cmake"
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
 )
 

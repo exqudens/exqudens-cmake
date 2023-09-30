@@ -81,7 +81,7 @@ function(test_2)
     endif()
 
     execute_process(
-        COMMAND "${CMAKE_COMMAND}" "-P" "${scriptFile}" "--" "sphinx"
+        COMMAND "${CMAKE_COMMAND}" "-P" "${scriptFile}" "--" "--escape-backslash" "sphinx"
                 SOURCE_BASE_DIR "${currentOutputDir}"
                 CONF_JSON_VARS "PROJECT_DIR=${currentOutputDir}"
                                "PROJECT_TITLE=${CMAKE_CURRENT_FUNCTION} designs"

@@ -4,7 +4,7 @@ function(test_1)
     message("${CMAKE_CURRENT_FUNCTION} ...")
 
     set(expected "ABC_abc !")
-    set_if_not_defined(actual "${expected}")
+    set_if_empty(actual "${expected}")
 
     if(NOT "${expected}" STREQUAL "${actual}")
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
@@ -18,7 +18,7 @@ function(test_2)
 
     set(expected "_")
     set(actual "_")
-    set_if_not_defined(actual "ABC_abc !")
+    set_if_empty(actual "ABC_abc !")
 
     if(NOT "${expected}" STREQUAL "${actual}")
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
