@@ -1976,18 +1976,18 @@ block()
             endif()
         endforeach()
 
-        set(escapeBackslashOption "--escape-backslash")
+        set(noEscapeBackslashOption "--no-escape-backslash")
 
         if("${args}" STREQUAL "")
             cmake_path(GET CMAKE_CURRENT_LIST_FILE FILENAME fileName)
-            message(FATAL_ERROR "Usage: cmake -P ${fileName} -- [${escapeBackslashOption}] function_name args...")
+            message(FATAL_ERROR "Usage: cmake -P ${fileName} -- [${noEscapeBackslashOption}] function_name args...")
         endif()
 
         list(POP_FRONT args firstArg)
-        set(escapeBackslash "FALSE")
+        set(escapeBackslash "TRUE")
 
-        if("${firstArg}" STREQUAL "${escapeBackslashOption}")
-            set(escapeBackslash "TRUE")
+        if("${firstArg}" STREQUAL "${noEscapeBackslashOption}")
+            set(escapeBackslash "FALSE")
             list(POP_FRONT args func)
         else()
             set(func "${firstArg}")
