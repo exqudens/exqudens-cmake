@@ -1568,7 +1568,7 @@ function(sphinx)
         "TYPE"
         "CONF_JSON_FILE"
         "OUTPUT_DIR"
-        "SPHINX_BUILD_COMMAND"
+        "SPHINX_COMMAND"
     )
     set(multiValueKeywords
         "FILES"
@@ -1717,12 +1717,12 @@ function(sphinx)
         cmake_path(GET "outputDirRelative" PARENT_PATH outputDirRelative)
     endif()
 
-    if("${${currentFunctionName}_SPHINX_BUILD_COMMAND}" STREQUAL "")
-        set(sphinxBuildCommand "")
+    if("${${currentFunctionName}_SPHINX_COMMAND}" STREQUAL "")
+        set(sphinxCommand "")
     else()
-        set(sphinxBuildCommand "${${currentFunctionName}_SPHINX_BUILD_COMMAND}")
-        cmake_path(APPEND sphinxBuildCommand "DIR")
-        cmake_path(GET "sphinxBuildCommand" PARENT_PATH sphinxBuildCommand)
+        set(sphinxCommand "${${currentFunctionName}_SPHINX_COMMAND}")
+        cmake_path(APPEND sphinxCommand "DIR")
+        cmake_path(GET "sphinxCommand" PARENT_PATH sphinxCommand)
     endif()
 
     if("${${currentFunctionName}_CONF_JSON_VARS}" STREQUAL "")
@@ -1763,8 +1763,8 @@ function(sphinx)
         cmake_path(GET "confJsonFileRelative" PARENT_PATH confJsonFileRelative)
     endif()
 
-    if("${sphinxBuildCommand}" STREQUAL "")
-        find_program(sphinxBuildCommandFound
+    if("${sphinxCommand}" STREQUAL "")
+        find_program(sphinxCommandFound
             NAMES "sphinx-build.exe" "sphinx-build"
             PATHS "${sourceBaseDir}/${envDirRelative}/Scripts"
                   "${sourceBaseDir}/${envDirRelative}/bin"
@@ -1773,7 +1773,7 @@ function(sphinx)
         )
 
         # create sphinx env
-        if("${sphinxBuildCommandFound}" STREQUAL "sphinxBuildCommandFound-NOTFOUND")
+        if("${sphinxCommandFound}" STREQUAL "sphinxCommandFound-NOTFOUND")
             if("${verbose}")
                 message(STATUS "create sphinx env")
             endif()
@@ -1811,7 +1811,7 @@ function(sphinx)
                 COMMAND_ECHO "STDOUT"
                 COMMAND_ERROR_IS_FATAL "ANY"
             )
-            find_program(sphinxBuildCommandFound
+            find_program(sphinxCommandFound
                 NAMES "sphinx-build.exe" "sphinx-build"
                 PATHS "${sourceBaseDir}/${envDirRelative}/Scripts"
                       "${sourceBaseDir}/${envDirRelative}/bin"
@@ -1821,7 +1821,7 @@ function(sphinx)
             )
         endif()
     else()
-        set(sphinxBuildCommandFound "${sphinxBuildCommand}")
+        set(sphinxCommandFound "${sphinxCommand}")
     endif()
 
     # create structure
@@ -1943,7 +1943,7 @@ function(sphinx)
             "-E"
         )
         execute_process(
-            COMMAND "${sphinxBuildCommandFound}"
+            COMMAND "${sphinxCommandFound}"
                     ${flags}
                     "-b"
                     "${builder}"
