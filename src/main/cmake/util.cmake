@@ -1462,7 +1462,7 @@ function(doxygen)
             list(APPEND doxygenTags "QUIET=YES")
         endif()
     else()
-        set(doxygenTags "${currentFunctionName}_DOXYGEN_TAGS")
+        set(doxygenTags "${${currentFunctionName}_DOXYGEN_TAGS}")
     endif()
 
     if(NOT "${${currentFunctionName}_DOXYGEN_ADD_TAGS}" STREQUAL "")
