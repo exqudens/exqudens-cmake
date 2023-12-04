@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.25 FATAL_ERROR)
+
+include("src/main/cmake/util.cmake")
+
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/name-version.txt" INFO)
 string(REPLACE ":" ";" INFO_LIST "${INFO}")
 list(GET INFO_LIST 0 RAW_NAME)
@@ -7,147 +10,49 @@ string(STRIP "${RAW_NAME}" NAME)
 string(STRIP "${RAW_VERSION}" VERSION)
 project("${NAME}" VERSION "${VERSION}" LANGUAGES "NONE")
 
+set(TEST_GROUP "all" CACHE STRING "...")
+set(TEST_CASE "all" CACHE STRING "...")
+
+if("${TEST_GROUP}" STREQUAL "all" AND "${TEST_CASE}" STREQUAL "all")
+    set(TEST_REGEXP "^.+\..+$")
+elseif(NOT "${TEST_GROUP}" STREQUAL "all" AND "${TEST_CASE}" STREQUAL "all")
+    set(TEST_REGEXP "^${TEST_GROUP}\..+$")
+elseif("${TEST_GROUP}" STREQUAL "all" AND NOT "${TEST_CASE}" STREQUAL "all")
+    set(TEST_REGEXP "^.+\.${TEST_CASE}$")
+elseif(NOT "${TEST_GROUP}" STREQUAL "all" AND NOT "${TEST_CASE}" STREQUAL "all")
+    set(TEST_REGEXP "^${TEST_GROUP}\.${TEST_CASE}$")
+endif()
+
 message("project: '${PROJECT_NAME}-${PROJECT_VERSION}'")
 
-include("src/main/cmake/util.cmake")
 enable_testing()
 
-add_test(
-    NAME "test_set_empty"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_if_empty.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_substring_from"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_substring_from.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_substring_to"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_substring_to.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_string_replace_between"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_string_replace_between.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_find_file_in_parent"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_find_file_in_parent.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_find_file_in"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_find_file_in.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_set_msvc_path"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_msvc_path.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_set_msvc_env"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_msvc_env.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_set_msvc_toolchain"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_msvc_toolchain.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_set_gnu_toolchain"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_gnu_toolchain.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_set_clang_toolchain"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_clang_toolchain.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_set_python_boolean"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_python_boolean.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_set_conan_architecture"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_conan_architecture.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_set_conan_compiler"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_conan_compiler.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_set_conan_compiler_version"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_conan_compiler_version.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_set_conan_compiler_runtime"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_conan_compiler_runtime.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_set_conan_settings"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_conan_settings.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_set_conan_options"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_conan_options.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_set_not_found_package_names"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_set_not_found_package_names.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_generate_interface_only_files"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_generate_interface_only_files.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_doxygen"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_doxygen.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
-
-add_test(
-    NAME "test_sphinx"
-    COMMAND "${CMAKE_COMMAND}" "-P" "${PROJECT_SOURCE_DIR}/src/test/cmake/test_sphinx.cmake"
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-)
+message("test-names:")
+file(GLOB TEST_FILES LIST_DIRECTORIES "FALSE" RELATIVE "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/src/test/cmake/*.cmake")
+foreach(testFile IN LISTS "TEST_FILES")
+    execute_process(
+        COMMAND "${CMAKE_COMMAND}" -P "${testFile}" "--" "list_functions"
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        ERROR_VARIABLE "testFileFunctions"
+        COMMAND_ERROR_IS_FATAL "ANY"
+    )
+    get_filename_component(testFileNameNoExt "${testFile}" NAME_WE)
+    string(STRIP "${testFileFunctions}" testFileFunctions)
+    string(REPLACE "\r\n" "\n" testFileFunctions "${testFileFunctions}")
+    string(REPLACE "\r" "\n" testFileFunctions "${testFileFunctions}")
+    string(REPLACE "\n" ";" testFileFunctions "${testFileFunctions}")
+    foreach(testFileFunction IN LISTS "testFileFunctions")
+        add_test(
+            NAME "${testFileNameNoExt}.${testFileFunction}"
+            COMMAND "${CMAKE_COMMAND}" -P "${testFile}" "--" "${testFileFunction}"
+            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        )
+        message("  ${testFileNameNoExt}.${testFileFunction}")
+    endforeach()
+endforeach()
 
 add_custom_target("cmake-test" ALL
-    COMMAND "${CMAKE_CTEST_COMMAND}"
-            --preset "${PRESET_NAME}"
-            #-R "test_sphinx"
+    COMMAND "${CMAKE_CTEST_COMMAND}" --preset "${PRESET_NAME}" -R "${TEST_REGEXP}"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
     USES_TERMINAL
     VERBATIM
