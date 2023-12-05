@@ -14,20 +14,21 @@ set(TEST_GROUP "all" CACHE STRING "...")
 set(TEST_CASE "all" CACHE STRING "...")
 
 if("${TEST_GROUP}" STREQUAL "all" AND "${TEST_CASE}" STREQUAL "all")
-    set(TEST_REGEXP "^.+\..+$")
+    set(TEST_REGEXP "^.+\\..+$")
 elseif(NOT "${TEST_GROUP}" STREQUAL "all" AND "${TEST_CASE}" STREQUAL "all")
-    set(TEST_REGEXP "^${TEST_GROUP}\..+$")
+    set(TEST_REGEXP "^${TEST_GROUP}\\..+$")
 elseif("${TEST_GROUP}" STREQUAL "all" AND NOT "${TEST_CASE}" STREQUAL "all")
-    set(TEST_REGEXP "^.+\.${TEST_CASE}$")
+    set(TEST_REGEXP "^.+\\.${TEST_CASE}$")
 elseif(NOT "${TEST_GROUP}" STREQUAL "all" AND NOT "${TEST_CASE}" STREQUAL "all")
-    set(TEST_REGEXP "^${TEST_GROUP}\.${TEST_CASE}$")
+    set(TEST_REGEXP "^${TEST_GROUP}\\.${TEST_CASE}$")
 endif()
 
 message("project: '${PROJECT_NAME}-${PROJECT_VERSION}'")
 
 enable_testing()
 
-message("test-names:")
+message("TEST_NAMES:")
+set(TEST_COUNT "0")
 file(GLOB TEST_FILES LIST_DIRECTORIES "FALSE" RELATIVE "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/src/test/cmake/*.cmake")
 foreach(testFile IN LISTS "TEST_FILES")
     execute_process(
@@ -42,14 +43,18 @@ foreach(testFile IN LISTS "TEST_FILES")
     string(REPLACE "\r" "\n" testFileFunctions "${testFileFunctions}")
     string(REPLACE "\n" ";" testFileFunctions "${testFileFunctions}")
     foreach(testFileFunction IN LISTS "testFileFunctions")
+        set(testName "${testFileNameNoExt}.${testFileFunction}")
         add_test(
-            NAME "${testFileNameNoExt}.${testFileFunction}"
+            NAME "${testName}"
             COMMAND "${CMAKE_COMMAND}" -P "${testFile}" "--" "${testFileFunction}"
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         )
+        list(APPEND TEST_NAMES "${testName}")
+        math(EXPR TEST_COUNT "${TEST_COUNT} + 1")
         message("  ${testFileNameNoExt}.${testFileFunction}")
     endforeach()
 endforeach()
+message("TEST_COUNT: '${TEST_COUNT}'")
 
 add_custom_target("cmake-test" ALL
     COMMAND "${CMAKE_CTEST_COMMAND}" --preset "${PRESET_NAME}" -R "${TEST_REGEXP}"
@@ -58,13 +63,13 @@ add_custom_target("cmake-test" ALL
     VERBATIM
 )
 
-set_target_names(ALL_TARGETS "${CMAKE_CURRENT_SOURCE_DIR}")
-message("all-targets:")
-foreach(t ${ALL_TARGETS})
+set_target_names(TARGET_NAMES "${CMAKE_CURRENT_SOURCE_DIR}")
+message("TARGET_NAMES:")
+foreach(t ${TARGET_NAMES})
     message("  ${t}")
 endforeach()
 
-set(EXPECTED_ALL_TARGETS
+set(EXPECTED_TARGET_NAMES
     "all"
     "help"
     "clean"
@@ -75,6 +80,6 @@ set(EXPECTED_ALL_TARGETS
     "cmake-test"
 )
 
-if(NOT "${EXPECTED_ALL_TARGETS}" STREQUAL "${ALL_TARGETS}")
-    message(FATAL_ERROR "'EXPECTED_ALL_TARGETS': '${EXPECTED_ALL_TARGETS}' != 'ALL_TARGETS': '${ALL_TARGETS}'")
+if(NOT "${EXPECTED_TARGET_NAMES}" STREQUAL "${TARGET_NAMES}")
+    message(FATAL_ERROR "'EXPECTED_TARGET_NAMES': '${EXPECTED_TARGET_NAMES}' != 'TARGET_NAMES': '${TARGET_NAMES}'")
 endif()

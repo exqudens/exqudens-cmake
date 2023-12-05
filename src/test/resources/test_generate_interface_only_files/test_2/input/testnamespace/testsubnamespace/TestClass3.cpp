@@ -1,4 +1,4 @@
-#include "testnamespace/testsubnamespace/TestClass3.hpp"
+#include <testnamespace/testsubnamespace/TestClass3.hpp>
 
 #include <iostream>
 

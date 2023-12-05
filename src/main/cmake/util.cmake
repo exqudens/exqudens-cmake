@@ -1209,6 +1209,10 @@ function(generate_interface_only_files var)
     set(sourceFilesExpressions "${${currentFunctionName}_SOURCE_FILES_EXPRESSIONS}")
     set(headerSourceMaps "${${currentFunctionName}_HEADER_SOURCE_MAPS}")
 
+    cmake_path(NORMAL_PATH srcDirectory)
+    cmake_path(NORMAL_PATH srcBaseDirectory)
+    cmake_path(NORMAL_PATH dstBaseDirectory)
+
     if(
         "${srcDirectory}" STREQUAL ""
         OR "${srcBaseDirectory}" STREQUAL ""
@@ -1311,6 +1315,18 @@ function(generate_interface_only_files var)
                         endif()
                     endforeach()
                 endif()
+            else()
+                foreach(map IN LISTS headerSourceMaps)
+                    if("${match}")
+                        break()
+                    endif()
+                    string(REPLACE ">" ";" parts "${map}")
+                    list(GET "parts" "0" key)
+                    list(GET "parts" "1" value)
+                    if("${headerFileName}" STREQUAL "${key}" AND "${sourceFileName}" STREQUAL "${value}")
+                        set(match "TRUE")
+                    endif()
+                endforeach()
             endif()
             if("${match}")
                 set(singleHeader "FALSE")
@@ -1337,22 +1353,50 @@ function(generate_interface_only_files var)
         endif()
     endforeach()
 
+    set(semicolon "<semicolon_${timestamp}>")
+    set(squareBracketOpen "<squareBracketOpen_${timestamp}>")
+    set(squareBracketClose "<squareBracketClose_${timestamp}>")
+
     foreach(header source IN ZIP_LISTS pairedHeaderFiles pairedSourceFiles)
         file(READ "${header}" headerContent)
         file(READ "${source}" sourceContent)
 
-        string_replace_between(sourcePart1 "${sourceContent}" "\n" "namespace " BETWEEN_ONLY)
-        substring_from(sourcePart2 "${sourceContent}" "namespace ")
-        string(PREPEND sourcePart2 "namespace ")
-        string(STRIP "${headerContent}" headerContent)
-        string(STRIP "${sourcePart1}" sourcePart1)
-        string(STRIP "${sourcePart2}" sourcePart2)
+        cmake_path(RELATIVE_PATH header BASE_DIRECTORY "${srcBaseDirectory}" OUTPUT_VARIABLE headerIncludePath)
+        get_filename_component(headerIncludeFile "${headerIncludePath}" NAME)
+
         set(newHeaderContent "")
-        string(APPEND newHeaderContent "${headerContent}" "\n" "\n")
-        if(NOT "" STREQUAL "${sourcePart1}")
-            string(APPEND newHeaderContent "${sourcePart1}" "\n" "\n")
-        endif()
-        string(APPEND newHeaderContent "${sourcePart2}" "\n")
+        string(STRIP "${headerContent}" headerContentStrip)
+        string(APPEND newHeaderContent "${headerContentStrip}" "\n")
+
+        string(STRIP "${sourceContent}" sourceLines)
+
+        string(REPLACE ";" "${semicolon}" sourceLines "${sourceLines}")
+        string(REPLACE "[" "${squareBracketOpen}" sourceLines "${sourceLines}")
+        string(REPLACE "]" "${squareBracketClose}" sourceLines "${sourceLines}")
+
+        string(REPLACE "\r\n" "\n" sourceLines "${sourceLines}")
+        string(REPLACE "\r" "\n" sourceLines "${sourceLines}")
+        string(REPLACE "\n" ";" sourceLines "${sourceLines}")
+
+        foreach(sourceLine IN LISTS sourceLines)
+            string(REPLACE "${semicolon}" ";" sourceLine "${sourceLine}")
+            string(REPLACE "${squareBracketOpen}" "[" sourceLine "${sourceLine}")
+            string(REPLACE "${squareBracketClose}" "]" sourceLine "${sourceLine}")
+
+            string(STRIP "${sourceLine}" sourceLineStrip)
+
+            if(
+                "${sourceLineStrip}" MATCHES "^#include[^\"]+\"${headerIncludePath}\"$"
+                OR "${sourceLineStrip}" MATCHES "^#include[^<]+<${headerIncludePath}>$"
+                OR "${sourceLineStrip}" MATCHES "^#include[^\"]+\"${headerIncludeFile}\"$"
+                OR "${sourceLineStrip}" MATCHES "^#include[^<]+<${headerIncludeFile}>$"
+            )
+                continue()
+            else()
+                string(APPEND newHeaderContent "${sourceLine}" "\n")
+            endif()
+        endforeach()
+
         cmake_path(RELATIVE_PATH header BASE_DIRECTORY "${srcBaseDirectory}" OUTPUT_VARIABLE newHeaderPath)
         set(newHeaderPath "${dstBaseDirectory}/${newHeaderPath}")
         cmake_path(RELATIVE_PATH newHeaderPath BASE_DIRECTORY "${srcDirectory}" OUTPUT_VARIABLE newHeaderRelativePath)
