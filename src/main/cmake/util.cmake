@@ -1553,7 +1553,7 @@ function(doxygen)
         endif()
 
         if("${doxygenCommand}" STREQUAL "")
-            find_program(doxygenCommandFound NAMES "doxygen.exe" "doxygen" PATHS ENV CONAN_PATH ENV PATH REQUIRED NO_CACHE NO_DEFAULT_PATH)
+            find_program(doxygenCommandFound NAMES "doxygen.exe" "doxygen" PATHS ENV DOXYGEN_PATH ENV PATH REQUIRED NO_CACHE NO_DEFAULT_PATH)
         else()
             set(doxygenCommandFound "${doxygenCommand}")
         endif()
