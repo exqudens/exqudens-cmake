@@ -893,6 +893,96 @@ function(set_clang_toolchain var)
     unset(result)
 endfunction()
 
+function(set_iar_toolchain var)
+    set(result "")
+
+    foreach(i var)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
+
+    set(currentFunctionName "${CMAKE_CURRENT_FUNCTION}")
+    set(options)
+    set(oneValueKeywords
+        "PATH"
+        "PROCESSOR"
+        "OS"
+        "OUTPUT_FILE"
+        "NO_CACHE"
+        "SET_CMAKE_SYSTEM_PROCESSOR"
+        "SET_CMAKE_SYSTEM_NAME"
+    )
+    set(multiValueKeywords)
+    cmake_parse_arguments("${currentFunctionName}" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+
+    if(NOT "${${currentFunctionName}_UNPARSED_ARGUMENTS}" STREQUAL "")
+        message(FATAL_ERROR "Unparsed arguments: '${${currentFunctionName}_UNPARSED_ARGUMENTS}'")
+    endif()
+
+    set(path "${${currentFunctionName}_PATH}")
+    set(processor "${${currentFunctionName}_PROCESSOR}")
+    set(os "${${currentFunctionName}_OS}")
+    set(outputFile "${${currentFunctionName}_OUTPUT_FILE}")
+    set(noCache "${${currentFunctionName}_NO_CACHE}")
+    set(setCmakeSystemProcessor "${${currentFunctionName}_SET_CMAKE_SYSTEM_PROCESSOR}")
+    set(setCmakeSystemName "${${currentFunctionName}_SET_CMAKE_SYSTEM_NAME}")
+
+    if("${noCache}" STREQUAL "" OR "${noCache}")
+        set(cacheInstructions "")
+    else()
+        set(cacheInstructions " CACHE INTERNAL \"...\" FORCE")
+    endif()
+
+    cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
+    get_filename_component(compilerFileNameExt "${path}" EXT)
+    get_filename_component(compilerFileNameNoExt "${path}" NAME_WE)
+    get_filename_component(compilerDir "${path}" DIRECTORY)
+
+    set(envPath "${compilerDir}")
+    list(APPEND envPath "\$ENV{PATH}")
+    list(FILTER envPath EXCLUDE REGEX "^$")
+    list(REMOVE_DUPLICATES envPath)
+    cmake_path(CONVERT "${envPath}" TO_NATIVE_PATH_LIST envPathNative NORMALIZE)
+
+    string(REPLACE "\\" "\\\\" envPathNative "${envPathNative}")
+
+    set(result "")
+
+    if("${setCmakeSystemProcessor}" STREQUAL "" OR "${setCmakeSystemProcessor}")
+        string(APPEND result "set(CMAKE_SYSTEM_PROCESSOR \"${processor}\"${cacheInstructions})" "\n")
+    endif()
+    if("${setCmakeSystemName}" STREQUAL "" OR "${setCmakeSystemName}")
+        string(APPEND result "set(CMAKE_SYSTEM_NAME \"${os}\"${cacheInstructions})" "\n")
+    endif()
+    string(APPEND result "" "\n")
+    string(APPEND result "set(COMPILER_PATH \"${compilerDir}\"${cacheInstructions})" "\n")
+    string(APPEND result "" "\n")
+    if("${compilerFileNameExt}" STREQUAL ".exe" AND "${compilerFileNameNoExt}" STREQUAL "iccarm")
+        string(APPEND result "set(CMAKE_ASM_COMPILER \"\${COMPILER_PATH}/iasmarm.exe\"${cacheInstructions})" "\n")
+        string(APPEND result "set(CMAKE_C_COMPILER   \"\${COMPILER_PATH}/iccarm.exe\"${cacheInstructions})" "\n")
+        string(APPEND result "set(CMAKE_CXX_COMPILER \"\${COMPILER_PATH}/iccarm.exe\"${cacheInstructions})" "\n")
+        string(APPEND result "" "\n")
+        string(APPEND result "set(CMAKE_TRY_COMPILE_TARGET_TYPE \"STATIC_LIBRARY\"${cacheInstructions})" "\n")
+    else()
+        message(FATAL_ERROR "Unsupported 'compilerFileNameExt': '${compilerFileNameExt}' 'compilerFileNameNoExt': '${compilerFileNameNoExt}'")
+    endif()
+    string(APPEND result "" "\n")
+    string(APPEND result "set(ENV{PATH} \"${envPathNative}\")" "\n")
+    string(APPEND result "" "\n")
+    string(APPEND result "set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM \"NEVER\"${cacheInstructions})" "\n")
+    string(APPEND result "set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY \"ONLY\"${cacheInstructions})" "\n")
+    string(APPEND result "set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE \"ONLY\"${cacheInstructions})" "\n")
+    string(APPEND result "set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE \"ONLY\"${cacheInstructions})" "\n")
+
+    if(NOT "${outputFile}" STREQUAL "" AND NOT EXISTS "${outputFile}")
+        file(WRITE "${outputFile}" "${result}")
+    endif()
+
+    set("${var}" "${result}" PARENT_SCOPE)
+    unset(result)
+endfunction()
+
 function(set_python_boolean var cmakeBoolean)
     set(result "")
 
