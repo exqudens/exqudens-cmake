@@ -1,8 +1,0 @@
-{
-    "NULL" : null,
-    "NUMBER": 1,
-    "STRING": "Abc",
-    "BOOLEAN": true,
-    "ARRAY": [],
-    "OBJECT": {}
-}
