@@ -2127,6 +2127,78 @@ function(sphinx)
     endif()
 endfunction()
 
+function(set_json var)
+    foreach(i var)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
+
+    set(currentFunctionName "${CMAKE_CURRENT_FUNCTION}")
+    set(options)
+    set(oneValueKeywords
+        "OUT_FILE"
+        "OVERWRITE"
+    )
+    set(multiValueKeywords
+        "VALUE"
+    )
+
+    cmake_parse_arguments("${currentFunctionName}" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+
+    if(NOT "${${currentFunctionName}_UNPARSED_ARGUMENTS}" STREQUAL "")
+        message(FATAL_ERROR "Unparsed arguments: '${${currentFunctionName}_UNPARSED_ARGUMENTS}'")
+    endif()
+
+    if("${${currentFunctionName}_OVERWRITE}" STREQUAL "")
+        set(overwrite "FALSE")
+    else()
+        if("${${currentFunctionName}_OVERWRITE}")
+            set(overwrite "TRUE")
+        else()
+            set(overwrite "FALSE")
+        endif()
+    endif()
+
+    if("${${currentFunctionName}_OUT_FILE}" STREQUAL "")
+        set(outFile "")
+    else()
+        set(outFile "${${currentFunctionName}_OUT_FILE}")
+        cmake_path(APPEND outFile "DIR")
+        cmake_path(GET "outFile" PARENT_PATH outFile)
+    endif()
+
+    if("${${currentFunctionName}_VALUE}" STREQUAL "")
+        set(value "")
+    else()
+        set(value "${${currentFunctionName}_VALUE}")
+    endif()
+
+    set(result "")
+
+    if(NOT "${value}" STREQUAL "")
+        foreach(v IN LISTS "value")
+            string(APPEND result "${v}" "\n")
+        endforeach()
+        string(TIMESTAMP quote)
+        set(quote "<quote_${quote}_quote>")
+        string(REPLACE "\\'" "${quote}" result "${result}")
+        string(REPLACE "'" "\"" result "${result}")
+        string(REPLACE "${quote}" "'" result "${result}")
+    endif()
+
+    string(JSON json SET "{}" "result" "${result}")
+    string(JSON result GET "${json}" "result")
+
+    if(NOT "${outFile}" STREQUAL "")
+        if("${overwrite}" OR NOT EXISTS "${outFile}")
+            file(WRITE "${outFile}" "${result}")
+        endif()
+    endif()
+
+    set("${var}" "${result}" PARENT_SCOPE)
+endfunction()
+
 block()
     if(NOT "${CMAKE_SCRIPT_MODE_FILE}" STREQUAL "" AND "${CMAKE_SCRIPT_MODE_FILE}" STREQUAL "${CMAKE_CURRENT_LIST_FILE}")
         set(args)
