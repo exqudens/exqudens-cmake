@@ -2130,6 +2130,140 @@ function(sphinx)
     endif()
 endfunction()
 
+function(vscode)
+    set(currentFunctionName "${CMAKE_CURRENT_FUNCTION}")
+    set(options)
+    set(oneValueKeywords
+        "SETTINGS_FILE"
+        "SETTINGS_C_CPP_ERROR_SQUIGGLES"
+        "C_CPP_PROPERTIES_FILE"
+        "C_CPP_PROPERTIES_VERSION"
+        "C_CPP_PROPERTIES_ENABLE_CONFIGURATION_SQUIGGLES"
+        "C_CPP_PROPERTIES_MSVC_CONFIG_NAME"
+        "C_CPP_PROPERTIES_MSVC_COMPILER_PATH"
+        "C_CPP_PROPERTIES_MSVC_INTELLI_SENSE_MODE"
+    )
+    set(multiValueKeywords
+        "C_CPP_PROPERTIES_MSVC_COMPILER_ARGS"
+    )
+    cmake_parse_arguments("${currentFunctionName}" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+
+    #[[if("${${currentFunctionName}_VERBOSE}" STREQUAL "")
+        set(verbose "FALSE")
+    else()
+        if("${${currentFunctionName}_VERBOSE}")
+            set(verbose "TRUE")
+        else()
+            set(verbose "FALSE")
+        endif()
+    endif()]]
+
+    # Generate ".vscode/settings.json" content
+    if(NOT "${${currentFunctionName}_SETTINGS_FILE}" STREQUAL "")
+        if(NOT "${${currentFunctionName}_SETTINGS_C_CPP_ERROR_SQUIGGLES}" STREQUAL "")
+            set(settingsCCppErrorSquiggles "${${currentFunctionName}_SETTINGS_C_CPP_ERROR_SQUIGGLES}")
+        endif()
+
+        if(EXISTS "${${currentFunctionName}_SETTINGS_FILE}")
+            file(READ "${${currentFunctionName}_SETTINGS_FILE}" settings)
+        else()
+            set(settingsCCppErrorSquiggles "enabledIfIncludesResolve")
+            set(settings "{}")
+        endif()
+
+        if(NOT "${settingsCCppErrorSquiggles}" STREQUAL "")
+            string(JSON settings SET "${settings}" "C_Cpp.errorSquiggles" "\"${settingsCCppErrorSquiggles}\"")
+        endif()
+
+        file(WRITE "${${currentFunctionName}_SETTINGS_FILE}" "${settings}")
+    endif()
+
+    # Generate ".vscode/c_cpp_properties.json" content
+    if(NOT "${${currentFunctionName}_C_CPP_PROPERTIES_FILE}" STREQUAL "")
+        if(NOT "${${currentFunctionName}_C_CPP_PROPERTIES_VERSION}" STREQUAL "")
+            set(cCppPropertiesVersion "${${currentFunctionName}_C_CPP_PROPERTIES_VERSION}")
+        endif()
+
+        if(NOT "${${currentFunctionName}_C_CPP_PROPERTIES_ENABLE_CONFIGURATION_SQUIGGLES}" STREQUAL "")
+            set(cCppPropertiesEnableConfigurationSquiggles "${${currentFunctionName}_C_CPP_PROPERTIES_ENABLE_CONFIGURATION_SQUIGGLES}")
+        endif()
+
+        if(EXISTS "${${currentFunctionName}_C_CPP_PROPERTIES_FILE}")
+            file(READ "${${currentFunctionName}_C_CPP_PROPERTIES_FILE}" cCppProperties)
+        else()
+            set(cCppPropertiesVersion "4")
+            set(cCppPropertiesEnableConfigurationSquiggles "true")
+            string(JSON cCppProperties SET "{}" "configurations" "[]")
+        endif()
+
+        if(NOT "${cCppPropertiesVersion}" STREQUAL "")
+            string(JSON cCppProperties SET "${cCppProperties}" "version" "${cCppPropertiesVersion}")
+        endif()
+
+        if(NOT "${cCppPropertiesEnableConfigurationSquiggles}" STREQUAL "")
+            string(JSON cCppProperties SET "${cCppProperties}" "enableConfigurationSquiggles" "${cCppPropertiesEnableConfigurationSquiggles}")
+        endif()
+
+        # Generate "msvc"
+        if(NOT "${${currentFunctionName}_C_CPP_PROPERTIES_MSVC_CONFIG_NAME}" STREQUAL "")
+            set(cCppPropertiesMsvcConfigName "${${currentFunctionName}_C_CPP_PROPERTIES_MSVC_CONFIG_NAME}")
+
+            if("${${currentFunctionName}_C_CPP_PROPERTIES_MSVC_COMPILER_PATH}" STREQUAL "")
+                message(FATAL_ERROR "'C_CPP_PROPERTIES_MSVC_COMPILER_PATH' is empty!")
+            else()
+                set(cCppPropertiesMsvcCompilerPath "${${currentFunctionName}_C_CPP_PROPERTIES_MSVC_COMPILER_PATH}")
+                cmake_path(APPEND cCppPropertiesMsvcCompilerPath "DIR")
+                cmake_path(GET "cCppPropertiesMsvcCompilerPath" PARENT_PATH cCppPropertiesMsvcCompilerPath)
+            endif()
+
+            if("${${currentFunctionName}_C_CPP_PROPERTIES_MSVC_COMPILER_ARGS}" STREQUAL "")
+                set(cCppPropertiesMsvcCompilerArgs "")
+            else()
+                set(cCppPropertiesMsvcCompilerArgs "${${currentFunctionName}_C_CPP_PROPERTIES_MSVC_COMPILER_ARGS}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_C_CPP_PROPERTIES_MSVC_INTELLI_SENSE_MODE}" STREQUAL "")
+                set(cCppPropertiesMsvcIntelliSenseMode "${${currentFunctionName}_C_CPP_PROPERTIES_MSVC_INTELLI_SENSE_MODE}")
+            endif()
+
+            # Generate item
+            string(JSON cCppPropertiesMsvcConfig SET "{}" "name" "\"${cCppPropertiesMsvcConfigName}\"")
+            string(JSON cCppPropertiesMsvcConfig SET "${cCppPropertiesMsvcConfig}" "compilerPath" "\"${cCppPropertiesMsvcCompilerPath}\"")
+            list(LENGTH "cCppPropertiesMsvcCompilerArgs" listLength)
+            if("${listLength}" GREATER "0")
+                string(JSON cCppPropertiesMsvcConfig SET "${cCppPropertiesMsvcConfig}" "compilerArgs" "[]")
+                math(EXPR listMaxIndex "${listLength} - 1")
+                foreach(i RANGE "0" "${listMaxIndex}")
+                    list(GET "cCppPropertiesMsvcCompilerArgs" "${i}" v)
+                    string(JSON cCppPropertiesMsvcConfig SET "${cCppPropertiesMsvcConfig}" "compilerArgs" "${i}" "\"${v}\"")
+                endforeach()
+            endif()
+            if(NOT "${cCppPropertiesMsvcIntelliSenseMode}" STREQUAL "")
+                string(JSON cCppPropertiesMsvcConfig SET "${cCppPropertiesMsvcConfig}" "intelliSenseMode" "\"${cCppPropertiesMsvcIntelliSenseMode}\"")
+            endif()
+
+            # Find index
+            string(JSON cCppPropertiesMsvcConfigIndex LENGTH "${cCppProperties}" "configurations")
+            if("${cCppPropertiesMsvcConfigIndex}" GREATER "0")
+                math(EXPR listMaxIndex "${cCppPropertiesMsvcConfigIndex} - 1")
+                foreach(i RANGE "0" "${listMaxIndex}")
+                    string(JSON v GET "${cCppProperties}" "configurations" "${i}")
+                    string(JSON vName GET "${v}" "name")
+                    if("${vName}" STREQUAL "${cCppPropertiesMsvcConfigName}")
+                        set(cCppPropertiesMsvcConfigIndex "${i}")
+                        break()
+                    endif()
+                endforeach()
+            endif()
+
+            # Set item
+            string(JSON cCppProperties SET "${cCppProperties}" "configurations" "${cCppPropertiesMsvcConfigIndex}" "${cCppPropertiesMsvcConfig}")
+        endif()
+
+        file(WRITE "${${currentFunctionName}_C_CPP_PROPERTIES_FILE}" "${cCppProperties}")
+    endif()
+endfunction()
+
 block()
     if(NOT "${CMAKE_SCRIPT_MODE_FILE}" STREQUAL "" AND "${CMAKE_SCRIPT_MODE_FILE}" STREQUAL "${CMAKE_CURRENT_LIST_FILE}")
         set(args)
