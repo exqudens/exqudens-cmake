@@ -38,13 +38,13 @@ function(test_1)
         SETTINGS_C_CPP_ERROR_SQUIGGLES "enabledIfIncludesResolve"
         SETTINGS_FILE "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/settings.json"
         C_CPP_PROPERTIES_FILE "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/c_cpp_properties.json"
-        C_CPP_PROPERTIES_MSVC_CONFIG_NAME "mscv-1"
-        C_CPP_PROPERTIES_MSVC_COMPILER_PATH "C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/VC/Tools/MSVC/14.29.30133/bin/Hostx64/x64/cl.exe"
-        C_CPP_PROPERTIES_MSVC_COMPILER_ARGS "-m64"
-        C_CPP_PROPERTIES_MSVC_INTELLI_SENSE_MODE "windows-msvc-x64"
-        C_CPP_PROPERTIES_MSVC_C_STANDARD "c17"
-        C_CPP_PROPERTIES_MSVC_CPP_STANDARD "c++20"
-        C_CPP_PROPERTIES_MSVC_INCLUDE_PATH "\${workspaceFolder}/src/main/c" "\${workspaceFolder}/src/main/cpp"
+        C_CPP_PROPERTIES_CONFIG_NAME "mscv-1"
+        C_CPP_PROPERTIES_CONFIG_COMPILER_PATH "C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/VC/Tools/MSVC/14.29.30133/bin/Hostx64/x64/cl.exe"
+        C_CPP_PROPERTIES_CONFIG_COMPILER_ARGS "-m64"
+        C_CPP_PROPERTIES_CONFIG_INTELLI_SENSE_MODE "windows-msvc-x64"
+        C_CPP_PROPERTIES_CONFIG_C_STANDARD "c17"
+        C_CPP_PROPERTIES_CONFIG_CPP_STANDARD "c++20"
+        C_CPP_PROPERTIES_CONFIG_INCLUDE_PATH "\${workspaceFolder}/src/main/c" "\${workspaceFolder}/src/main/cpp"
     )
 
     file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/settings.json" actualSettings)
