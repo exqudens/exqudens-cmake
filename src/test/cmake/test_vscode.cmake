@@ -30,7 +30,12 @@ function(test_1)
     file(REMOVE "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/settings.json")
     file(REMOVE "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/c_cpp_properties.json")
 
+    set(settings "{\"C_Cpp.errorSquiggles\": \"enabled\"}")
+
     vscode(
+        SETTINGS_VAR "settings"
+        SETTINGS_INPUT "var"
+        SETTINGS_C_CPP_ERROR_SQUIGGLES "enabledIfIncludesResolve"
         SETTINGS_FILE "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/settings.json"
         C_CPP_PROPERTIES_FILE "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/c_cpp_properties.json"
         C_CPP_PROPERTIES_MSVC_CONFIG_NAME "mscv-1"
