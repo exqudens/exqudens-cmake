@@ -2176,6 +2176,14 @@ function(vscode)
         "LAUNCH_CONFIG_SERVER_READY_ACTION_KILL_ON_SERVER_STOP"
         "LAUNCH_CONFIG_TARGET"
         "LAUNCH_CONFIG_PROGRAM"
+        "LAUNCH_CONFIG_DRIVER"
+        "LAUNCH_CONFIG_STOP_ON_SYMBOL"
+        "LAUNCH_CONFIG_WORKBENCH_PATH"
+        "LAUNCH_CONFIG_PROJECT_PATH"
+        "LAUNCH_CONFIG_PROJECT_CONFIG"
+        "LAUNCH_CONFIG_LEAVE_TARGET_RUNNING"
+        "LAUNCH_CONFIG_TRACE"
+        "LAUNCH_CONFIG_DOWNLOAD_FLASH_LOADER"
     )
     set(multiValueKeywords
         "C_CPP_PROPERTIES_CONFIG_COMPILER_ARGS"
@@ -2184,6 +2192,8 @@ function(vscode)
         "C_CPP_PROPERTIES_CONFIG_MAC_FRAMEWORK_PATH"
         "C_CPP_PROPERTIES_CONFIG_FORCED_INCLUDE"
         "C_CPP_PROPERTIES_CONFIG_BROWSE_PATH"
+        "LAUNCH_CONFIG_DRIVER_OPTIONS"
+        "LAUNCH_CONFIG_DOWNLOAD_DEVICE_MACROS"
     )
     cmake_parse_arguments("${currentFunctionName}" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
 
@@ -2628,6 +2638,62 @@ function(vscode)
                 set(launchConfigProgram "${${currentFunctionName}_LAUNCH_CONFIG_PROGRAM}")
             endif()
 
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_DRIVER}" STREQUAL "")
+                set(launchConfigDriver "${${currentFunctionName}_LAUNCH_CONFIG_DRIVER}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_STOP_ON_SYMBOL}" STREQUAL "")
+                set(launchConfigStopOnSymbol "${${currentFunctionName}_LAUNCH_CONFIG_STOP_ON_SYMBOL}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_WORKBENCH_PATH}" STREQUAL "")
+                set(launchConfigWorkbenchPath "${${currentFunctionName}_LAUNCH_CONFIG_WORKBENCH_PATH}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_PROJECT_PATH}" STREQUAL "")
+                set(launchConfigProjectPath "${${currentFunctionName}_LAUNCH_CONFIG_PROJECT_PATH}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_PROJECT_CONFIG}" STREQUAL "")
+                set(launchConfigProjectConfig "${${currentFunctionName}_LAUNCH_CONFIG_PROJECT_CONFIG}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_LEAVE_TARGET_RUNNING}" STREQUAL "")
+                set(launchConfigLeaveTargetRunning "${${currentFunctionName}_LAUNCH_CONFIG_LEAVE_TARGET_RUNNING}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_TRACE}" STREQUAL "")
+                set(launchConfigTrace "${${currentFunctionName}_LAUNCH_CONFIG_TRACE}")
+            endif()
+
+            if("${${currentFunctionName}_LAUNCH_CONFIG_DRIVER_OPTIONS}" STREQUAL "")
+                set(launchConfigDriverOptions "")
+            else()
+                foreach(v IN LISTS "${currentFunctionName}_LAUNCH_CONFIG_DRIVER_OPTIONS")
+                    cmake_path(APPEND v "DIR")
+                    cmake_path(GET "v" PARENT_PATH v)
+                    if(NOT "${v}" IN_LIST "launchConfigDriverOptions")
+                        list(APPEND launchConfigDriverOptions "${v}")
+                    endif()
+                endforeach()
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_DOWNLOAD_FLASH_LOADER}" STREQUAL "")
+                set(launchConfigDownloadFlashLoader "${${currentFunctionName}_LAUNCH_CONFIG_DOWNLOAD_FLASH_LOADER}")
+            endif()
+
+            if("${${currentFunctionName}_LAUNCH_CONFIG_DOWNLOAD_DEVICE_MACROS}" STREQUAL "")
+                set(launchConfigDownloadDeviceMacros "")
+            else()
+                foreach(v IN LISTS "${currentFunctionName}_LAUNCH_CONFIG_DOWNLOAD_DEVICE_MACROS")
+                    cmake_path(APPEND v "DIR")
+                    cmake_path(GET "v" PARENT_PATH v)
+                    if(NOT "${v}" IN_LIST "launchConfigDownloadDeviceMacros")
+                        list(APPEND launchConfigDownloadDeviceMacros "${v}")
+                    endif()
+                endforeach()
+            endif()
+
             # Generate config json
             string(JSON launchConfig SET "{}" "name" "\"${launchConfigName}\"")
             string(JSON launchConfig SET "${launchConfig}" "type" "\"${launchConfigType}\"")
@@ -2705,6 +2771,64 @@ function(vscode)
             endif()
             if(NOT "${launchConfigProgram}" STREQUAL "")
                 string(JSON launchConfig SET "${launchConfig}" "program" "\"${launchConfigProgram}\"")
+            endif()
+            if(NOT "${launchConfigDriver}" STREQUAL "")
+                string(JSON launchConfig SET "${launchConfig}" "driver" "\"${launchConfigDriver}\"")
+            endif()
+            if(NOT "${launchConfigStopOnSymbol}" STREQUAL "")
+                string(JSON launchConfig SET "${launchConfig}" "stopOnSymbol" "\"${launchConfigStopOnSymbol}\"")
+            endif()
+            if(NOT "${launchConfigWorkbenchPath}" STREQUAL "")
+                string(JSON launchConfig SET "${launchConfig}" "workbenchPath" "\"${launchConfigWorkbenchPath}\"")
+            endif()
+            if(NOT "${launchConfigProjectPath}" STREQUAL "")
+                string(JSON launchConfig SET "${launchConfig}" "projectPath" "\"${launchConfigProjectPath}\"")
+            endif()
+            if(NOT "${launchConfigProjectConfig}" STREQUAL "")
+                string(JSON launchConfig SET "${launchConfig}" "projectConfiguration" "\"${launchConfigProjectConfig}\"")
+            endif()
+            if(NOT "${launchConfigLeaveTargetRunning}" STREQUAL "")
+                if("${launchConfigLeaveTargetRunning}")
+                    string(JSON launchConfig SET "${launchConfig}" "leaveTargetRunning" "true")
+                else()
+                    string(JSON launchConfig SET "${launchConfig}" "leaveTargetRunning" "false")
+                endif()
+            endif()
+            if(NOT "${launchConfigTrace}" STREQUAL "")
+                if("${launchConfigTrace}")
+                    string(JSON launchConfig SET "${launchConfig}" "trace" "true")
+                else()
+                    string(JSON launchConfig SET "${launchConfig}" "trace" "false")
+                endif()
+            endif()
+            list(LENGTH "launchConfigDriverOptions" listLength)
+            if("${listLength}" GREATER "0")
+                string(JSON launchConfig SET "${launchConfig}" "driverOptions" "[]")
+                math(EXPR listMaxIndex "${listLength} - 1")
+                foreach(i RANGE "0" "${listMaxIndex}")
+                    list(GET "launchConfigDriverOptions" "${i}" v)
+                    string(JSON launchConfig SET "${launchConfig}" "driverOptions" "${i}" "\"${v}\"")
+                endforeach()
+            endif()
+            if(
+                NOT "${launchConfigDownloadFlashLoader}" STREQUAL ""
+                OR NOT "${launchConfigDownloadDeviceMacros}" STREQUAL ""
+            )
+                string(JSON launchConfig SET "${launchConfig}" "download" "{}")
+
+                if(NOT "${launchConfigDownloadFlashLoader}" STREQUAL "")
+                    string(JSON launchConfig SET "${launchConfig}" "download" "flashLoader" "\"${launchConfigDownloadFlashLoader}\"")
+                endif()
+
+                list(LENGTH "launchConfigDownloadDeviceMacros" listLength)
+                if("${listLength}" GREATER "0")
+                    string(JSON launchConfig SET "${launchConfig}" "download" "deviceMacros" "[]")
+                    math(EXPR listMaxIndex "${listLength} - 1")
+                    foreach(i RANGE "0" "${listMaxIndex}")
+                        list(GET "launchConfigDownloadDeviceMacros" "${i}" v)
+                        string(JSON launchConfig SET "${launchConfig}" "download" "deviceMacros" "${i}" "\"${v}\"")
+                    endforeach()
+                endif()
             endif()
 
             # Find index
