@@ -8,17 +8,11 @@
 
             "presentation": {
                 "hidden": false,
-                "group": "",
+                "group": "my-group",
                 "order": 1
             },
-            "preLaunchTask": {
-                "task": "",
-                "type": "grunt"
-            },
-            "postDebugTask": {
-                "task": "",
-                "type": "grunt"
-            },
+            "preLaunchTask": "Compile",
+            "postDebugTask": "Clean",
             "internalConsoleOptions": "openOnSessionStart",
             "debugServer": 4711,
             "serverReadyAction": {

@@ -49,6 +49,7 @@ function(test_1)
         C_CPP_PROPERTIES_CONFIG_INCLUDE_PATH "\${workspaceFolder}/src/main/c" "\${workspaceFolder}/src/main/cpp"
         LAUNCH_FILE "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/launch.json"
         LAUNCH_CONFIG_NAME "iar-1"
+        LAUNCH_CONFIG_TYPE "cspy"
     )
 
     file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/settings.json" actualSettings)

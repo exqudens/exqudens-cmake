@@ -2160,6 +2160,22 @@ function(vscode)
         "LAUNCH_INPUT"
         "LAUNCH_VERSION"
         "LAUNCH_CONFIG_NAME"
+        "LAUNCH_CONFIG_TYPE"
+        "LAUNCH_CONFIG_REQUEST"
+        "LAUNCH_CONFIG_PRESENTATION_HIDDEN"
+        "LAUNCH_CONFIG_PRESENTATION_GROUP"
+        "LAUNCH_CONFIG_PRESENTATION_ORDER"
+        "LAUNCH_CONFIG_PRE_LAUNCH_TASK"
+        "LAUNCH_CONFIG_POST_DEBUG_TASK"
+        "LAUNCH_CONFIG_INTERNAL_CONSOLE_OPTIONS"
+        "LAUNCH_CONFIG_DEBUG_SERVER"
+        "LAUNCH_CONFIG_SERVER_READY_ACTION"
+        "LAUNCH_CONFIG_SERVER_READY_ACTION_PATTERN"
+        "LAUNCH_CONFIG_SERVER_READY_ACTION_URI_FORMAT"
+        "LAUNCH_CONFIG_SERVER_READY_ACTION_WEB_ROOT"
+        "LAUNCH_CONFIG_SERVER_READY_ACTION_KILL_ON_SERVER_STOP"
+        "LAUNCH_CONFIG_TARGET"
+        "LAUNCH_CONFIG_PROGRAM"
     )
     set(multiValueKeywords
         "C_CPP_PROPERTIES_CONFIG_COMPILER_ARGS"
@@ -2544,8 +2560,152 @@ function(vscode)
         if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_NAME}" STREQUAL "")
             set(launchConfigName "${${currentFunctionName}_LAUNCH_CONFIG_NAME}")
 
+            if("${${currentFunctionName}_LAUNCH_CONFIG_TYPE}" STREQUAL "")
+                message(FATAL_ERROR "'LAUNCH_CONFIG_TYPE' is empty!")
+            else()
+                set(launchConfigType "${${currentFunctionName}_LAUNCH_CONFIG_TYPE}")
+            endif()
+
+            if("${${currentFunctionName}_LAUNCH_CONFIG_REQUEST}" STREQUAL "")
+                set(launchConfigRequest "launch")
+            else()
+                set(launchConfigRequest "${${currentFunctionName}_LAUNCH_CONFIG_REQUEST}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_PRESENTATION_HIDDEN}" STREQUAL "")
+                set(launchConfigPresentationHidden "${${currentFunctionName}_LAUNCH_CONFIG_PRESENTATION_HIDDEN}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_PRESENTATION_GROUP}" STREQUAL "")
+                set(launchConfigPresentationGroup "${${currentFunctionName}_LAUNCH_CONFIG_PRESENTATION_GROUP}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_PRESENTATION_ORDER}" STREQUAL "")
+                set(launchConfigPresentationOrder "${${currentFunctionName}_LAUNCH_CONFIG_PRESENTATION_ORDER}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_PRE_LAUNCH_TASK}" STREQUAL "")
+                set(launchConfigPreLaunchTask "${${currentFunctionName}_LAUNCH_CONFIG_PRE_LAUNCH_TASK}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_POST_DEBUG_TASK}" STREQUAL "")
+                set(launchConfigPostDebugTask "${${currentFunctionName}_LAUNCH_CONFIG_POST_DEBUG_TASK}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_INTERNAL_CONSOLE_OPTIONS}" STREQUAL "")
+                set(launchConfigInternalConsoleOptions "${${currentFunctionName}_LAUNCH_CONFIG_INTERNAL_CONSOLE_OPTIONS}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_DEBUG_SERVER}" STREQUAL "")
+                set(launchConfigDebugServer "${${currentFunctionName}_LAUNCH_CONFIG_DEBUG_SERVER}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_SERVER_READY_ACTION}" STREQUAL "")
+                set(launchSonfigServerReadyAction "${${currentFunctionName}_LAUNCH_CONFIG_SERVER_READY_ACTION}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_SERVER_READY_ACTION_PATTERN}" STREQUAL "")
+                set(launchConfigServerReadyActionPattern "${${currentFunctionName}_LAUNCH_CONFIG_SERVER_READY_ACTION_PATTERN}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_SERVER_READY_ACTION_URI_FORMAT}" STREQUAL "")
+                set(launchConfigServerReadyActionUriFormat "${${currentFunctionName}_LAUNCH_CONFIG_SERVER_READY_ACTION_URI_FORMAT}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_SERVER_READY_ACTION_WEB_ROOT}" STREQUAL "")
+                set(launchConfigServerReadyActionWebRoot "${${currentFunctionName}_LAUNCH_CONFIG_SERVER_READY_ACTION_WEB_ROOT}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_SERVER_READY_ACTION_KILL_ON_SERVER_STOP}" STREQUAL "")
+                set(launchConfigServerReadyActionKillOnServerStop "${${currentFunctionName}_LAUNCH_CONFIG_SERVER_READY_ACTION_KILL_ON_SERVER_STOP}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_TARGET}" STREQUAL "")
+                set(launchConfigTarget "${${currentFunctionName}_LAUNCH_CONFIG_TARGET}")
+            endif()
+
+            if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_PROGRAM}" STREQUAL "")
+                set(launchConfigProgram "${${currentFunctionName}_LAUNCH_CONFIG_PROGRAM}")
+            endif()
+
             # Generate config json
             string(JSON launchConfig SET "{}" "name" "\"${launchConfigName}\"")
+            string(JSON launchConfig SET "${launchConfig}" "type" "\"${launchConfigType}\"")
+            string(JSON launchConfig SET "${launchConfig}" "request" "\"${launchConfigRequest}\"")
+            if(
+                NOT "${launchConfigPresentationHidden}" STREQUAL ""
+                OR NOT "${launchConfigPresentationGroup}" STREQUAL ""
+                OR NOT "${launchConfigPresentationOrder}" STREQUAL ""
+            )
+                string(JSON launchConfig SET "${launchConfig}" "presentation" "{}")
+
+                if(NOT "${launchConfigPresentationHidden}" STREQUAL "")
+                    if("${launchConfigPresentationHidden}")
+                        string(JSON launchConfig SET "${launchConfig}" "presentation" "hidden" "true")
+                    else()
+                        string(JSON launchConfig SET "${launchConfig}" "presentation" "hidden" "false")
+                    endif()
+                endif()
+
+                if(NOT "${launchConfigPresentationGroup}" STREQUAL "")
+                    string(JSON launchConfig SET "${launchConfig}" "presentation" "group" "\"${launchConfigPresentationGroup}\"")
+                endif()
+
+                if(NOT "${launchConfigPresentationOrder}" STREQUAL "")
+                    string(JSON launchConfig SET "${launchConfig}" "presentation" "order" "${launchConfigPresentationOrder}")
+                endif()
+            endif()
+            if(NOT "${launchConfigPreLaunchTask}" STREQUAL "")
+                string(JSON launchConfig SET "${launchConfig}" "preLaunchTask" "\"${launchConfigPreLaunchTask}\"")
+            endif()
+            if(NOT "${launchConfigPostDebugTask}" STREQUAL "")
+                string(JSON launchConfig SET "${launchConfig}" "postDebugTask" "\"${launchConfigPostDebugTask}\"")
+            endif()
+            if(NOT "${launchConfigInternalConsoleOptions}" STREQUAL "")
+                string(JSON launchConfig SET "${launchConfig}" "internalConsoleOptions" "\"${launchConfigInternalConsoleOptions}\"")
+            endif()
+            if(NOT "${launchConfigDebugServer}" STREQUAL "")
+                string(JSON launchConfig SET "${launchConfig}" "debugServer" "${launchConfigDebugServer}")
+            endif()
+            if(
+                NOT "${launchSonfigServerReadyAction}" STREQUAL ""
+                OR NOT "${launchConfigServerReadyActionPattern}" STREQUAL ""
+                OR NOT "${launchConfigServerReadyActionUriFormat}" STREQUAL ""
+                OR NOT "${launchConfigServerReadyActionWebRoot}" STREQUAL ""
+                OR NOT "${launchConfigServerReadyActionKillOnServerStop}" STREQUAL ""
+            )
+                string(JSON launchConfig SET "${launchConfig}" "serverReadyAction" "{}")
+
+                if(NOT "${launchSonfigServerReadyAction}" STREQUAL "")
+                    string(JSON launchConfig SET "${launchConfig}" "serverReadyAction" "action" "\"${launchSonfigServerReadyAction}\"")
+                endif()
+
+                if(NOT "${launchConfigServerReadyActionPattern}" STREQUAL "")
+                    string(JSON launchConfig SET "${launchConfig}" "serverReadyAction" "pattern" "\"${launchConfigServerReadyActionPattern}\"")
+                endif()
+
+                if(NOT "${launchConfigServerReadyActionUriFormat}" STREQUAL "")
+                    string(JSON launchConfig SET "${launchConfig}" "serverReadyAction" "uriFormat" "\"${launchConfigServerReadyActionUriFormat}\"")
+                endif()
+
+                if(NOT "${launchConfigServerReadyActionWebRoot}" STREQUAL "")
+                    string(JSON launchConfig SET "${launchConfig}" "serverReadyAction" "webRoot" "\"${launchConfigServerReadyActionWebRoot}\"")
+                endif()
+
+                if(NOT "${launchConfigServerReadyActionKillOnServerStop}" STREQUAL "")
+                    if("${launchConfigServerReadyActionKillOnServerStop}")
+                        string(JSON launchConfig SET "${launchConfig}" "serverReadyAction" "killOnServerStop" "true")
+                    else()
+                        string(JSON launchConfig SET "${launchConfig}" "serverReadyAction" "killOnServerStop" "false")
+                    endif()
+                endif()
+            endif()
+            if(NOT "${launchConfigTarget}" STREQUAL "")
+                string(JSON launchConfig SET "${launchConfig}" "target" "\"${launchConfigTarget}\"")
+            endif()
+            if(NOT "${launchConfigProgram}" STREQUAL "")
+                string(JSON launchConfig SET "${launchConfig}" "program" "\"${launchConfigProgram}\"")
+            endif()
 
             # Find index
             string(JSON launchConfigIndex LENGTH "${launch}" "configurations")
