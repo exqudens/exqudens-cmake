@@ -2158,6 +2158,8 @@ function(vscode)
         "LAUNCH_VAR"
         "LAUNCH_FILE"
         "LAUNCH_INPUT"
+        "LAUNCH_VERSION"
+        "LAUNCH_CONFIG_NAME"
     )
     set(multiValueKeywords
         "C_CPP_PROPERTIES_CONFIG_COMPILER_ARGS"
@@ -2230,6 +2232,8 @@ function(vscode)
         if("${cCppPropertiesInput}" STREQUAL "var")
             set(cCppProperties "${${${currentFunctionName}_C_CPP_PROPERTIES_VAR}}")
             if("${cCppProperties}" STREQUAL "")
+                set(cCppPropertiesVersion "4")
+                set(cCppPropertiesEnableConfigSquiggles "true")
                 string(JSON cCppProperties SET "{}" "configurations" "[]")
             endif()
         elseif("${cCppPropertiesInput}" STREQUAL "file")
@@ -2259,7 +2263,7 @@ function(vscode)
             string(JSON cCppProperties SET "${cCppProperties}" "enableConfigurationSquiggles" "${cCppPropertiesEnableConfigSquiggles}")
         endif()
 
-        # Generate "msvc"
+        # Generate config
         if(NOT "${${currentFunctionName}_C_CPP_PROPERTIES_CONFIG_NAME}" STREQUAL "")
             set(cCppPropertiesConfigName "${${currentFunctionName}_C_CPP_PROPERTIES_CONFIG_NAME}")
 
@@ -2383,7 +2387,7 @@ function(vscode)
                 endforeach()
             endif()
 
-            # Generate item
+            # Generate config json
             string(JSON cCppPropertiesConfig SET "{}" "name" "\"${cCppPropertiesConfigName}\"")
             string(JSON cCppPropertiesConfig SET "${cCppPropertiesConfig}" "compilerPath" "\"${cCppPropertiesConfigCompilerPath}\"")
             list(LENGTH "cCppPropertiesConfigCompilerArgs" listLength)
@@ -2515,6 +2519,7 @@ function(vscode)
         if("${launchInput}" STREQUAL "var")
             set(launch "${${${currentFunctionName}_LAUNCH_VAR}}")
             if("${launch}" STREQUAL "")
+                set(launchVersion "0.2.0")
                 string(JSON launch SET "{}" "configurations" "[]")
             endif()
         elseif("${launchInput}" STREQUAL "file")
@@ -2532,10 +2537,33 @@ function(vscode)
 
         # Generate
         if(NOT "${launchVersion}" STREQUAL "")
-            string(JSON launch SET "${launch}" "version" "${launchVersion}")
+            string(JSON launch SET "${launch}" "version" "\"${launchVersion}\"")
         endif()
 
-        # TODO
+        # Generate config
+        if(NOT "${${currentFunctionName}_LAUNCH_CONFIG_NAME}" STREQUAL "")
+            set(launchConfigName "${${currentFunctionName}_LAUNCH_CONFIG_NAME}")
+
+            # Generate config json
+            string(JSON launchConfig SET "{}" "name" "\"${launchConfigName}\"")
+
+            # Find index
+            string(JSON launchConfigIndex LENGTH "${launch}" "configurations")
+            if("${launchConfigIndex}" GREATER "0")
+                math(EXPR listMaxIndex "${launchConfigIndex} - 1")
+                foreach(i RANGE "0" "${listMaxIndex}")
+                    string(JSON v GET "${launch}" "configurations" "${i}")
+                    string(JSON vName GET "${v}" "name")
+                    if("${vName}" STREQUAL "${launchConfigName}")
+                        set(launchConfigIndex "${i}")
+                        break()
+                    endif()
+                endforeach()
+            endif()
+
+            # Set item
+            string(JSON launch SET "${launch}" "configurations" "${launchConfigIndex}" "${launchConfig}")
+        endif()
 
         if(NOT "${${currentFunctionName}_LAUNCH_VAR}" STREQUAL "")
             set("${${currentFunctionName}_LAUNCH_VAR}" "${launch}" PARENT_SCOPE)

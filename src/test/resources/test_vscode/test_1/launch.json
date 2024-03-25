@@ -1,0 +1,55 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "iar-1",
+            "type": "cspy",
+            "request": "launch",
+
+            "presentation": {
+                "hidden": false,
+                "group": "",
+                "order": 1
+            },
+            "preLaunchTask": {
+                "task": "",
+                "type": "grunt"
+            },
+            "postDebugTask": {
+                "task": "",
+                "type": "grunt"
+            },
+            "internalConsoleOptions": "openOnSessionStart",
+            "debugServer": 4711,
+            "serverReadyAction": {
+                "action": "debugWithEdge",
+                "pattern": "listening on port ([0-9]+)",
+                "uriFormat": "http://localhost:%s",
+                "webRoot": "${workspaceFolder}",
+                "killOnServerStop": false
+            },
+
+            "target": "arm",
+            "program": "${workspaceFolder}/Debug/Exe/ewproj.out",
+            "driver": "I-jet",
+            "stopOnSymbol": "main",
+            "workbenchPath": "${command:iar-config.toolchain} for an iar-build project or path to EW root.",
+            "projectPath": "${command:iar-config.project-file} for an iar-build project.",
+            "projectConfiguration": "${command:iar-config.project-configuration} for an iar-build project. Remove this for other project types.",
+            "leaveTargetRunning": false,
+            "trace": false,
+            "driverOptions": [
+                "--endian=little",
+                "--cpu=<CPU_NAME>",
+                "--fpu=None",
+                "--semihosting"
+            ],
+            "download": {
+                "flashLoader": "${command:iar-settings.toolchain}/arm/config/flashloader/ST/FlashSTM32F427xI.board",
+                "deviceMacros": [
+                    "${command:iar-settings.toolchain}/arm/config/debugger/ST/STM32F4xx.dmac"
+                ]
+            }
+        }
+    ]
+}

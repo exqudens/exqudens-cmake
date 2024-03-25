@@ -26,9 +26,11 @@ function(test_1)
 
     file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${testFileName}/${testFunctionName}/settings.json" expectedSettings)
     file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${testFileName}/${testFunctionName}/c_cpp_properties.json" expectedCCppProperties)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${testFileName}/${testFunctionName}/launch.json" expectedLaunch)
 
     file(REMOVE "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/settings.json")
     file(REMOVE "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/c_cpp_properties.json")
+    file(REMOVE "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/launch.json")
 
     set(settings "{\"C_Cpp.errorSquiggles\": \"enabled\"}")
 
@@ -45,10 +47,13 @@ function(test_1)
         C_CPP_PROPERTIES_CONFIG_C_STANDARD "c17"
         C_CPP_PROPERTIES_CONFIG_CPP_STANDARD "c++20"
         C_CPP_PROPERTIES_CONFIG_INCLUDE_PATH "\${workspaceFolder}/src/main/c" "\${workspaceFolder}/src/main/cpp"
+        LAUNCH_FILE "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/launch.json"
+        LAUNCH_CONFIG_NAME "iar-1"
     )
 
     file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/settings.json" actualSettings)
     file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/c_cpp_properties.json" actualCCppProperties)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/launch.json" actualLaunch)
 
     string(JSON settingsEqual EQUAL "${expectedSettings}" "${actualSettings}")
     if(NOT "${settingsEqual}")
@@ -58,6 +63,11 @@ function(test_1)
     string(JSON cCppPropertiesEqual EQUAL "${expectedCCppProperties}" "${actualCCppProperties}")
     if(NOT "${cCppPropertiesEqual}")
         message(FATAL_ERROR "'expectedCCppProperties': '${expectedCCppProperties}' != 'actualCCppProperties': '${actualCCppProperties}'")
+    endif()
+
+    string(JSON launchEqual EQUAL "${expectedLaunch}" "${actualLaunch}")
+    if(NOT "${launchEqual}")
+        message(FATAL_ERROR "'expectedLaunch': '${expectedLaunch}' != 'actualLaunch': '${actualLaunch}'")
     endif()
 
     message("... PASS")
