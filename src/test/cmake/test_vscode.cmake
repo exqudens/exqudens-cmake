@@ -71,7 +71,10 @@ function(test_1)
         LAUNCH_CONFIG_PROJECT_CONFIG "\${command:iar-config.project-configuration}"
         LAUNCH_CONFIG_LEAVE_TARGET_RUNNING "false"
         LAUNCH_CONFIG_TRACE "false"
+        LAUNCH_CONFIG_PLUGINS "\${command:iar-config.toolchain}/arm/bin/armbat.dll"
+        LAUNCH_CONFIG_SETUP_MACROS "\${workspaceFolder}/setup.mac"
         LAUNCH_CONFIG_DRIVER_OPTIONS "--endian=little" "--cpu=<CPU_NAME>" "--fpu=None" "--semihosting"
+        LAUNCH_CONFIG_SOURCE_FILE_MAP "'file.h': 'moved/file.h'"
         LAUNCH_CONFIG_DOWNLOAD_FLASH_LOADER "\${command:iar-settings.toolchain}/arm/config/flashloader/ST/FlashSTM32F427xI.board"
         LAUNCH_CONFIG_DOWNLOAD_DEVICE_MACROS "\${command:iar-settings.toolchain}/arm/config/debugger/ST/STM32F4xx.dmac" "\${command:iar-settings.toolchain}/arm/config/debugger/ST/STM32F4xx-DEBUG.dmac"
     )

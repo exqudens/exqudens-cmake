@@ -32,12 +32,21 @@
             "projectConfiguration": "${command:iar-config.project-configuration}",
             "leaveTargetRunning": false,
             "trace": false,
+            "plugins": [
+                "${command:iar-config.toolchain}/arm/bin/armbat.dll"
+            ],
+            "setupMacros": [
+                "${workspaceFolder}/setup.mac"
+            ],
             "driverOptions": [
                 "--endian=little",
                 "--cpu=<CPU_NAME>",
                 "--fpu=None",
                 "--semihosting"
             ],
+            "sourceFileMap": {
+                "file.h": "moved/file.h"
+            },
             "download": {
                 "flashLoader": "${command:iar-settings.toolchain}/arm/config/flashloader/ST/FlashSTM32F427xI.board",
                 "deviceMacros": [
