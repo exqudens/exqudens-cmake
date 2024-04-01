@@ -1,1 +1,1 @@
-exqudens-cmake: 1.0.0
+exqudens-cmake: 1.0.1
