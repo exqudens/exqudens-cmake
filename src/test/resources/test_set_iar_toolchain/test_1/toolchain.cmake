@@ -1,13 +1,11 @@
 set(CMAKE_SYSTEM_PROCESSOR "arm")
 set(CMAKE_SYSTEM_NAME "Generic")
 
-set(COMPILER_PATH "C:/Program Files/IAR Systems/Embedded Workbench 9.3/arm/bin")
-
-set(CMAKE_ASM_COMPILER "${COMPILER_PATH}/iasmarm.exe")
-set(CMAKE_C_COMPILER   "${COMPILER_PATH}/iccarm.exe")
-set(CMAKE_CXX_COMPILER "${COMPILER_PATH}/iccarm.exe")
-set(CMAKE_AR           "${COMPILER_PATH}/iarchive.exe")
-set(CMAKE_LINKER       "${COMPILER_PATH}/ilinkarm.exe")
+set(CMAKE_ASM_COMPILER "C:/Program Files/IAR Systems/Embedded Workbench 9.3/arm/bin/iasmarm.exe")
+set(CMAKE_C_COMPILER   "C:/Program Files/IAR Systems/Embedded Workbench 9.3/arm/bin/iccarm.exe")
+set(CMAKE_CXX_COMPILER "C:/Program Files/IAR Systems/Embedded Workbench 9.3/arm/bin/iccarm.exe")
+set(CMAKE_AR           "C:/Program Files/IAR Systems/Embedded Workbench 9.3/arm/bin/iarchive.exe")
+set(CMAKE_LINKER       "C:/Program Files/IAR Systems/Embedded Workbench 9.3/arm/bin/ilinkarm.exe")
 set(CMAKE_RC_COMPILER  "")
 
 set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")

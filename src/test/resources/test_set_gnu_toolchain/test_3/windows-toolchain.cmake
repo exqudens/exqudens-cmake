@@ -1,10 +1,8 @@
 set(CMAKE_SYSTEM_PROCESSOR "x86_64")
 set(CMAKE_SYSTEM_NAME "Linux")
 
-set(COMPILER_PATH "/usr/bin")
-
-set(CMAKE_C_COMPILER   "${COMPILER_PATH}/gcc")
-set(CMAKE_CXX_COMPILER "${COMPILER_PATH}/g++")
+set(CMAKE_C_COMPILER   "/usr/bin/gcc")
+set(CMAKE_CXX_COMPILER "/usr/bin/g++")
 
 set(ENV{PATH} "\\usr\\bin;$ENV{PATH}")
 
