@@ -22,7 +22,7 @@ endfunction()
 function(test_1)
     message("${CMAKE_CURRENT_FUNCTION} ...")
 
-    set(expected "Visual Studio")
+    set(expected "msvc")
     set_conan_compiler(actual "MSVC")
 
     if(NOT "${expected}" STREQUAL "${actual}")

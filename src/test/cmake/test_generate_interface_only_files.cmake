@@ -23,14 +23,14 @@ endfunction()
 
 function(test_1)
     message("${CMAKE_CURRENT_FUNCTION} ...")
+    get_filename_component(currentFileNameNoExt "${CMAKE_CURRENT_LIST_FILE}" NAME_WE)
 
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/expected/testnamespace/testsubnamespace/TestClass1.hpp" expected1)
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/expected/testnamespace/testsubnamespace/TestClass2.hpp" expected2)
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/expected/testnamespace/testsubnamespace/TestClass3.hpp" expected3)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/expected/testnamespace/testsubnamespace/TestClass1.hpp" expected1)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/expected/testnamespace/testsubnamespace/TestClass2.hpp" expected2)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/expected/testnamespace/testsubnamespace/TestClass3.hpp" expected3)
 
-    set(srcDirectory "${CMAKE_CURRENT_LIST_DIR}/../../../build/..")
-    get_filename_component(buildDirName "${CMAKE_CURRENT_LIST_DIR}/../../../build" NAME)
-    set(dstBaseDirectory "${CMAKE_CURRENT_LIST_DIR}/../../../build/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}")
+    set(srcDirectory "${CMAKE_CURRENT_LIST_DIR}/../../..")
+    set(dstBaseDirectory "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}")
 
     cmake_path(NORMAL_PATH srcDirectory)
     cmake_path(APPEND srcDirectory DIR)
@@ -39,19 +39,19 @@ function(test_1)
 
     generate_interface_only_files(actual4
         SRC_DIRECTORY "${srcDirectory}"
-        SRC_BASE_DIRECTORY "${srcDirectory}/src/test/resources/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/input"
+        SRC_BASE_DIRECTORY "${srcDirectory}/src/test/resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/input"
         DST_BASE_DIRECTORY "${dstBaseDirectory}"
         HEADER_FILES_EXPRESSIONS "**/*.hpp"
         SOURCE_FILES_EXPRESSIONS "**/*.cpp"
     )
 
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass1.hpp" actual1)
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass2.hpp" actual2)
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass3.hpp" actual3)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass1.hpp" actual1)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass2.hpp" actual2)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass3.hpp" actual3)
     set(expected4
-        "${buildDirName}/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass1.hpp"
-        "${buildDirName}/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass2.hpp"
-        "${buildDirName}/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass3.hpp"
+        "build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass1.hpp"
+        "build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass2.hpp"
+        "build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass3.hpp"
     )
 
     if(NOT "${expected1}" STREQUAL "${actual1}")
@@ -75,14 +75,14 @@ endfunction()
 
 function(test_2)
     message("${CMAKE_CURRENT_FUNCTION} ...")
+    get_filename_component(currentFileNameNoExt "${CMAKE_CURRENT_LIST_FILE}" NAME_WE)
 
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/expected/testnamespace/testsubnamespace/TestClass1.hpp" expected1)
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/expected/testnamespace/testsubnamespace/TestClass2.hpp" expected2)
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/expected/testnamespace/testsubnamespace/TestClass3.hpp" expected3)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/expected/testnamespace/testsubnamespace/TestClass1.hpp" expected1)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/expected/testnamespace/testsubnamespace/TestClass2.hpp" expected2)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/expected/testnamespace/testsubnamespace/TestClass3.hpp" expected3)
 
-    set(srcDirectory "${CMAKE_CURRENT_LIST_DIR}/../../../build/..")
-    get_filename_component(buildDirName "${CMAKE_CURRENT_LIST_DIR}/../../../build" NAME)
-    set(dstBaseDirectory "${CMAKE_CURRENT_LIST_DIR}/../../../build/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}")
+    set(srcDirectory "${CMAKE_CURRENT_LIST_DIR}/../../..")
+    set(dstBaseDirectory "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}")
 
     cmake_path(NORMAL_PATH srcDirectory)
     cmake_path(APPEND srcDirectory DIR)
@@ -91,22 +91,22 @@ function(test_2)
 
     generate_interface_only_files(actual4
         SRC_DIRECTORY "${srcDirectory}"
-        SRC_BASE_DIRECTORY "${srcDirectory}/src/test/resources/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/input"
+        SRC_BASE_DIRECTORY "${srcDirectory}/src/test/resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/input"
         DST_BASE_DIRECTORY "${dstBaseDirectory}"
-        HEADER_FILES "src/test/resources/test_generate_interface_only_files/test_2/input/testnamespace/testsubnamespace/TestClass1.hpp"
-                     "src/test/resources/test_generate_interface_only_files/test_2/input/testnamespace/testsubnamespace/TestClass2.hpp"
-                     "src/test/resources/test_generate_interface_only_files/test_2/input/testnamespace/testsubnamespace/TestClass3.hpp"
-        SOURCE_FILES "src/test/resources/test_generate_interface_only_files/test_2/input/testnamespace/testsubnamespace/TestClass2.cpp"
-                     "src/test/resources/test_generate_interface_only_files/test_2/input/testnamespace/testsubnamespace/TestClass3.cpp"
+        HEADER_FILES "src/test/resources/${currentFileNameNoExt}/test_2/input/testnamespace/testsubnamespace/TestClass1.hpp"
+                     "src/test/resources/${currentFileNameNoExt}/test_2/input/testnamespace/testsubnamespace/TestClass2.hpp"
+                     "src/test/resources/${currentFileNameNoExt}/test_2/input/testnamespace/testsubnamespace/TestClass3.hpp"
+        SOURCE_FILES "src/test/resources/${currentFileNameNoExt}/test_2/input/testnamespace/testsubnamespace/TestClass2.cpp"
+                     "src/test/resources/${currentFileNameNoExt}/test_2/input/testnamespace/testsubnamespace/TestClass3.cpp"
     )
 
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass1.hpp" actual1)
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass2.hpp" actual2)
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass3.hpp" actual3)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass1.hpp" actual1)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass2.hpp" actual2)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass3.hpp" actual3)
     set(expected4
-        "${buildDirName}/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass1.hpp"
-        "${buildDirName}/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass2.hpp"
-        "${buildDirName}/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass3.hpp"
+        "build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass1.hpp"
+        "build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass2.hpp"
+        "build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass3.hpp"
     )
 
     if(NOT "${expected1}" STREQUAL "${actual1}")
@@ -130,14 +130,14 @@ endfunction()
 
 function(test_3)
     message("${CMAKE_CURRENT_FUNCTION} ...")
+    get_filename_component(currentFileNameNoExt "${CMAKE_CURRENT_LIST_FILE}" NAME_WE)
 
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/expected/testnamespace/testsubnamespace/TestClass1.hpp" expected1)
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/expected/testnamespace/testsubnamespace/TestClass2.hpp" expected2)
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/expected/testnamespace/testsubnamespace/TestClass3.hpp" expected3)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/expected/testnamespace/testsubnamespace/TestClass1.hpp" expected1)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/expected/testnamespace/testsubnamespace/TestClass2.hpp" expected2)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/expected/testnamespace/testsubnamespace/TestClass3.hpp" expected3)
 
-    set(srcDirectory "${CMAKE_CURRENT_LIST_DIR}/../../../build/..")
-    get_filename_component(buildDirName "${CMAKE_CURRENT_LIST_DIR}/../../../build" NAME)
-    set(dstBaseDirectory "${CMAKE_CURRENT_LIST_DIR}/../../../build/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}")
+    set(srcDirectory "${CMAKE_CURRENT_LIST_DIR}/../../..")
+    set(dstBaseDirectory "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}")
 
     cmake_path(NORMAL_PATH srcDirectory)
     cmake_path(APPEND srcDirectory DIR)
@@ -146,20 +146,20 @@ function(test_3)
 
     generate_interface_only_files(actual4
         SRC_DIRECTORY "${srcDirectory}"
-        SRC_BASE_DIRECTORY "${srcDirectory}/src/test/resources/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/input"
+        SRC_BASE_DIRECTORY "${srcDirectory}/src/test/resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/input"
         DST_BASE_DIRECTORY "${dstBaseDirectory}"
         HEADER_FILES_EXPRESSIONS "**/*.hpp"
         SOURCE_FILES_EXPRESSIONS "**/*.cpp"
         HEADER_SOURCE_MAPS "TestClass3>WindowsTestClass3"
     )
 
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass1.hpp" actual1)
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass2.hpp" actual2)
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass3.hpp" actual3)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass1.hpp" actual1)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass2.hpp" actual2)
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass3.hpp" actual3)
     set(expected4
-        "${buildDirName}/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass1.hpp"
-        "${buildDirName}/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass2.hpp"
-        "${buildDirName}/test_generate_interface_only_files/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass3.hpp"
+        "build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass1.hpp"
+        "build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass2.hpp"
+        "build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/testnamespace/testsubnamespace/TestClass3.hpp"
     )
 
     if(NOT "${expected1}" STREQUAL "${actual1}")

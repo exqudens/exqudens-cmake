@@ -18,7 +18,22 @@
     {
       "name": "windows",
       "hidden": true,
-      "cmakeExecutable": "cmake.exe"
+      "cmakeExecutable": "cmake.exe",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "linux",
+      "hidden": true,
+      "cmakeExecutable": "cmake",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
     },
     {
       "name": "ninja",
@@ -55,7 +70,7 @@
       },
       "filter": {
         "exclude": {
-          "name": "(UiTestsA\\.test1)|(UiTestsB\\.test1)|(UiTestsC\\.test1)|(UiTestsD\\.test1)|(UiTestsE\\.test1)"
+          "name": "(ExcludedTestsA\\.test1)|(ExcludedTestsB\\..*)"
         }
       },
       "execution": {

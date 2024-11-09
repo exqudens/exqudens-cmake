@@ -86,3 +86,10 @@ foreach(v IN LISTS "TEST_NAMES")
     math(EXPR TEST_COUNT "${TEST_COUNT} + 1")
 endforeach()
 message(STATUS "TEST_COUNT: '${TEST_COUNT}'")
+
+set("${PROJECT_NAME}_ADDITIONAL_CLEAN_FILES"
+    "${PROJECT_BINARY_DIR}/test"
+)
+set_directory_properties(PROPERTIES
+    ADDITIONAL_CLEAN_FILES "${${PROJECT_NAME}_ADDITIONAL_CLEAN_FILES}"
+)

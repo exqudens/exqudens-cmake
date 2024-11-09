@@ -40,8 +40,8 @@ function(test_1)
         TARGET "${target}"
     )
 
-    file(WRITE "${CMAKE_CURRENT_LIST_DIR}/../../../build/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/clang-x64-toolchain.cmake" "${actual}")
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/clang-x64-toolchain.cmake" actual)
+    file(WRITE "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/clang-x64-toolchain.cmake" "${actual}")
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/clang-x64-toolchain.cmake" actual)
 
     if(NOT "${expected}" STREQUAL "${actual}")
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")

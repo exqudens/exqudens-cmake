@@ -40,8 +40,8 @@ function(test_1)
         PATH "${path}"
     )
 
-    file(WRITE "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/toolchain.cmake" "${actual}")
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/toolchain.cmake" actual)
+    file(WRITE "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${testFileName}/${testFunctionName}/toolchain.cmake" "${actual}")
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${testFileName}/${testFunctionName}/toolchain.cmake" actual)
 
     if(NOT "${expected}" STREQUAL "${actual}")
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
@@ -69,8 +69,8 @@ function(test_2)
         PATH "${path}"
     )
 
-    file(WRITE "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/toolchain.cmake" "${actual}")
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/toolchain.cmake" actual)
+    file(WRITE "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${testFileName}/${testFunctionName}/toolchain.cmake" "${actual}")
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${testFileName}/${testFunctionName}/toolchain.cmake" actual)
 
     if(NOT "${expected}" STREQUAL "${actual}")
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
@@ -99,8 +99,8 @@ function(test_3)
         PATH "${path}"
     )
 
-    file(WRITE "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/toolchain.cmake" "${actual}")
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/${testFileName}/${testFunctionName}/toolchain.cmake" actual)
+    file(WRITE "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${testFileName}/${testFunctionName}/toolchain.cmake" "${actual}")
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${testFileName}/${testFunctionName}/toolchain.cmake" actual)
 
     if(NOT "${expected}" STREQUAL "${actual}")
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")

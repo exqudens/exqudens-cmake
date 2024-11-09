@@ -40,8 +40,8 @@ function(test_1)
         PATH "${path}"
     )
 
-    file(WRITE "${CMAKE_CURRENT_LIST_DIR}/../../../build/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" "${actual}")
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" actual)
+    file(WRITE "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" "${actual}")
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" actual)
 
     if(NOT "${expected}" STREQUAL "${actual}")
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
@@ -75,8 +75,8 @@ function(test_2)
         PRODUCTS "${products}"
     )
 
-    file(WRITE "${CMAKE_CURRENT_LIST_DIR}/../../../build/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" "${actual}")
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" actual)
+    file(WRITE "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" "${actual}")
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" actual)
 
     if(NOT "${expected}" STREQUAL "${actual}")
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
@@ -111,8 +111,8 @@ function(test_3)
         NO_CACHE "FALSE"
     )
 
-    file(WRITE "${CMAKE_CURRENT_LIST_DIR}/../../../build/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" "${actual}")
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" actual)
+    file(WRITE "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" "${actual}")
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/msvc-16-x64-toolchain.cmake" actual)
 
     if(NOT "${expected}" STREQUAL "${actual}")
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")

@@ -22,21 +22,21 @@ endfunction()
 function(test_1)
     message("${CMAKE_CURRENT_FUNCTION} ...")
 
-    set(expected "17")
+    set(expected "193")
     set_conan_compiler_version(actual "MSVC" "19.30")
 
     if(NOT "${expected}" STREQUAL "${actual}")
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
     endif()
 
-    set(expected "16")
+    set(expected "192")
     set_conan_compiler_version(actual "MSVC" "19.20")
 
     if(NOT "${expected}" STREQUAL "${actual}")
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
     endif()
 
-    set(expected "15")
+    set(expected "191")
     set_conan_compiler_version(actual "MSVC" "19.10")
 
     if(NOT "${expected}" STREQUAL "${actual}")
