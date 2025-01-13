@@ -36,6 +36,16 @@
       }
     },
     {
+        "name": "darwin",
+        "hidden": true,
+        "cmakeExecutable": "cmake",
+        "condition": {
+            "type": "equals",
+            "lhs": "${hostSystemName}",
+            "rhs": "Darwin"
+        }
+    },
+    {
       "name": "ninja",
       "hidden": true,
       "generator": "Ninja"
@@ -44,6 +54,16 @@
     {
       "name": "windows.ninja",
       "inherits": [ "default", "windows", "ninja" ],
+      "binaryDir": "${sourceDir}/build"
+    },
+    {
+      "name": "linux.ninja",
+      "inherits": [ "default", "linux", "ninja" ],
+      "binaryDir": "${sourceDir}/build"
+    },
+    {
+      "name": "darwin.ninja",
+      "inherits": [ "default", "darwin", "ninja" ],
       "binaryDir": "${sourceDir}/build"
     }
   ],
@@ -57,6 +77,16 @@
     {
       "name": "windows.ninja",
       "configurePreset": "windows.ninja",
+      "inherits": [ "default" ]
+    },
+    {
+      "name": "linux.ninja",
+      "configurePreset": "linux.ninja",
+      "inherits": [ "default" ]
+    },
+    {
+      "name": "darwin.ninja",
+      "configurePreset": "darwin.ninja",
       "inherits": [ "default" ]
     }
   ],
@@ -82,6 +112,16 @@
     {
       "name": "windows.ninja",
       "configurePreset": "windows.ninja",
+      "inherits": [ "default" ]
+    },
+    {
+      "name": "linux.ninja",
+      "configurePreset": "linux.ninja",
+      "inherits": [ "default" ]
+    },
+    {
+      "name": "darwin.ninja",
+      "configurePreset": "darwin.ninja",
       "inherits": [ "default" ]
     }
   ]

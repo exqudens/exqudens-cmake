@@ -1,6 +1,12 @@
-cmake_minimum_required(VERSION 3.25 FATAL_ERROR)
+cmake_minimum_required(VERSION "3.25" FATAL_ERROR)
 
-include("src/main/cmake/util.cmake")
+message(STATUS "PRESET_NAME: '${PRESET_NAME}'")
+
+set(USE_CONAN "1" CACHE BOOL "...")
+set(SKIP_TEST "0" CACHE BOOL "...")
+
+message(STATUS "USE_CONAN: '${USE_CONAN}'")
+message(STATUS "SKIP_TEST: '${SKIP_TEST}'")
 
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/name-version.txt" INFO)
 string(REPLACE ":" ";" INFO_LIST "${INFO}")
@@ -10,82 +16,164 @@ string(STRIP "${RAW_NAME}" NAME)
 string(STRIP "${RAW_VERSION}" VERSION)
 project("${NAME}" VERSION "${VERSION}" LANGUAGES "NONE")
 
-set(TEST_GROUP "all" CACHE STRING "...")
-set(TEST_CASE "all" CACHE STRING "...")
+message(STATUS "PROJECT_NAME: '${PROJECT_NAME}'")
+message(STATUS "PROJECT_VERSION: '${PROJECT_VERSION}'")
+message(STATUS "PROJECT_SOURCE_DIR: '${PROJECT_SOURCE_DIR}'")
+message(STATUS "PROJECT_BINARY_DIR: '${PROJECT_BINARY_DIR}'")
 
-if("${TEST_GROUP}" STREQUAL "all" AND "${TEST_CASE}" STREQUAL "all")
-    set(TEST_REGEXP "^.+\\..+$")
-elseif(NOT "${TEST_GROUP}" STREQUAL "all" AND "${TEST_CASE}" STREQUAL "all")
-    set(TEST_REGEXP "^${TEST_GROUP}\\..+$")
-elseif("${TEST_GROUP}" STREQUAL "all" AND NOT "${TEST_CASE}" STREQUAL "all")
-    set(TEST_REGEXP "^.+\\.${TEST_CASE}$")
-elseif(NOT "${TEST_GROUP}" STREQUAL "all" AND NOT "${TEST_CASE}" STREQUAL "all")
-    set(TEST_REGEXP "^${TEST_GROUP}\\.${TEST_CASE}$")
+set(CMAKE_INSTALL_PREFIX "${PROJECT_BINARY_DIR}/cmake-install" CACHE PATH "..." FORCE)
+
+message(STATUS "CMAKE_INSTALL_PREFIX: '${CMAKE_INSTALL_PREFIX}'")
+
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+    "${PROJECT_SOURCE_DIR}/package-config.cmake.in"
+    "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+    INSTALL_DESTINATION "cmake"
+)
+write_basic_package_version_file(
+    "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
+    VERSION "${PROJECT_VERSION}"
+    COMPATIBILITY "ExactVersion"
+)
+install(
+    FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+          "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
+          "${PROJECT_SOURCE_DIR}/src/main/cmake/util.cmake"
+    DESTINATION "cmake"
+)
+
+if(NOT "${SKIP_TEST}")
+    set(TEST_GROUP "all" CACHE STRING "...")
+    set(TEST_CASE "all" CACHE STRING "...")
+
+    if("${TEST_GROUP}" STREQUAL "all" AND "${TEST_CASE}" STREQUAL "all")
+        set(TEST_REGEXP "^.+\\..+$")
+    elseif(NOT "${TEST_GROUP}" STREQUAL "all" AND "${TEST_CASE}" STREQUAL "all")
+        set(TEST_REGEXP "^${TEST_GROUP}\\..+$")
+    elseif("${TEST_GROUP}" STREQUAL "all" AND NOT "${TEST_CASE}" STREQUAL "all")
+        set(TEST_REGEXP "^.+\\.${TEST_CASE}$")
+    elseif(NOT "${TEST_GROUP}" STREQUAL "all" AND NOT "${TEST_CASE}" STREQUAL "all")
+        set(TEST_REGEXP "^${TEST_GROUP}\\.${TEST_CASE}$")
+    endif()
+
+    enable_testing()
+
+    file(GLOB TEST_FILES LIST_DIRECTORIES "FALSE" RELATIVE "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/src/test/cmake/*.cmake")
+    foreach(testFile IN LISTS "TEST_FILES")
+        execute_process(
+            COMMAND "${CMAKE_COMMAND}" -P "${testFile}" "--" "list_functions"
+            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+            ERROR_VARIABLE "testFileFunctions"
+            COMMAND_ERROR_IS_FATAL "ANY"
+        )
+        get_filename_component(testFileNameNoExt "${testFile}" NAME_WE)
+        string(STRIP "${testFileFunctions}" testFileFunctions)
+        string(REPLACE "\r\n" "\n" testFileFunctions "${testFileFunctions}")
+        string(REPLACE "\r" "\n" testFileFunctions "${testFileFunctions}")
+        string(REPLACE "\n" ";" testFileFunctions "${testFileFunctions}")
+        foreach(testFileFunction IN LISTS "testFileFunctions")
+            set(testName "${testFileNameNoExt}.${testFileFunction}")
+            add_test(
+                NAME "${testName}"
+                COMMAND "${CMAKE_COMMAND}" -P "${testFile}" "--" "${testFileFunction}"
+                WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+            )
+            list(APPEND TEST_NAMES "${testName}")
+        endforeach()
+    endforeach()
+
+    add_custom_command(
+        OUTPUT "${PROJECT_BINARY_DIR}/junit.xml"
+        COMMAND "${CMAKE_CTEST_COMMAND}" "--build-nocmake" "--output-junit" "${PROJECT_BINARY_DIR}/junit.xml" "--preset" "${PRESET_NAME}" "-R" "${TEST_REGEXP}"
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        USES_TERMINAL
+        VERBATIM
+    )
+
+    add_custom_target("cmake-test"
+        DEPENDS "${PROJECT_BINARY_DIR}/junit.xml"
+    )
+
+    set(TARGET_CMAKE_INSTALL_DEPENDS_ON "cmake-test")
+
+    include("src/main/cmake/util.cmake")
+
+    set_target_names(TARGET_NAMES "${CMAKE_CURRENT_SOURCE_DIR}")
+    message(STATUS "TARGET_NAMES:")
+    foreach(v IN LISTS "TARGET_NAMES")
+        message(STATUS "  ${v}")
+    endforeach()
+
+    set(EXPECTED_TARGET_NAMES
+        "all"
+        "help"
+        "clean"
+        "test"
+        "install"
+        "package"
+        "package_source"
+        "cmake-test"
+    )
+
+    if(NOT "${EXPECTED_TARGET_NAMES}" STREQUAL "${TARGET_NAMES}")
+        message(FATAL_ERROR "'EXPECTED_TARGET_NAMES': '${EXPECTED_TARGET_NAMES}' != 'TARGET_NAMES': '${TARGET_NAMES}'")
+    endif()
+
+    message(STATUS "TEST_NAMES:")
+    set(TEST_COUNT "0")
+    foreach(v IN LISTS "TEST_NAMES")
+        message(STATUS "  ${v}")
+        math(EXPR TEST_COUNT "${TEST_COUNT} + 1")
+    endforeach()
+    message(STATUS "TEST_COUNT: '${TEST_COUNT}'")
 endif()
 
-message(STATUS "project: '${PROJECT_NAME}-${PROJECT_VERSION}'")
-
-enable_testing()
-
-file(GLOB TEST_FILES LIST_DIRECTORIES "FALSE" RELATIVE "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/src/test/cmake/*.cmake")
-foreach(testFile IN LISTS "TEST_FILES")
-    execute_process(
-        COMMAND "${CMAKE_COMMAND}" -P "${testFile}" "--" "list_functions"
-        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-        ERROR_VARIABLE "testFileFunctions"
-        COMMAND_ERROR_IS_FATAL "ANY"
-    )
-    get_filename_component(testFileNameNoExt "${testFile}" NAME_WE)
-    string(STRIP "${testFileFunctions}" testFileFunctions)
-    string(REPLACE "\r\n" "\n" testFileFunctions "${testFileFunctions}")
-    string(REPLACE "\r" "\n" testFileFunctions "${testFileFunctions}")
-    string(REPLACE "\n" ";" testFileFunctions "${testFileFunctions}")
-    foreach(testFileFunction IN LISTS "testFileFunctions")
-        set(testName "${testFileNameNoExt}.${testFileFunction}")
-        add_test(
-            NAME "${testName}"
-            COMMAND "${CMAKE_COMMAND}" -P "${testFile}" "--" "${testFileFunction}"
-            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-        )
-        list(APPEND TEST_NAMES "${testName}")
-    endforeach()
-endforeach()
-
-add_custom_target("cmake-test" ALL
-    COMMAND "${CMAKE_CTEST_COMMAND}" --preset "${PRESET_NAME}" -R "${TEST_REGEXP}"
+add_custom_command(
+    OUTPUT "${CMAKE_INSTALL_PREFIX}/cmake/${PROJECT_NAME}-config.cmake"
+    COMMAND "${CMAKE_COMMAND}" --install "${PROJECT_BINARY_DIR}" --prefix "${CMAKE_INSTALL_PREFIX}"
+    DEPENDS ${TARGET_CMAKE_INSTALL_DEPENDS_ON}
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
     USES_TERMINAL
     VERBATIM
 )
 
-set_target_names(TARGET_NAMES "${CMAKE_CURRENT_SOURCE_DIR}")
-message(STATUS "TARGET_NAMES:")
-foreach(v IN LISTS "TARGET_NAMES")
-    message(STATUS "  ${v}")
-endforeach()
-
-set(EXPECTED_TARGET_NAMES
-    "all"
-    "help"
-    "clean"
-    "test"
-    "install"
-    "package"
-    "package_source"
-    "cmake-test"
+add_custom_target("cmake-install" ALL
+    DEPENDS "${CMAKE_INSTALL_PREFIX}/cmake/${PROJECT_NAME}-config.cmake"
 )
 
-if(NOT "${EXPECTED_TARGET_NAMES}" STREQUAL "${TARGET_NAMES}")
-    message(FATAL_ERROR "'EXPECTED_TARGET_NAMES': '${EXPECTED_TARGET_NAMES}' != 'TARGET_NAMES': '${TARGET_NAMES}'")
-endif()
+if("${USE_CONAN}")
+    find_program(CONAN_COMMAND NAMES "conan.exe" "conan" PATHS ENV CONAN_PATH ENV PATH REQUIRED NO_CACHE NO_DEFAULT_PATH)
 
-message(STATUS "TEST_NAMES:")
-set(TEST_COUNT "0")
-foreach(v IN LISTS "TEST_NAMES")
-    message(STATUS "  ${v}")
-    math(EXPR TEST_COUNT "${TEST_COUNT} + 1")
-endforeach()
-message(STATUS "TEST_COUNT: '${TEST_COUNT}'")
+    add_custom_target("conan-export"
+        COMMAND "${CONAN_COMMAND}" "export-pkg"
+                "--output-folder" "${CMAKE_INSTALL_PREFIX}"
+                #${CONAN_SETTINGS}
+                #${CONAN_OPTIONS}
+                #"--user" "gitlab-group+gitlab-sub-group+${PROJECT_NAME}"
+                #"--channel" "stable"
+                "${PROJECT_SOURCE_DIR}/conanfile.py"
+        DEPENDS "cmake-install"
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        USES_TERMINAL
+        VERBATIM
+    )
+
+    add_custom_target("conan-remove"
+        COMMAND "${CONAN_COMMAND}" "remove" "-c" "${PROJECT_NAME}/${PROJECT_VERSION}"
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        USES_TERMINAL
+        VERBATIM
+    )
+
+    add_custom_target("conan-list"
+        COMMAND "${CONAN_COMMAND}" "list" "-c" "${PROJECT_NAME}/${PROJECT_VERSION}:*"
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        USES_TERMINAL
+        VERBATIM
+    )
+endif()
 
 set("${PROJECT_NAME}_ADDITIONAL_CLEAN_FILES"
     "${PROJECT_BINARY_DIR}/test"
