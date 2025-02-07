@@ -60,7 +60,9 @@ if(NOT "${SKIP_TEST}")
 
     enable_testing()
 
+    string(JSON testListJson SET "{}" "testsuites" "[]")
     file(GLOB TEST_FILES LIST_DIRECTORIES "FALSE" RELATIVE "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/src/test/cmake/*.cmake")
+    set(testFileIndex "0")
     foreach(testFile IN LISTS "TEST_FILES")
         execute_process(
             COMMAND "${CMAKE_COMMAND}" -P "${testFile}" "--" "list_functions"
@@ -69,11 +71,17 @@ if(NOT "${SKIP_TEST}")
             COMMAND_ERROR_IS_FATAL "ANY"
         )
         get_filename_component(testFileNameNoExt "${testFile}" NAME_WE)
+        string(JSON testListJson SET "${testListJson}" "testsuites" "${testFileIndex}" "{}")
+        string(JSON testListJson SET "${testListJson}" "testsuites" "${testFileIndex}" "name" "\"${testFileNameNoExt}\"")
+        string(JSON testListJson SET "${testListJson}" "testsuites" "${testFileIndex}" "testsuite" "[]")
         string(STRIP "${testFileFunctions}" testFileFunctions)
         string(REPLACE "\r\n" "\n" testFileFunctions "${testFileFunctions}")
         string(REPLACE "\r" "\n" testFileFunctions "${testFileFunctions}")
         string(REPLACE "\n" ";" testFileFunctions "${testFileFunctions}")
+        set(testFileFunctionIndex "0")
         foreach(testFileFunction IN LISTS "testFileFunctions")
+            string(JSON testListJson SET "${testListJson}" "testsuites" "${testFileIndex}" "testsuite" "${testFileFunctionIndex}" "{}")
+            string(JSON testListJson SET "${testListJson}" "testsuites" "${testFileIndex}" "testsuite" "${testFileFunctionIndex}" "name" "\"${testFileFunction}\"")
             set(testName "${testFileNameNoExt}.${testFileFunction}")
             add_test(
                 NAME "${testName}"
@@ -81,8 +89,11 @@ if(NOT "${SKIP_TEST}")
                 WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
             )
             list(APPEND TEST_NAMES "${testName}")
+            math(EXPR testFileFunctionIndex "${testFileFunctionIndex} + 1")
         endforeach()
+        math(EXPR testFileIndex "${testFileIndex} + 1")
     endforeach()
+    file(WRITE "${PROJECT_BINARY_DIR}/test-list.json" "${testListJson}")
 
     add_custom_command(
         OUTPUT "${PROJECT_BINARY_DIR}/junit.xml"
@@ -129,6 +140,16 @@ if(NOT "${SKIP_TEST}")
     endforeach()
     message(STATUS "TEST_COUNT: '${TEST_COUNT}'")
 endif()
+
+add_custom_target("vscode"
+    COMMAND "${CMAKE_COMMAND}" "-P" "cmake/vscode.cmake" "--" "vscode"
+            SOURCE_DIR "${PROJECT_SOURCE_DIR}"
+            BINARY_DIR "${PROJECT_BINARY_DIR}"
+            LAUNCH_TEST_LIST_FILE "${PROJECT_BINARY_DIR}/test-list.json"
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    USES_TERMINAL
+    VERBATIM
+)
 
 add_custom_command(
     OUTPUT "${CMAKE_INSTALL_PREFIX}/cmake/${PROJECT_NAME}-config.cmake"

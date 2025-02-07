@@ -1,7 +1,7 @@
 # Directories
 .idea/
 .vs/
-.vscode/
+.vscode/*
 build/
 tmp/
 
