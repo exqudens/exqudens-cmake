@@ -1,0 +1,4 @@
+@PACKAGE_INIT@
+
+set_and_check("@PROJECT_NAME@_PACKAGE_PREFIX_DIR" "${PACKAGE_PREFIX_DIR}")
+check_required_components("@PROJECT_NAME@")

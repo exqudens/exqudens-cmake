@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "test",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "console": "internalConsole",
+            "cwd": "${workspaceRoot}",
+            "program": "ctest.exe",
+            "args": [
+                "--verbose",
+                "--build-nocmake",
+                "--test-dir", "${workspaceRoot}/build",
+                "-R", "${input:pick-test}"
+            ]
+        }
+    ],
+    "inputs": [
+        {
+            "id": "pick-test",
+            "type": "pickString",
+            "description": "Select Test Entry",
+            "default": "@_LAUNCH_DEFAULT_TEST@",
+            "options": [
+                "@_LAUNCH_TESTS@"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,128 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 25
+    },
+    "configurePresets": [
+        {
+            "name": "default",
+            "hidden": true,
+            "cacheVariables": {
+                "PRESET_NAME": {
+                    "type": "STRING",
+                    "value": "${presetName}"
+                }
+            }
+        },
+        {
+            "name": "windows",
+            "hidden": true,
+            "cmakeExecutable": "cmake.exe",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "linux",
+            "hidden": true,
+            "cmakeExecutable": "cmake",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            }
+        },
+        {
+                "name": "darwin",
+                "hidden": true,
+                "cmakeExecutable": "cmake",
+                "condition": {
+                        "type": "equals",
+                        "lhs": "${hostSystemName}",
+                        "rhs": "Darwin"
+                }
+        },
+        {
+            "name": "ninja",
+            "hidden": true,
+            "generator": "Ninja"
+        },
+
+        {
+            "name": "windows.ninja",
+            "inherits": ["default", "windows", "ninja"],
+            "binaryDir": "${sourceDir}/build"
+        },
+        {
+            "name": "linux.ninja",
+            "inherits": ["default", "linux", "ninja"],
+            "binaryDir": "${sourceDir}/build"
+        },
+        {
+            "name": "darwin.ninja",
+            "inherits": ["default", "darwin", "ninja"],
+            "binaryDir": "${sourceDir}/build"
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "default",
+            "hidden": true,
+            "jobs": 8
+        },
+
+        {
+            "name": "windows.ninja",
+            "configurePreset": "windows.ninja",
+            "inherits": ["default"]
+        },
+        {
+            "name": "linux.ninja",
+            "configurePreset": "linux.ninja",
+            "inherits": ["default"]
+        },
+        {
+            "name": "darwin.ninja",
+            "configurePreset": "darwin.ninja",
+            "inherits": ["default"]
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "default",
+            "hidden": true,
+            "output": {
+                "verbosity": "verbose",
+                "outputOnFailure": true
+            },
+            "filter": {
+                "exclude": {
+                    "name": "(ExcludedTestsA\\.test1)|(ExcludedTestsB\\..*)"
+                }
+            },
+            "execution": {
+                "noTestsAction": "error",
+                "stopOnFailure": true
+            }
+        },
+
+        {
+            "name": "windows.ninja",
+            "configurePreset": "windows.ninja",
+            "inherits": ["default"]
+        },
+        {
+            "name": "linux.ninja",
+            "configurePreset": "linux.ninja",
+            "inherits": ["default"]
+        },
+        {
+            "name": "darwin.ninja",
+            "configurePreset": "darwin.ninja",
+            "inherits": ["default"]
+        }
+    ]
+}
