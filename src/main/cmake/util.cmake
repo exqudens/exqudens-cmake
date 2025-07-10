@@ -1755,6 +1755,7 @@ function(sphinx)
         "CLEAN"
         "TOCTREE_MAXDEPTH"
         "TOCTREE_CAPTION"
+        "TOCTREE_HIDDEN"
         "SOURCE_BASE_DIR"
         "SOURCE_DIR"
         "BUILD_DIR"
@@ -1857,6 +1858,12 @@ function(sphinx)
         set(toctreeCaption "Contents:")
     else()
         set(toctreeCaption "${_TOCTREE_CAPTION}")
+    endif()
+
+    if("${_TOCTREE_HIDDEN}")
+        set(toctreeHidden "TRUE")
+    else()
+        set(toctreeHidden "FALSE")
     endif()
 
     if("${_SOURCE_BASE_DIR}" STREQUAL "")
@@ -2046,13 +2053,14 @@ function(sphinx)
     if(EXISTS "${sourceBaseDir}/${buildDirRelative}/${type}")
         file(REMOVE_RECURSE "${sourceBaseDir}/${buildDirRelative}/${type}")
     endif()
-    string(JOIN "\n" indexRstContent
-        ".. toctree::"
-        "   :maxdepth: ${toctreeMaxdepth}"
-        "   :caption: ${toctreeCaption}"
-        ""
-        ""
-    )
+    set(indexRstContent "")
+    string(APPEND indexRstContent ".. toctree::" "\n")
+    string(APPEND indexRstContent "   :maxdepth: ${toctreeMaxdepth}" "\n")
+    string(APPEND indexRstContent "   :caption: ${toctreeCaption}" "\n")
+    if("${toctreeHidden}")
+        string(APPEND indexRstContent "   :hidden:" "\n")
+    endif()
+    string(APPEND indexRstContent "\n")
     if(NOT "${files}" STREQUAL "")
         foreach(file IN LISTS "files")
             set(fileSrc "${file}")
