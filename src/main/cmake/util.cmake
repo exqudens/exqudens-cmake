@@ -1056,6 +1056,25 @@ function(set_conan_architecture var cmakeSystemProcessor)
     unset(result)
 endfunction()
 
+function(set_conan_os var cmakeSystemName)
+    set(result "")
+
+    foreach(i var)
+        if("" STREQUAL "${${i}}")
+            message(FATAL_ERROR "[${CMAKE_CURRENT_FUNCTION}] Empty value not supported for '${i}'.")
+        endif()
+    endforeach()
+
+    if("Darwin" STREQUAL "${cmakeSystemName}")
+        set(result "Macos")
+    else()
+        set(result "${cmakeSystemName}")
+    endif()
+
+    set("${var}" "${result}" PARENT_SCOPE)
+    unset(result)
+endfunction()
+
 function(set_conan_compiler var cmakeCxxCompilerId)
     set(result "")
 
