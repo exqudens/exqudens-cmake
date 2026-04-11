@@ -3,12 +3,16 @@
     "inputs": [
         {
             "id": "ctest-selector",
-            "type": "pickString",
-            "description": "Select Test Entry",
-            "default": "@_LAUNCH_DEFAULT_TEST@",
-            "options": [
-                "@_LAUNCH_TESTS@"
-            ]
+            "type": "command",
+            "command": "extension.commandvariable.pickStringRemember",
+            "args": {
+                "key": "ctest-selector",
+                "addLabelToTop": "${remember:ctest-selector}",
+                "description": "Select Test Entry",
+                "options": [
+                    "@_LAUNCH_TESTS@"
+                ]
+            }
         }
     ],
     "configurations": [
