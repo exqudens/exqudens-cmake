@@ -3,9 +3,25 @@ cmake_minimum_required(VERSION "3.25" FATAL_ERROR)
 message(STATUS "PRESET_NAME: '${PRESET_NAME}'")
 
 set(USE_CONAN "1" CACHE BOOL "...")
-set(SKIP_TEST "0" CACHE BOOL "...")
 
 message(STATUS "USE_CONAN: '${USE_CONAN}'")
+
+string(REPLACE "." ";" PRESET_NAME_ELEMENTS "${PRESET_NAME}")
+
+if("${USE_CONAN}")
+    if("windows" IN_LIST "PRESET_NAME_ELEMENTS")
+        find_program(CONAN_COMMAND NAMES "conan.exe" PATHS ENV CONAN_PATH ENV PATH REQUIRED NO_CACHE NO_DEFAULT_PATH)
+    else()
+        find_program(CONAN_COMMAND NAMES "conan" PATHS ENV CONAN_PATH ENV PATH REQUIRED NO_CACHE NO_DEFAULT_PATH)
+    endif()
+    message(STATUS "CONAN_COMMAND: '${CONAN_COMMAND}'")
+    set(CONAN_USER "exqudens" CACHE STRING "...")
+    set(CONAN_CHANNEL "development" CACHE STRING "...")
+    message(STATUS "CONAN_USER: '${CONAN_USER}'")
+    message(STATUS "CONAN_CHANNEL: '${CONAN_CHANNEL}'")
+endif()
+
+set(SKIP_TEST "0" CACHE BOOL "...")
 message(STATUS "SKIP_TEST: '${SKIP_TEST}'")
 
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/name-version.txt" INFO)
@@ -131,15 +147,13 @@ add_custom_target("cmake-install" ALL
 )
 
 if("${USE_CONAN}")
-    find_program(CONAN_COMMAND NAMES "conan.exe" "conan" PATHS ENV CONAN_PATH ENV PATH REQUIRED NO_CACHE NO_DEFAULT_PATH)
-
     add_custom_target("conan-export"
         COMMAND "${CONAN_COMMAND}" "export-pkg"
                 "--output-folder" "${CMAKE_INSTALL_PREFIX}"
                 #${CONAN_SETTINGS}
                 #${CONAN_OPTIONS}
-                #"--user" "gitlab-group+gitlab-sub-group+${PROJECT_NAME}"
-                #"--channel" "stable"
+                "--user" "${CONAN_USER}"
+                "--channel" "${CONAN_CHANNEL}"
                 "${PROJECT_SOURCE_DIR}/conanfile.py"
         DEPENDS "cmake-install"
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"

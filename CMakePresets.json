@@ -18,7 +18,6 @@
         {
             "name": "windows",
             "hidden": true,
-            "cmakeExecutable": "cmake.exe",
             "condition": {
                 "type": "equals",
                 "lhs": "${hostSystemName}",
@@ -28,7 +27,6 @@
         {
             "name": "linux",
             "hidden": true,
-            "cmakeExecutable": "cmake",
             "condition": {
                 "type": "equals",
                 "lhs": "${hostSystemName}",
@@ -38,7 +36,6 @@
         {
                 "name": "darwin",
                 "hidden": true,
-                "cmakeExecutable": "cmake",
                 "condition": {
                         "type": "equals",
                         "lhs": "${hostSystemName}",

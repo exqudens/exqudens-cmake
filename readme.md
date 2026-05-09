@@ -28,6 +28,14 @@
 1. `git push <remote_name> --delete <branch_name>` example: `git push origin --delete 1-implement-project`
 2. `git branch -D <branch_name>` example: `git branch -D 1-implement-project`
 
+## how-to-export-all-presets
+
+1. `conan list 'exqudens-cmake/*'`
+1. `conan remove -c 'exqudens-cmake'`
+1. `git clean -xdf`
+1. `cmake --list-presets | cut -d ':' -f2 | xargs -I '{}' echo '{}' | xargs -I '{}' bash -c "cmake --preset {} || exit 255"`
+1. `cmake --list-presets | cut -d ':' -f2 | xargs -I '{}' echo '{}' | xargs -I '{}' bash -c "cmake --build --preset {} --target conan-export || exit 255"`
+
 ## vscode
 
 1. `git clean -xdf`
