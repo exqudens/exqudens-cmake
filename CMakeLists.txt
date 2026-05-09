@@ -1,3 +1,6 @@
+message(STATUS "CMAKE_COMMAND: '${CMAKE_COMMAND}'")
+message(STATUS "CMAKE_VERSION: '${CMAKE_VERSION}'")
+
 cmake_minimum_required(VERSION "3.25" FATAL_ERROR)
 
 message(STATUS "PRESET_NAME: '${PRESET_NAME}'")
