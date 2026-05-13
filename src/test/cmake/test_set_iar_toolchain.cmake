@@ -24,7 +24,11 @@ function(test_1)
     set(testFunctionName "${CMAKE_CURRENT_FUNCTION}")
     message("${testFileName}.${testFunctionName} ...")
 
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${testFileName}/${testFunctionName}/toolchain.cmake" expected)
+    if("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Windows")
+        file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${testFileName}/${testFunctionName}/windows-toolchain.cmake" expected)
+    else()
+        file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${testFileName}/${testFunctionName}/unix-toolchain.cmake" expected)
+    endif()
 
     set(processor "arm")
     set(os "Generic")

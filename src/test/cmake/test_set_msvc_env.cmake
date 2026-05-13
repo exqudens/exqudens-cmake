@@ -16,8 +16,10 @@ endif()
 include("${CMAKE_CURRENT_LIST_DIR}/../../main/cmake/util.cmake")
 
 function(list_functions)
-    message("test_1")
-    message("test_2")
+    if("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Windows")
+        message("test_1")
+        message("test_2")
+    endif()
 endfunction()
 
 function(test_1)

@@ -600,6 +600,7 @@ function(set_msvc_toolchain var)
         "HOST"
         "TARGET"
         "PATH"
+        "PATH_CONVERT_TO_CMAKE"
         "PROCESSOR"
         "OS"
         "OUTPUT_FILE"
@@ -627,6 +628,7 @@ function(set_msvc_toolchain var)
     set(host "${_HOST}")
     set(target "${_TARGET}")
     set(path "${_PATH}")
+    set(pathConvertToCmake "${_PATH_CONVERT_TO_CMAKE}")
     set(processor "${_PROCESSOR}")
     set(os "${_OS}")
     set(products "${_PRODUCTS}")
@@ -639,6 +641,10 @@ function(set_msvc_toolchain var)
         set(cacheInstructions "")
     else()
         set(cacheInstructions " CACHE INTERNAL \"...\" FORCE")
+    endif()
+
+    if(NOT "${pathConvertToCmake}" STREQUAL "" AND "${pathConvertToCmake}")
+        cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
     endif()
 
     set_msvc_env("func"
@@ -743,6 +749,7 @@ function(set_gnu_toolchain var)
     set(options)
     set(oneValueKeywords
         "PATH"
+        "PATH_CONVERT_TO_CMAKE"
         "PROCESSOR"
         "OS"
         "OUTPUT_FILE"
@@ -763,6 +770,7 @@ function(set_gnu_toolchain var)
     endif()
 
     set(path "${_PATH}")
+    set(pathConvertToCmake "${_PATH_CONVERT_TO_CMAKE}")
     set(processor "${_PROCESSOR}")
     set(os "${_OS}")
     set(outputFile "${_OUTPUT_FILE}")
@@ -776,7 +784,10 @@ function(set_gnu_toolchain var)
         set(cacheInstructions " CACHE INTERNAL \"...\" FORCE")
     endif()
 
-    cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
+    if(NOT "${pathConvertToCmake}" STREQUAL "" AND "${pathConvertToCmake}")
+        cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
+    endif()
+
     get_filename_component(compilerFileNameExt "${path}" EXT)
     get_filename_component(compilerFileNameNoExt "${path}" NAME_WE)
     get_filename_component(compilerDir "${path}" DIRECTORY)
@@ -843,6 +854,7 @@ function(set_clang_toolchain var)
     set(options)
     set(oneValueKeywords
         "PATH"
+        "PATH_CONVERT_TO_CMAKE"
         "PROCESSOR"
         "OS"
         "TARGET"
@@ -864,6 +876,7 @@ function(set_clang_toolchain var)
     endif()
 
     set(path "${_PATH}")
+    set(pathConvertToCmake "${_PATH_CONVERT_TO_CMAKE}")
     set(processor "${_PROCESSOR}")
     set(os "${_OS}")
     set(target "${_TARGET}")
@@ -878,7 +891,9 @@ function(set_clang_toolchain var)
         set(cacheInstructions " CACHE INTERNAL \"...\" FORCE")
     endif()
 
-    cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
+    if(NOT "${pathConvertToCmake}" STREQUAL "" AND "${pathConvertToCmake}")
+        cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
+    endif()
 
     get_filename_component(compilerDir "${path}" DIRECTORY)
 
@@ -931,6 +946,7 @@ function(set_iar_toolchain var)
     set(options)
     set(oneValueKeywords
         "PATH"
+        "PATH_CONVERT_TO_CMAKE"
         "PROCESSOR"
         "OS"
         "OUTPUT_FILE"
@@ -951,6 +967,7 @@ function(set_iar_toolchain var)
     endif()
 
     set(path "${_PATH}")
+    set(pathConvertToCmake "${_PATH_CONVERT_TO_CMAKE}")
     set(processor "${_PROCESSOR}")
     set(os "${_OS}")
     set(outputFile "${_OUTPUT_FILE}")
@@ -964,7 +981,10 @@ function(set_iar_toolchain var)
         set(cacheInstructions " CACHE INTERNAL \"...\" FORCE")
     endif()
 
-    cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
+    if(NOT "${pathConvertToCmake}" STREQUAL "" AND "${pathConvertToCmake}")
+        cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
+    endif()
+
     get_filename_component(compilerFileNameExt "${path}" EXT)
     get_filename_component(compilerFileNameNoExt "${path}" NAME_WE)
     get_filename_component(compilerDir "${path}" DIRECTORY)
@@ -1332,251 +1352,6 @@ function(set_target_names var dir)
     endwhile()
 
     set(${var} "${result}" PARENT_SCOPE)
-    unset(result)
-endfunction()
-
-function(generate_interface_only_files var)
-    set(result "")
-
-    foreach(i var)
-        if("" STREQUAL "${${i}}")
-            message(FATAL_ERROR "[${CMAKE_CURRENT_FUNCTION}] Empty value not supported for '${i}'.")
-        endif()
-    endforeach()
-
-    set(options)
-    set(oneValueKeywords
-        "SRC_DIRECTORY"
-        "SRC_BASE_DIRECTORY"
-        "DST_BASE_DIRECTORY"
-    )
-    set(multiValueKeywords
-        "HEADER_FILES"
-        "HEADER_FILES_EXPRESSIONS"
-        "SOURCE_FILES"
-        "SOURCE_FILES_EXPRESSIONS"
-        "HEADER_SOURCE_MAPS"
-    )
-
-    foreach(v IN LISTS "options" "oneValueKeywords" "multiValueKeywords")
-        unset("_${v}")
-    endforeach()
-
-    cmake_parse_arguments("" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
-
-    if(NOT "${_UNPARSED_ARGUMENTS}" STREQUAL "")
-        message(FATAL_ERROR "[${CMAKE_CURRENT_FUNCTION}] Unparsed arguments: '${_UNPARSED_ARGUMENTS}'")
-    endif()
-
-    set(srcDirectory "${_SRC_DIRECTORY}")
-    set(srcBaseDirectory "${_SRC_BASE_DIRECTORY}")
-    set(dstBaseDirectory "${_DST_BASE_DIRECTORY}")
-    set(headerFiles "${_HEADER_FILES}")
-    set(headerFilesExpressions "${_HEADER_FILES_EXPRESSIONS}")
-    set(sourceFiles "${_SOURCE_FILES}")
-    set(sourceFilesExpressions "${_SOURCE_FILES_EXPRESSIONS}")
-    set(headerSourceMaps "${_HEADER_SOURCE_MAPS}")
-
-    cmake_path(NORMAL_PATH srcDirectory)
-    cmake_path(NORMAL_PATH srcBaseDirectory)
-    cmake_path(NORMAL_PATH dstBaseDirectory)
-
-    if(
-        "${srcDirectory}" STREQUAL ""
-        OR "${srcBaseDirectory}" STREQUAL ""
-        OR "${dstBaseDirectory}" STREQUAL ""
-        OR ("${headerFiles}" STREQUAL "" AND "${headerFilesExpressions}" STREQUAL "")
-        OR ("${sourceFiles}" STREQUAL "" AND "${sourceFilesExpressions}" STREQUAL "")
-    )
-        string(JOIN " " message
-            "Invalid set of arguments:"
-            "srcDirectory: '${srcDirectory}'"
-            "srcBaseDirectory: '${srcBaseDirectory}'"
-            "dstBaseDirectory: '${dstBaseDirectory}'"
-            "headerFiles: '${headerFiles}'"
-            "headerFilesExpressions: '${headerFilesExpressions}'"
-            "sourceFiles: '${sourceFiles}'"
-            "sourceFilesExpressions: '${sourceFilesExpressions}'"
-        )
-        message(FATAL_ERROR "[${CMAKE_CURRENT_FUNCTION}] ${message}")
-    endif()
-
-    if(
-        (NOT "${headerFiles}" STREQUAL "" AND NOT "${headerFilesExpressions}" STREQUAL "")
-        OR (NOT "${sourceFiles}" STREQUAL "" AND NOT "${sourceFilesExpressions}" STREQUAL "")
-    )
-        string(JOIN " " message
-            "Invalid set of arguments:"
-            "headerFiles: '${headerFiles}'"
-            "headerFilesExpressions: '${headerFilesExpressions}'"
-            "sourceFiles: '${sourceFiles}'"
-            "sourceFilesExpressions: '${sourceFilesExpressions}'"
-        )
-        message(FATAL_ERROR "[${CMAKE_CURRENT_FUNCTION}] ${message}")
-    endif()
-
-    foreach(map IN LISTS headerSourceMaps)
-        string(FIND "${map}" ">" index)
-        if("${index}" LESS "0")
-            message(FATAL_ERROR "[${CMAKE_CURRENT_FUNCTION}] Invalid HEADER_SOURCE_MAP: '${map}' should contain '>'")
-        endif()
-        string(REPLACE ">" ";" parts "${map}")
-        list(GET "parts" "0" key)
-        list(GET "parts" "1" value)
-        if("${key}" STREQUAL "" OR "${value}" STREQUAL "")
-            message(FATAL_ERROR "[${CMAKE_CURRENT_FUNCTION}] Invalid HEADER_SOURCE_MAP: '${map}' key or value empty")
-        endif()
-    endforeach()
-
-    cmake_path(RELATIVE_PATH dstBaseDirectory BASE_DIRECTORY "${srcDirectory}" OUTPUT_VARIABLE dstRelativePath)
-
-    foreach(expression IN LISTS headerFilesExpressions)
-        file(GLOB_RECURSE files "${srcBaseDirectory}/${expression}")
-        foreach(file IN LISTS files)
-            list(APPEND headerFilesFound "${file}")
-        endforeach()
-    endforeach()
-
-    foreach(expression IN LISTS sourceFilesExpressions)
-        file(GLOB_RECURSE files "${srcBaseDirectory}/${expression}")
-        foreach(file IN LISTS files)
-            list(APPEND sourceFilesFound "${file}")
-        endforeach()
-    endforeach()
-
-    foreach(file IN LISTS headerFiles)
-        list(APPEND headerFilesFound "${srcDirectory}/${file}")
-    endforeach()
-
-    foreach(file IN LISTS sourceFiles)
-        list(APPEND sourceFilesFound "${srcDirectory}/${file}")
-    endforeach()
-
-    list(SORT headerFilesFound)
-    list(SORT sourceFilesFound)
-    set(singleHeaderFiles "")
-    set(pairedHeaderFiles "")
-    set(pairedSourceFiles "")
-    set(result "")
-
-    foreach(header IN LISTS headerFilesFound)
-        set(singleHeader "TRUE")
-        get_filename_component(headerFileDir "${header}" DIRECTORY)
-        get_filename_component(headerFileName "${header}" NAME_WE)
-        foreach(source IN LISTS sourceFilesFound)
-            set(match "FALSE")
-            get_filename_component(sourceFileDir "${source}" DIRECTORY)
-            get_filename_component(sourceFileName "${source}" NAME_WE)
-            if("${headerFileDir}" STREQUAL "${sourceFileDir}")
-                if("${headerFileName}" STREQUAL "${sourceFileName}")
-                    set(match "TRUE")
-                else()
-                    foreach(map IN LISTS headerSourceMaps)
-                        if("${match}")
-                            break()
-                        endif()
-                        string(REPLACE ">" ";" parts "${map}")
-                        list(GET "parts" "0" key)
-                        list(GET "parts" "1" value)
-                        if("${headerFileName}" STREQUAL "${key}" AND "${sourceFileName}" STREQUAL "${value}")
-                            set(match "TRUE")
-                        endif()
-                    endforeach()
-                endif()
-            else()
-                foreach(map IN LISTS headerSourceMaps)
-                    if("${match}")
-                        break()
-                    endif()
-                    string(REPLACE ">" ";" parts "${map}")
-                    list(GET "parts" "0" key)
-                    list(GET "parts" "1" value)
-                    if("${headerFileName}" STREQUAL "${key}" AND "${sourceFileName}" STREQUAL "${value}")
-                        set(match "TRUE")
-                    endif()
-                endforeach()
-            endif()
-            if("${match}")
-                set(singleHeader "FALSE")
-                if(NOT "${header}" IN_LIST pairedHeaderFiles)
-                    list(APPEND pairedHeaderFiles "${header}")
-                    list(APPEND pairedSourceFiles "${source}")
-                endif()
-            endif()
-        endforeach()
-        if("${singleHeader}" AND NOT "${header}" IN_LIST singleHeaderFiles)
-            list(APPEND singleHeaderFiles "${header}")
-        endif()
-    endforeach()
-
-    foreach(header IN LISTS singleHeaderFiles)
-        cmake_path(RELATIVE_PATH header BASE_DIRECTORY "${srcBaseDirectory}" OUTPUT_VARIABLE newHeaderRelativePath)
-        get_filename_component(newHeaderRelativeDir "${newHeaderRelativePath}" DIRECTORY)
-        set(newHeaderDir "${dstBaseDirectory}/${newHeaderRelativeDir}")
-
-        file(COPY "${header}" DESTINATION "${newHeaderDir}")
-
-        if(NOT "${dstRelativePath}/${newHeaderRelativePath}" IN_LIST result)
-            list(APPEND result "${dstRelativePath}/${newHeaderRelativePath}")
-        endif()
-    endforeach()
-
-    set(semicolon "<semicolon_${timestamp}>")
-    set(squareBracketOpen "<squareBracketOpen_${timestamp}>")
-    set(squareBracketClose "<squareBracketClose_${timestamp}>")
-
-    foreach(header source IN ZIP_LISTS pairedHeaderFiles pairedSourceFiles)
-        file(READ "${header}" headerContent)
-        file(READ "${source}" sourceContent)
-
-        cmake_path(RELATIVE_PATH header BASE_DIRECTORY "${srcBaseDirectory}" OUTPUT_VARIABLE headerIncludePath)
-        get_filename_component(headerIncludeFile "${headerIncludePath}" NAME)
-
-        set(newHeaderContent "")
-        string(STRIP "${headerContent}" headerContentStrip)
-        string(APPEND newHeaderContent "${headerContentStrip}" "\n")
-
-        string(STRIP "${sourceContent}" sourceLines)
-
-        string(REPLACE ";" "${semicolon}" sourceLines "${sourceLines}")
-        string(REPLACE "[" "${squareBracketOpen}" sourceLines "${sourceLines}")
-        string(REPLACE "]" "${squareBracketClose}" sourceLines "${sourceLines}")
-
-        string(REPLACE "\r\n" "\n" sourceLines "${sourceLines}")
-        string(REPLACE "\r" "\n" sourceLines "${sourceLines}")
-        string(REPLACE "\n" ";" sourceLines "${sourceLines}")
-
-        foreach(sourceLine IN LISTS sourceLines)
-            string(REPLACE "${semicolon}" ";" sourceLine "${sourceLine}")
-            string(REPLACE "${squareBracketOpen}" "[" sourceLine "${sourceLine}")
-            string(REPLACE "${squareBracketClose}" "]" sourceLine "${sourceLine}")
-
-            string(STRIP "${sourceLine}" sourceLineStrip)
-
-            if(
-                "${sourceLineStrip}" MATCHES "^#include[^\"]+\"${headerIncludePath}\"$"
-                OR "${sourceLineStrip}" MATCHES "^#include[^<]+<${headerIncludePath}>$"
-                OR "${sourceLineStrip}" MATCHES "^#include[^\"]+\"${headerIncludeFile}\"$"
-                OR "${sourceLineStrip}" MATCHES "^#include[^<]+<${headerIncludeFile}>$"
-            )
-                continue()
-            else()
-                string(APPEND newHeaderContent "${sourceLine}" "\n")
-            endif()
-        endforeach()
-
-        cmake_path(RELATIVE_PATH header BASE_DIRECTORY "${srcBaseDirectory}" OUTPUT_VARIABLE newHeaderPath)
-        set(newHeaderPath "${dstBaseDirectory}/${newHeaderPath}")
-        cmake_path(RELATIVE_PATH newHeaderPath BASE_DIRECTORY "${srcDirectory}" OUTPUT_VARIABLE newHeaderRelativePath)
-
-        file(WRITE "${newHeaderPath}" "${newHeaderContent}")
-
-        if(NOT "${newHeaderRelativePath}" IN_LIST result)
-            list(APPEND result "${newHeaderRelativePath}")
-        endif()
-    endforeach()
-
-    set("${var}" "${result}" PARENT_SCOPE)
     unset(result)
 endfunction()
 

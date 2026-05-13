@@ -24,7 +24,11 @@ function(test_1)
 
     get_filename_component(currentFileNameNoExt "${CMAKE_CURRENT_LIST_FILE}" NAME_WE)
 
-    file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/clang-x64-toolchain.cmake" expected)
+    if("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Windows")
+        file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/windows-clang-x64-toolchain.cmake" expected)
+    else()
+        file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/unix-clang-x64-toolchain.cmake" expected)
+    endif()
 
     set(processor "AMD64")
     set(os "Windows")
