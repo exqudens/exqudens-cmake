@@ -42,6 +42,7 @@ function(test_1)
         PROCESSOR "${processor}"
         OS "${os}"
         PATH "${path}"
+        TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY"
     )
 
     file(WRITE "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${testFileName}/${testFunctionName}/toolchain.cmake" "${actual}")
