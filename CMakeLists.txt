@@ -13,9 +13,9 @@ string(REPLACE "." ";" PRESET_NAME_ELEMENTS "${PRESET_NAME}")
 
 if("${USE_CONAN}")
     if("windows" IN_LIST "PRESET_NAME_ELEMENTS")
-        find_program(CONAN_COMMAND NAMES "conan.exe" PATHS ENV CONAN_PATH ENV PATH REQUIRED NO_CACHE NO_DEFAULT_PATH)
+        find_program(CONAN_COMMAND NAMES "conan.exe" PATHS ENV CONAN_PATH ENV PATH REQUIRED NO_DEFAULT_PATH)
     else()
-        find_program(CONAN_COMMAND NAMES "conan" PATHS ENV CONAN_PATH ENV PATH REQUIRED NO_CACHE NO_DEFAULT_PATH)
+        find_program(CONAN_COMMAND NAMES "conan" PATHS ENV CONAN_PATH ENV PATH REQUIRED NO_DEFAULT_PATH)
     endif()
     message(STATUS "CONAN_COMMAND: '${CONAN_COMMAND}'")
     set(CONAN_USER "exqudens" CACHE STRING "...")
@@ -62,6 +62,8 @@ install(
           "${PROJECT_SOURCE_DIR}/src/main/cmake/util.cmake"
     DESTINATION "cmake"
 )
+
+set(TARGET_CMAKE_INSTALL_DEPENDS_ON "${PROJECT_SOURCE_DIR}/src/main/cmake/util.cmake")
 
 if(NOT "${SKIP_TEST}")
     set(TEST_GROUP "all" CACHE STRING "...")
@@ -135,6 +137,8 @@ if(NOT "${SKIP_TEST}")
 
     set(TARGET_CMAKE_INSTALL_DEPENDS_ON "cmake-test")
 endif()
+
+message(STATUS "TARGET_CMAKE_INSTALL_DEPENDS_ON: '${TARGET_CMAKE_INSTALL_DEPENDS_ON}'")
 
 add_custom_command(
     OUTPUT "${CMAKE_INSTALL_PREFIX}/cmake/${PROJECT_NAME}-config.cmake"
