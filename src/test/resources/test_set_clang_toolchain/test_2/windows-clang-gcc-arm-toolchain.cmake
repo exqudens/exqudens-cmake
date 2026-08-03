@@ -17,12 +17,23 @@ set(CMAKE_C_STANDARD_INCLUDE_DIRECTORIES
     "C:/ST/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/lib/gcc/arm-none-eabi/14.3.1/include"
     "C:/ST/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/lib/gcc/arm-none-eabi/14.3.1/include-fixed"
     "C:/ST/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/arm-none-eabi/include"
+    "C:/ST/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/lib/gcc/arm-none-eabi/14.3.1/include"
+    "C:/ST/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/lib/gcc/arm-none-eabi/14.3.1/include-fixed"
+    "C:/ST/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/arm-none-eabi/include"
 )
 set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES
-    "${CMAKE_C_STANDARD_INCLUDE_DIRECTORIES}"
     "C:/ST/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/arm-none-eabi/include/c++/14.3.1"
     "C:/ST/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/arm-none-eabi/include/c++/14.3.1/arm-none-eabi"
     "C:/ST/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/arm-none-eabi/include/c++/14.3.1/backward"
+    "C:/ST/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/lib/gcc/arm-none-eabi/14.3.1/include"
+    "C:/ST/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/lib/gcc/arm-none-eabi/14.3.1/include-fixed"
+    "C:/ST/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/arm-none-eabi/include"
+    "C:/ST/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/arm-none-eabi/include/c++/14.3.1"
+    "C:/ST/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/arm-none-eabi/include/c++/14.3.1/arm-none-eabi"
+    "C:/ST/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/arm-none-eabi/include/c++/14.3.1/backward"
+    "C:/ST/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/lib/gcc/arm-none-eabi/14.3.1/include"
+    "C:/ST/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/lib/gcc/arm-none-eabi/14.3.1/include-fixed"
+    "C:/ST/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/arm-none-eabi/include"
 )
 
 set(ENV{PATH} "C:\\Program Files\\LLVM\\bin;C:\\ST\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin;$ENV{PATH}")

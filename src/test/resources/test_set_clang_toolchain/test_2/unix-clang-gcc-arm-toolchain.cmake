@@ -17,12 +17,23 @@ set(CMAKE_C_STANDARD_INCLUDE_DIRECTORIES
     "/opt/arm-none-eabi-gcc/lib/gcc/arm-none-eabi/14.3.1/include"
     "/opt/arm-none-eabi-gcc/lib/gcc/arm-none-eabi/14.3.1/include-fixed"
     "/opt/arm-none-eabi-gcc/arm-none-eabi/include"
+    "/opt/arm-none-eabi-gcc/lib/gcc/arm-none-eabi/14.3.1/include"
+    "/opt/arm-none-eabi-gcc/lib/gcc/arm-none-eabi/14.3.1/include-fixed"
+    "/opt/arm-none-eabi-gcc/arm-none-eabi/include"
 )
 set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES
-    "${CMAKE_C_STANDARD_INCLUDE_DIRECTORIES}"
     "/opt/arm-none-eabi-gcc/arm-none-eabi/include/c++/14.3.1"
     "/opt/arm-none-eabi-gcc/arm-none-eabi/include/c++/14.3.1/arm-none-eabi"
     "/opt/arm-none-eabi-gcc/arm-none-eabi/include/c++/14.3.1/backward"
+    "/opt/arm-none-eabi-gcc/lib/gcc/arm-none-eabi/14.3.1/include"
+    "/opt/arm-none-eabi-gcc/lib/gcc/arm-none-eabi/14.3.1/include-fixed"
+    "/opt/arm-none-eabi-gcc/arm-none-eabi/include"
+    "/opt/arm-none-eabi-gcc/arm-none-eabi/include/c++/14.3.1"
+    "/opt/arm-none-eabi-gcc/arm-none-eabi/include/c++/14.3.1/arm-none-eabi"
+    "/opt/arm-none-eabi-gcc/arm-none-eabi/include/c++/14.3.1/backward"
+    "/opt/arm-none-eabi-gcc/lib/gcc/arm-none-eabi/14.3.1/include"
+    "/opt/arm-none-eabi-gcc/lib/gcc/arm-none-eabi/14.3.1/include-fixed"
+    "/opt/arm-none-eabi-gcc/arm-none-eabi/include"
 )
 
 set(ENV{PATH} "/opt/llvm/bin:/opt/arm-none-eabi-gcc/bin:$ENV{PATH}")
