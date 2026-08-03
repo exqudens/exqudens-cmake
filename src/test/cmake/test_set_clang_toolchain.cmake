@@ -60,6 +60,12 @@ function(test_2)
 
     get_filename_component(currentFileNameNoExt "${CMAKE_CURRENT_LIST_FILE}" NAME_WE)
 
+    if("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Windows")
+        file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/windows-clang-gcc-arm-toolchain.cmake" expected)
+    else()
+        file(READ "${CMAKE_CURRENT_LIST_DIR}/../resources/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/unix-clang-gcc-arm-toolchain.cmake" expected)
+    endif()
+
     set(processor "armv7")
     set(os "Generic")
     set(path "C:/Program Files/LLVM/bin/clang.exe")
@@ -77,6 +83,12 @@ function(test_2)
         TARGET "${target}"
         OUTPUT_FILE "${outputFile}"
     )
+
+    file(READ "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/clang-gcc-arm-toolchain.cmake" actual)
+
+    if(NOT "${expected}" STREQUAL "${actual}")
+        message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
+    endif()
 
     message("... PASS")
 endfunction()
