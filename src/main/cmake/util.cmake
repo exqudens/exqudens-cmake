@@ -874,6 +874,8 @@ function(set_clang_toolchain var)
     set(oneValueKeywords
         "PATH"
         "PATH_CONVERT_TO_CMAKE"
+        "BACK_PATH"
+        "BACK_PATH_CONVERT_TO_CMAKE"
         "PROCESSOR"
         "OS"
         "TARGET"
@@ -897,6 +899,8 @@ function(set_clang_toolchain var)
 
     set(path "${_PATH}")
     set(pathConvertToCmake "${_PATH_CONVERT_TO_CMAKE}")
+    set(backPath "${_BACK_PATH}")
+    set(backPathConvertToCmake "${_BACK_PATH_CONVERT_TO_CMAKE}")
     set(processor "${_PROCESSOR}")
     set(os "${_OS}")
     set(target "${_TARGET}")
@@ -905,6 +909,10 @@ function(set_clang_toolchain var)
     set(setCmakeSystemProcessor "${_SET_CMAKE_SYSTEM_PROCESSOR}")
     set(setCmakeSystemName "${_SET_CMAKE_SYSTEM_NAME}")
     set(tryCompileTargetType "${_TRY_COMPILE_TARGET_TYPE}")
+    set(exeSuffix "")
+    if("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Windows")
+        set(exeSuffix ".exe")
+    endif()
 
     if("${noCache}" STREQUAL "" OR "${noCache}")
         set(cacheInstructions "")
@@ -913,12 +921,151 @@ function(set_clang_toolchain var)
     endif()
 
     if(NOT "${pathConvertToCmake}" STREQUAL "" AND "${pathConvertToCmake}")
-        cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST path NORMALIZE)
+        cmake_path(CONVERT "${path}" TO_CMAKE_PATH_LIST "path" NORMALIZE)
+    endif()
+
+    if(NOT "${backPathConvertToCmake}" STREQUAL "" AND "${backPathConvertToCmake}")
+        cmake_path(CONVERT "${backPath}" TO_CMAKE_PATH_LIST "backPath" NORMALIZE)
+    endif()
+
+    if("${target}" STREQUAL "arm-none-eabi" AND NOT "${backPath}" STREQUAL "")
+        if("${outputFile}" STREQUAL "")
+            message(FATAL_ERROR "Missing required parameter OUTPUT_FILE for TARGET: '${target}' and BACK_PATH: '${backPath}'")
+        endif()
+
+        set(backPathType "NONE")
+        set(backPathAnchors
+            "gcc${exeSuffix}"
+        )
+        string(LENGTH "${backPath}" backPathLength)
+        foreach("backPathAnchor" IN LISTS "backPathAnchors")
+            string(LENGTH "${backPathAnchor}" backPathAnchorLength)
+            string(FIND "${backPath}" "${backPathAnchor}" backPathAnchorIndex REVERSE)
+            if("${backPathAnchorIndex}" STREQUAL "-1")
+                continue()
+            endif()
+            math(EXPR backPathAnchorIndexPlusAnchorLength "${backPathAnchorIndex} + ${backPathAnchorLength}")
+            if("${backPathAnchorIndexPlusAnchorLength}" STREQUAL "${backPathLength}")
+                if("${backPathAnchor}" STREQUAL "gcc${exeSuffix}")
+                    set(backPathType "GCC")
+                endif()
+                break()
+            endif()
+        endforeach()
+
+        if("${backPathType}" STREQUAL "NONE")
+            message(FATAL_ERROR "Unsupported TARGET: '${target}' and BACK_PATH: '${backPath}'")
+        endif()
+
+        get_filename_component(outputDir "${outputFile}" DIRECTORY)
+        set(detectIncludePathFileContent "int main() { return 0; }")
+
+        if(NOT EXISTS "${outputDir}/detect_include_path_c")
+            file(MAKE_DIRECTORY "${outputDir}/detect_include_path_c")
+        endif()
+        if(NOT EXISTS "${outputDir}/detect_include_path_c/main.c")
+            file(WRITE "${outputDir}/detect_include_path_c/main.c" "${detectIncludePathFileContent}")
+        endif()
+
+        if(NOT EXISTS "${outputDir}/detect_include_path_cpp")
+            file(MAKE_DIRECTORY "${outputDir}/detect_include_path_cpp")
+        endif()
+        if(NOT EXISTS "${outputDir}/detect_include_path_cpp/main.cpp")
+            file(WRITE "${outputDir}/detect_include_path_cpp/main.cpp" "${detectIncludePathFileContent}")
+        endif()
+
+        if("${backPathType}" STREQUAL "GCC")
+            execute_process(
+                COMMAND "${backPath}" "-xc" "-E" "-v" "main.c"
+                WORKING_DIRECTORY "${outputDir}/detect_include_path_c"
+                ERROR_VARIABLE "cIncludePathOutput"
+                ERROR_STRIP_TRAILING_WHITESPACE
+                ENCODING "UTF-8"
+                COMMAND_ERROR_IS_FATAL "ANY"
+            )
+
+            set(anchor "#include <...> search starts here:")
+            string(LENGTH "${anchor}" anchorLength)
+            string(FIND "${cIncludePathOutput}" "${anchor}" startIndex REVERSE)
+            if("${startIndex}" STREQUAL "-1")
+                message(FATAL_ERROR "Unable to find: '${anchor}' in back compiler output")
+            endif()
+            math(EXPR startIndex "${startIndex} + ${anchorLength}")
+            string(SUBSTRING "${cIncludePathOutput}" "${startIndex}" "-1" "cIncludePathOutput")
+            set(anchor "End of search list.")
+            string(FIND "${cIncludePathOutput}" "${anchor}" endIndex)
+            if("${endIndex}" STREQUAL "-1")
+                message(FATAL_ERROR "Unable to find: '${anchor}' in back compiler output")
+            endif()
+            string(SUBSTRING "${cIncludePathOutput}" "0" "${endIndex}" "cIncludePathOutput")
+            string(STRIP "${cIncludePathOutput}" "cIncludePathOutput")
+            string(REPLACE "\r\n" "\n" "cIncludePathOutput" "${cIncludePathOutput}")
+            string(REPLACE "\r" "\n" "cIncludePathOutput" "${cIncludePathOutput}")
+
+            string(REPLACE "\n" ";" "cIncludePathOutput" "${cIncludePathOutput}")
+            foreach("v" IN LISTS "cIncludePathOutput")
+                string(STRIP "${v}" "v")
+                if(NOT "${v}" STREQUAL "")
+                    cmake_path(CONVERT "${v}" TO_CMAKE_PATH_LIST "v" NORMALIZE)
+                    if(NOT "${v}" IN_LIST "cIncludePath")
+                        list(APPEND "cIncludePath" "${v}")
+                    endif()
+                endif()
+            endforeach()
+
+            file(REMOVE_RECURSE "${outputDir}/detect_include_path_c")
+
+            execute_process(
+                COMMAND "${backPath}" "-xc++" "-E" "-v" "main.cpp"
+                WORKING_DIRECTORY "${outputDir}/detect_include_path_cpp"
+                ERROR_VARIABLE "cppIncludePathOutput"
+                ERROR_STRIP_TRAILING_WHITESPACE
+                ENCODING "UTF-8"
+                COMMAND_ERROR_IS_FATAL "ANY"
+            )
+
+            set(anchor "#include <...> search starts here:")
+            string(LENGTH "${anchor}" anchorLength)
+            string(FIND "${cppIncludePathOutput}" "${anchor}" startIndex REVERSE)
+            if("${startIndex}" STREQUAL "-1")
+                message(FATAL_ERROR "Unable to find: '${anchor}' in back compiler output")
+            endif()
+            math(EXPR startIndex "${startIndex} + ${anchorLength}")
+            string(SUBSTRING "${cppIncludePathOutput}" "${startIndex}" "-1" "cppIncludePathOutput")
+            set(anchor "End of search list.")
+            string(FIND "${cppIncludePathOutput}" "${anchor}" endIndex)
+            if("${endIndex}" STREQUAL "-1")
+                message(FATAL_ERROR "Unable to find: '${anchor}' in back compiler output")
+            endif()
+            string(SUBSTRING "${cppIncludePathOutput}" "0" "${endIndex}" "cppIncludePathOutput")
+            string(STRIP "${cppIncludePathOutput}" "cppIncludePathOutput")
+            string(REPLACE "\r\n" "\n" "cppIncludePathOutput" "${cppIncludePathOutput}")
+            string(REPLACE "\r" "\n" "cppIncludePathOutput" "${cppIncludePathOutput}")
+
+            string(REPLACE "\n" ";" "cppIncludePathOutput" "${cppIncludePathOutput}")
+            foreach("v" IN LISTS "cppIncludePathOutput")
+                string(STRIP "${v}" "v")
+                if(NOT "${v}" STREQUAL "")
+                    cmake_path(CONVERT "${v}" TO_CMAKE_PATH_LIST "v" NORMALIZE)
+                    if(NOT "${v}" IN_LIST "cIncludePath" AND NOT "${v}" IN_LIST "cppIncludePath")
+                        list(APPEND "cppIncludePath" "${v}")
+                    endif()
+                endif()
+            endforeach()
+
+            file(REMOVE_RECURSE "${outputDir}/detect_include_path_cpp")
+        else()
+            message(FATAL_ERROR "Unsupported back path type: '${backPathType}'")
+        endif()
     endif()
 
     get_filename_component(compilerDir "${path}" DIRECTORY)
 
     set(envPath "${compilerDir}")
+    if(NOT "${backPath}" STREQUAL "")
+        get_filename_component(backCompilerDir "${backPath}" DIRECTORY)
+        list(APPEND envPath "${backCompilerDir}")
+    endif()
     list(APPEND envPath "\$ENV{PATH}")
     list(FILTER envPath EXCLUDE REGEX "^$")
     list(REMOVE_DUPLICATES envPath)
@@ -935,12 +1082,36 @@ function(set_clang_toolchain var)
         string(APPEND result "set(CMAKE_SYSTEM_NAME \"${os}\"${cacheInstructions})" "\n")
     endif()
     string(APPEND result "" "\n")
-    string(APPEND result "set(CMAKE_C_COMPILER          \"${compilerDir}/clang.exe\"${cacheInstructions})" "\n")
-    string(APPEND result "set(CMAKE_CXX_COMPILER        \"${compilerDir}/clang++.exe\"${cacheInstructions})" "\n")
+    string(APPEND result "set(CMAKE_ASM_COMPILER \"${compilerDir}/clang${exeSuffix}\"${cacheInstructions})" "\n")
+    string(APPEND result "set(CMAKE_C_COMPILER   \"${compilerDir}/clang${exeSuffix}\"${cacheInstructions})" "\n")
+    string(APPEND result "set(CMAKE_CXX_COMPILER \"${compilerDir}/clang++${exeSuffix}\"${cacheInstructions})" "\n")
+    if(NOT "${backPath}" STREQUAL "" AND "${target}" STREQUAL "arm-none-eabi" AND "${backPathType}" STREQUAL "GCC")
+        string(APPEND result "set(CLANG_OBJCOPY      \"${compilerDir}/llvm-objcopy${exeSuffix}\"${cacheInstructions})" "\n")
+        string(APPEND result "set(CLANG_SIZE         \"${compilerDir}/llllvm-size${exeSuffix}\"${cacheInstructions})" "\n")
+    endif()
     if(NOT "${target}" STREQUAL "")
         string(APPEND result "" "\n")
+        string(APPEND result "set(CMAKE_ASM_COMPILER_TARGET \"${target}\"${cacheInstructions})" "\n")
         string(APPEND result "set(CMAKE_C_COMPILER_TARGET   \"${target}\"${cacheInstructions})" "\n")
         string(APPEND result "set(CMAKE_CXX_COMPILER_TARGET \"${target}\"${cacheInstructions})" "\n")
+    endif()
+    if(NOT "${backPath}" STREQUAL "" AND "${target}" STREQUAL "arm-none-eabi" AND "${backPathType}" STREQUAL "GCC")
+        get_filename_component(sysRoot "${backPath}" DIRECTORY)
+        get_filename_component(sysRoot "${sysRoot}" DIRECTORY)
+        string(APPEND result "" "\n")
+        string(APPEND result "set(CMAKE_SYSROOT \"${sysRoot}/${target}\"${cacheInstructions})" "\n")
+        string(APPEND result "" "\n")
+        string(APPEND result "set(CMAKE_C_STANDARD_INCLUDE_DIRECTORIES" "\n")
+        foreach("v" IN LISTS "cIncludePath")
+            string(APPEND result "    \"${v}\"" "\n")
+        endforeach()
+        string(APPEND result "${cacheInstructions})" "\n")
+        string(APPEND result "set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES" "\n")
+        string(APPEND result "    \"\${CMAKE_C_STANDARD_INCLUDE_DIRECTORIES}\"" "\n")
+        foreach("v" IN LISTS "cppIncludePath")
+            string(APPEND result "    \"${v}\"" "\n")
+        endforeach()
+        string(APPEND result "${cacheInstructions})" "\n")
     endif()
     if("${tryCompileTargetType}" STREQUAL "STATIC_LIBRARY")
         string(APPEND result "" "\n")

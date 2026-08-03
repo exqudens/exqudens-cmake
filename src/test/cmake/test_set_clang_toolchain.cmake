@@ -17,6 +17,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/../../main/cmake/util.cmake")
 
 function(list_functions)
     message("test_1")
+    message("test_2")
 endfunction()
 
 function(test_1)
@@ -50,6 +51,32 @@ function(test_1)
     if(NOT "${expected}" STREQUAL "${actual}")
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
     endif()
+
+    message("... PASS")
+endfunction()
+
+function(test_2)
+    message("${CMAKE_CURRENT_FUNCTION} ...")
+
+    get_filename_component(currentFileNameNoExt "${CMAKE_CURRENT_LIST_FILE}" NAME_WE)
+
+    set(processor "armv7")
+    set(os "Generic")
+    set(path "C:/Program Files/LLVM/bin/clang.exe")
+    set(backPath "C:/ST/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/bin/arm-none-eabi-gcc.exe")
+    set(target "arm-none-eabi")
+    set(outputFile "${CMAKE_CURRENT_LIST_DIR}/../../../build/test/${currentFileNameNoExt}/${CMAKE_CURRENT_FUNCTION}/clang-gcc-arm-toolchain.cmake")
+
+    cmake_path(CONVERT "${path}" TO_NATIVE_PATH_LIST path NORMALIZE)
+
+    set_clang_toolchain(actual
+        PROCESSOR "${processor}"
+        OS "${os}"
+        PATH "${path}"
+        BACK_PATH "${backPath}"
+        TARGET "${target}"
+        OUTPUT_FILE "${outputFile}"
+    )
 
     message("... PASS")
 endfunction()
