@@ -50,6 +50,13 @@ function(test_1)
         message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
     endif()
 
+    set(expected "baremetal")
+    set_conan_os(actual "Generic")
+
+    if(NOT "${expected}" STREQUAL "${actual}")
+        message(FATAL_ERROR "'expected': '${expected}' != 'actual': '${actual}'")
+    endif()
+
     message("... PASS")
 endfunction()
 

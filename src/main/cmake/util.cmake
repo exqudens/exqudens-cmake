@@ -1313,6 +1313,8 @@ function(set_conan_os var cmakeSystemName)
 
     if("Darwin" STREQUAL "${cmakeSystemName}")
         set(result "Macos")
+    elseif("Generic" STREQUAL "${cmakeSystemName}")
+        set(result "baremetal")
     else()
         set(result "${cmakeSystemName}")
     endif()
@@ -1518,6 +1520,189 @@ function(set_conan_options var)
 
     set("${var}" "${result}" PARENT_SCOPE)
     unset(result)
+endfunction()
+
+function(conan_export_pkg_zip)
+    set(options)
+    set(oneValueKeywords
+        "SOURCE_DIR"
+        "BINARY_DIR"
+
+        "PACKAGE_DIR_NAME"
+        "ZIP_FILE_URL"
+        "EXPECTED_MD5"
+        "CHECK_FILE"
+        "NAME"
+        "VERSION"
+        "USER"
+        "CHANNEL"
+        "CONAN_COMMAND"
+    )
+    set(multiValueKeywords)
+
+    foreach(v IN LISTS "options" "oneValueKeywords" "multiValueKeywords")
+        unset("_${v}")
+    endforeach()
+
+    cmake_parse_arguments("" "${options}" "${oneValueKeywords}" "${multiValueKeywords}" "${ARGN}")
+
+    # check-input
+    if(NOT "${_UNPARSED_ARGUMENTS}" STREQUAL "")
+        message(FATAL_ERROR "UNPARSED_ARGUMENTS: '${_UNPARSED_ARGUMENTS}'")
+    endif()
+
+    if("${_SOURCE_DIR}" STREQUAL "")
+        cmake_path(GET "CMAKE_CURRENT_LIST_DIR" PARENT_PATH "_SOURCE_DIR")
+    endif()
+    if("${_SOURCE_DIR}" STREQUAL "")
+        message(FATAL_ERROR "empty SOURCE_DIR: '${_SOURCE_DIR}'")
+    elseif(NOT EXISTS "${_SOURCE_DIR}")
+        message(FATAL_ERROR "not exists SOURCE_DIR: '${_SOURCE_DIR}'")
+    endif()
+
+    if("${_BINARY_DIR}" STREQUAL "")
+        set(_BINARY_DIR "${_SOURCE_DIR}/build")
+    endif()
+    if("${_BINARY_DIR}" STREQUAL "")
+        message(FATAL_ERROR "empty BINARY_DIR: '${_BINARY_DIR}'")
+    elseif("${_BINARY_DIR}" STREQUAL "")
+        message(FATAL_ERROR "empty BINARY_DIR: '${_BINARY_DIR}'")
+    endif()
+
+    if("${_ZIP_FILE_URL}" STREQUAL "")
+        message(FATAL_ERROR "empty ZIP_FILE_URL: '${_ZIP_FILE_URL}'")
+    endif()
+
+    if("${_PACKAGE_DIR_NAME}" STREQUAL "")
+        set(_PACKAGE_DIR_NAME "conan-export-pkg-zip-dir")
+    endif()
+    if("${_PACKAGE_DIR_NAME}" STREQUAL "")
+        message(FATAL_ERROR "empty PACKAGE_DIR_NAME: '${_PACKAGE_DIR_NAME}'")
+    endif()
+
+    if("${_EXPECTED_MD5}" STREQUAL "")
+        message(FATAL_ERROR "empty EXPECTED_MD5: '${_EXPECTED_MD5}'")
+    endif()
+
+    if("${_CHECK_FILE}" STREQUAL "")
+        set(_CHECK_FILE "README.md")
+    endif()
+    if("${_CHECK_FILE}" STREQUAL "")
+        message(FATAL_ERROR "empty CHECK_FILE: '${_CHECK_FILE}'")
+    endif()
+
+    if("${_NAME}" STREQUAL "")
+        message(FATAL_ERROR "empty NAME: '${_NAME}'")
+    endif()
+
+    if("${_VERSION}" STREQUAL "")
+        message(FATAL_ERROR "empty VERSION: '${_VERSION}'")
+    endif()
+
+    if("${_USER}" STREQUAL "")
+        set(_USER "-")
+    endif()
+    if("${_USER}" STREQUAL "")
+        message(FATAL_ERROR "empty USER: '${_USER}'")
+    endif()
+
+    if("${_CHANNEL}" STREQUAL "")
+        set(_CHANNEL "-")
+    endif()
+    if("${_CHANNEL}" STREQUAL "")
+        message(FATAL_ERROR "empty CHANNEL: '${_CHANNEL}'")
+    endif()
+
+    if("${_CONAN_COMMAND}" STREQUAL "")
+        find_program(_CONAN_COMMAND NAMES "conan.exe" "conan" PATHS ENV CONAN_PATH ENV PATH REQUIRED NO_CACHE NO_DEFAULT_PATH)
+    endif()
+    if("${_CONAN_COMMAND}" STREQUAL "")
+        message(FATAL_ERROR "empty CONAN_COMMAND: '${_CONAN_COMMAND}'")
+    elseif(NOT EXISTS "${_CONAN_COMMAND}")
+        message(FATAL_ERROR "not exists CONAN_COMMAND: '${_CONAN_COMMAND}'")
+    endif()
+
+    # process
+    if(NOT EXISTS "${_BINARY_DIR}")
+        file(MAKE_DIRECTORY "${_BINARY_DIR}/${_PACKAGE_DIR_NAME}")
+    endif()
+    if(NOT EXISTS "${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/file.zip")
+        message(STATUS "download: '${_ZIP_FILE_URL}'")
+        file(DOWNLOAD
+            "${_ZIP_FILE_URL}"
+            "${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/file.zip"
+            EXPECTED_MD5 "${_EXPECTED_MD5}"
+            STATUS "_DOWNLOAD_STATUS"
+        )
+        if(NOT "${_DOWNLOAD_STATUS}" STREQUAL "0;\"No error\"")
+            message(FATAL_ERROR "DOWNLOAD_STATUS: '${_DOWNLOAD_STATUS}'")
+        endif()
+    endif()
+    if(NOT EXISTS "${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/dir")
+        message(STATUS "extract: '${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/file.zip'")
+        file(MAKE_DIRECTORY "${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/dir")
+        file(ARCHIVE_EXTRACT INPUT "${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/file.zip" DESTINATION "${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/dir")
+    endif()
+    if(NOT EXISTS "${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/dir/${_CHECK_FILE}")
+        message(FATAL_ERROR "not exists: '${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/dir/${_CHECK_FILE}'")
+    endif()
+    if(NOT EXISTS "${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/conanfile.py.in")
+        message(STATUS "write: '${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/conanfile.py.in'")
+        string(JOIN "\n" _CONAN_TEMPLATE_FILE_CONTENT
+            "from pathlib import Path"
+            ""
+            "required_conan_version = '>=2.0 <3.0'"
+            ""
+            "from conan import ConanFile"
+            "from conan.tools.files import copy"
+            ""
+            "class ConanConfiguration(ConanFile):"
+            "    name: str = '@_NAME@'"
+            "    version: str = '@_VERSION@'"
+            ""
+            "    def package(self):"
+            "        try:"
+            "            copy(self, pattern='*', src=Path(self.build_folder).as_posix(), dst=Path(self.package_folder).as_posix())"
+            "        except Exception as e:"
+            "            self.output.error(e)"
+            "            raise e"
+            ""
+        )
+        file(WRITE "${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/conanfile.py.in" "${_CONAN_TEMPLATE_FILE_CONTENT}")
+    endif()
+    if(NOT EXISTS "${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/conanfile.py")
+        message(STATUS "write: '${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/conanfile.py'")
+        configure_file("${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/conanfile.py.in" "${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/conanfile.py" "@ONLY" NEWLINE_STYLE "UNIX")
+        file(REMOVE "${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/conanfile.py.in")
+    endif()
+    if(NOT EXISTS "${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/exported.txt")
+        message(STATUS "export: '${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/conanfile.py'")
+        if(NOT "${_USER}" STREQUAL "-" AND NOT "${_CHANNEL}" STREQUAL "-")
+            execute_process(
+                COMMAND "${_CONAN_COMMAND}" "export-pkg"
+                        "--output-folder" "${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/dir"
+                        "--user" "${_USER}"
+                        "--channel" "${_CHANNEL}"
+                        "${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/conanfile.py"
+                WORKING_DIRECTORY "${_SOURCE_DIR}"
+                COMMAND_ECHO "STDOUT"
+                ENCODING "UTF-8"
+                COMMAND_ERROR_IS_FATAL "ANY"
+            )
+        else()
+            execute_process(
+                COMMAND "${_CONAN_COMMAND}" "export-pkg"
+                        "--output-folder" "${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/dir"
+                        "${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/conanfile.py"
+                WORKING_DIRECTORY "${_SOURCE_DIR}"
+                COMMAND_ECHO "STDOUT"
+                ENCODING "UTF-8"
+                COMMAND_ERROR_IS_FATAL "ANY"
+            )
+        endif()
+        file(WRITE "${_BINARY_DIR}/${_PACKAGE_DIR_NAME}/exported.txt" "0;no-error")
+    endif()
+    message(STATUS "exported: '${_NAME}/${_VERSION}'")
 endfunction()
 
 function(set_not_found_package_names var)
