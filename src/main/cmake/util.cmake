@@ -1657,6 +1657,8 @@ function(conan_export_pkg_zip)
             "from conan.tools.files import copy"
             ""
             "class ConanConfiguration(ConanFile):"
+            "    virtualbuildenv = False"
+            "    virtualrunenv = False"
             "    name: str = '@_NAME@'"
             "    version: str = '@_VERSION@'"
             ""
