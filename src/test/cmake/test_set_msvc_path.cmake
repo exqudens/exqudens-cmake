@@ -25,6 +25,11 @@ function(test_1)
     message("${CMAKE_CURRENT_FUNCTION} ...")
 
     set(expected
+        "C:/Program Files/Microsoft Visual Studio/18/Enterprise"
+        "C:/Program Files/Microsoft Visual Studio/18/Professional"
+        "C:/Program Files/Microsoft Visual Studio/18/Community"
+        "C:/Program Files/Microsoft Visual Studio/18/BuildTools"
+
         "C:/Program Files/Microsoft Visual Studio/2022/Enterprise"
         "C:/Program Files/Microsoft Visual Studio/2022/Professional"
         "C:/Program Files/Microsoft Visual Studio/2022/Community"
