@@ -1387,7 +1387,9 @@ function(set_conan_compiler_version var cmakeCxxCompilerId cmakeCxxCompilerVersi
     endif()
 
     if("MSVC" STREQUAL "${cmakeCxxCompilerId}")
-        if("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "19.40" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "19.50")
+        if("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "19.50" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "19.60")
+            set(result "195")
+        elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "19.40" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "19.50")
             set(result "194")
         elseif("${cmakeCxxCompilerVersion}" VERSION_GREATER_EQUAL "19.30" AND "${cmakeCxxCompilerVersion}" VERSION_LESS "19.40")
             set(result "193")
